@@ -42,3 +42,9 @@ chmod +x scripts/*.sh install/*.sh
 - v0.1: target-machine installer + dotfiles + sync (2-4 wks)
 - v0.2: hardware profiles (laptop-amd/intel, desktop-7900xt), power/HiDPI
 - v0.3: optional Nix layer, `luci sync` as binary, CI + VM test matrix
+
+## License
+
+MIT — see `LICENSE`. This covers the original files in this repo (scripts, configs, dotfiles, docs).
+Third-party software installed via these lists (Arch packages, AUR, Flatpaks, Hyprland) keeps its own
+upstream licenses. LuicipherOS is based on Arch Linux and is not an official Arch product.
