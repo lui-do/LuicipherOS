@@ -1,0 +1,132 @@
+{
+  "_note": "LuicipherOS v0.1 target-machine base. EDIT-ME before use: device, hostname, timezone, kb_layout, mirror_regions. Generate creds from archinstall-desktop.creds.example.json (never commit real passwords). Validate: python3 -m json.tool install/archinstall-desktop.json. Install: archinstall --config install/archinstall-desktop.json --creds /tmp/creds.json. Then run install/bootstrap.sh. VM smoke: set device to /dev/vda. Target (Ryzen 9600X + B650E + RX 7900 XT): /dev/nvme0n1. See TESTING.md.",
+  "archinstall-language": "English",
+  "audio_config": {
+    "audio": "pipewire"
+  },
+  "bootloader_config": {
+    "bootloader": "Systemd-boot",
+    "uki": false,
+    "removable": false
+  },
+  "debug": false,
+  "disk_config": {
+    "config_type": "manual_partitioning",
+    "device_modifications": [
+      {
+        "device": "/dev/nvme0n1",
+        "partitions": [
+          {
+            "btrfs": [],
+            "dev_path": null,
+            "flags": ["boot"],
+            "fs_type": "fat32",
+            "size": {
+              "sector_size": { "unit": "B", "value": 512 },
+              "unit": "MiB",
+              "value": 1024
+            },
+            "mount_options": [],
+            "mountpoint": "/boot",
+            "obj_id": "b1eaf000-0000-4000-8000-000000000001",
+            "start": {
+              "sector_size": { "unit": "B", "value": 512 },
+              "unit": "MiB",
+              "value": 1
+            },
+            "status": "create",
+            "type": "primary"
+          },
+          {
+            "btrfs": [
+              { "mountpoint": "/", "name": "@" },
+              { "mountpoint": "/home", "name": "@home" },
+              { "mountpoint": "/var/log", "name": "@log" },
+              { "mountpoint": "/var/cache/pacman/pkg", "name": "@pkg" },
+              { "mountpoint": "/.snapshots", "name": "@snapshots" }
+            ],
+            "dev_path": null,
+            "flags": [],
+            "fs_type": "btrfs",
+            "size": {
+              "sector_size": null,
+              "unit": "Percent",
+              "value": 100
+            },
+            "mount_options": ["compress=zstd"],
+            "mountpoint": null,
+            "obj_id": "b1eaf000-0000-4000-8000-000000000002",
+            "start": {
+              "sector_size": null,
+              "unit": "MiB",
+              "value": 1025
+            },
+            "status": "create",
+            "type": "primary"
+          }
+        ],
+        "wipe": true
+      }
+    ]
+  },
+  "hostname": "luicipheros",
+  "kernels": ["linux"],
+  "locale_config": {
+    "kb_layout": "us",
+    "sys_enc": "UTF-8",
+    "sys_lang": "en_US"
+  },
+  "mirror_config": {
+    "mirror_regions": {},
+    "optional_repositories": [],
+    "custom_servers": [],
+    "custom_repositories": []
+  },
+  "network_config": {
+    "type": "nm"
+  },
+  "no_pkg_lookups": false,
+  "ntp": true,
+  "offline": false,
+  "packages": [
+    "base",
+    "base-devel",
+    "linux",
+    "linux-firmware",
+    "linux-firmware-amdgpu",
+    "amd-ucode",
+    "btrfs-progs",
+    "networkmanager",
+    "sudo",
+    "git",
+    "stow",
+    "vim",
+    "pipewire",
+    "wireplumber",
+    "pipewire-pulse",
+    "pipewire-alsa"
+  ],
+  "pacman_config": {
+    "color": true,
+    "parallel_downloads": 5
+  },
+  "profile_config": {
+    "gfx_driver": "AMD / ATI (open-source)",
+    "greeter": null,
+    "profile": {
+      "details": [],
+      "main": "Minimal"
+    }
+  },
+  "custom_commands": [
+    "systemctl enable NetworkManager"
+  ],
+  "script": "guided",
+  "silent": false,
+  "swap": {
+    "enabled": true,
+    "algorithm": "zstd"
+  },
+  "timezone": "Europe/Prague",
+  "version": "3.0.0"
+}

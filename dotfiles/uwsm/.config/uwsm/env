@@ -1,0 +1,9 @@
+# ~/.config/uwsm/env — toolkit/theming vars for the uwsm session.
+# uwsm users must keep these OUT of hyprland.lua (Hyprland wiki).
+export XCURSOR_SIZE=24
+export HYPRCURSOR_SIZE=24
+export QT_QPA_PLATFORM=wayland
+export GDK_BACKEND=wayland,x11
+export ELECTRON_OZONE_PLATFORM_HINT=wayland
+export MOZ_ENABLE_WAYLAND=1
+# Tabby is Electron: runs native Wayland via the hint above.

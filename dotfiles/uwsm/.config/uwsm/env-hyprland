@@ -1,0 +1,5 @@
+# ~/.config/uwsm/env-hyprland — Hyprland/AQ vars for the uwsm session.
+# Target desktop (RX 7900 XT gfx1100): prefer the discrete card.
+export AQ_DRM_DEVICES=/dev/dri/card1:/dev/dri/card0
+export AMD_VULKAN_ICD=RADV
+# v0.2: profiles/<machine> overrides this file per machine.

@@ -6,8 +6,12 @@
 
 yay-bin
 vicinae
+tabby-bin
+# NOTE: tabby-bin (prebuilt) over `tabby` (builds Electron from source).
+# quickshell  # NOT here: framework is in Arch Extra (config/packages).
+# noctalia-shell  # OPT-IN v0.2: full shell; v0.1 ships custom shell.qml + plugin host
 # quickshell        # DEFER to v0.2 (themed shell, breaks often)
-# hyprpanel         # ALT to waybar, decide in grill
+# hyprpanel         # ALT to custom Quickshell shell, decided: own shell.qml + plugin host
 # matugen           # DEFER, theming engine
 # awww              # ML4W wallpaper daemon successor to swww, decide in grill
 # protonup-qt       # gaming helper, decide in grill (or flatpak?)

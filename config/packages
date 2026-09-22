@@ -42,21 +42,22 @@ xdg-desktop-portal-hyprland
 xdg-desktop-portal-gtk
 uwsm
 
-# --- keyboard-driven shell: launcher / bar / notify / lock / screenshots ---
-waybar
+# --- keyboard-driven shell: launcher / shell / notify / lock / screenshots ---
+quickshell
 fuzzel
-# rofi-wayland  # ALT: pick ONE launcher in grill (fuzzel=simple, rofi=themed like Omarchy/ML4W)
+# waybar  # REPLACED by custom Quickshell shell (dotfiles/quickshell), v0.1
 swaync
-# mako  # ALT to swaync, decide in grill
+# mako  # ALT to swaync, decided: swaync kept
 wlogout
 wl-clipboard
 cliphist
 grim
 slurp
-swappy
+gradia
+# swappy  # REPLACED by Gradia (region -> file -> Gradia editor)
 
-# --- terminal / files / editor ---
-kitty
+# --- terminal / files / editor (Tabby replaces kitty: SSH manager + tabs) ---
+# NOTE: terminal itself is AUR `tabby-bin`, see config/packages-arch.
 yazi
 neovim
 git

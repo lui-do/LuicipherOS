@@ -1,0 +1,4 @@
+{
+  "_note": "Enabled shell plugins in load order. Drop a ported widget as plugins/<name>.qml and list it here.",
+  "plugins": ["swayncIndicator"]
+}

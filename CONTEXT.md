@@ -11,12 +11,16 @@ Glossary only. No implementation details.
 - **Extra**: explicitly installed package/app not in desired + protected sets. Previewed before prune, never silently removed.
 - **Target machine**: Ryzen 5 9600X + ASUS B650E-PLUS WIFI + RX 7900 XT 20GB. v0.1 is tuned here, tested elsewhere.
 - **Hardware profile**: per-machine overlay (monitors, `AQ_DRM_DEVICES`, power) under `profiles/` (v0.2).
-- **Keyboard-driven shell**: Hyprland + Vicinae (primary, Raycast-like) + fuzzel (fallback) + bar (waybar) + swaync + lock/idle + portals, all SUPER-key first.
+- **Keyboard-driven shell**: Hyprland (native Lua `hyprland.lua`, 0.55+) + Vicinae (primary, Raycast-like, SUPER+Space) + fuzzel (fallback) + Quickshell custom shell (bar + plugin host) + swaync + Tabby + Gradia screenshots + lock/idle + portals, all SUPER-key first.
 
 ## Locked in grill (v0.1)
 
-- launcher: Vicinae (user already uses it; Raycast-like layer). fuzzel stays as fallback system launcher.
-- notifier: swaync (customizable via CSS/JSON/widgets — yes, modifiable).
+- launcher: Vicinae (user already uses it; Raycast-like layer). fuzzel stays as fallback system launcher. Toggle: SUPER+Space.
+- bar: custom Quickshell `shell.qml` (framework from Arch Extra) + `plugins/` host for ported Noctalia / DankMaterialShell / Omarchy widgets. Waybar removed.
+- terminal: Tabby (AUR tabby-bin prebuilt; SSH manager + tabs; xterm TERM, no remote terminfo installs). kitty removed.
+- screenshots: grim + slurp region capture -> file -> Gradia editor (Extra). swappy removed.
+- notifier: swaync KEPT for v0.1 (custom shell has no notification center yet; shell shows its indicator via swaync-client). Drop only once the shell grows a NotificationServer-based center (v0.2).
+- Hyprland config: native Lua only (`hyprland.lua` + `lua/` modules via require()); hyprlang `.conf` deprecated since 0.55. uwsm users keep env in `~/.config/uwsm/env{,-hyprland}`.
 - AUR helper: yay-bin default (precompiled, docs); paru supported via helper flag.
 - flatpak scope: SPLIT — system list + user list.
 - sync: manual-only, no auto-sync on boot.
@@ -24,6 +28,7 @@ Glossary only. No implementation details.
 
 ## Open for v0.2
 
-- Vicinae keybind/clipboard on Hyprland (manual bind, portal limits)
-- swaync theme (CSS) to match Waybar
-- hardware profiles, Hyprland Lua monitors
+- shell workspaces widget, tray, NotificationServer center (then drop swaync)
+- swaync CSS theme (only if still kept)
+- hardware profiles, Hyprland Lua monitor overrides
+- Vicinae clipboard on Hyprland (portal limits)

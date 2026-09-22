@@ -1,0 +1,11 @@
+{
+  "_note": "EXAMPLE ONLY — copy to /tmp/creds.json, fill secrets, never commit. Generate password hashes via: openssl passwd -6 'YOUR_PASSWORD' (yescrypt/sha512). Install: archinstall --config install/archinstall-desktop.json --creds /tmp/creds.json",
+  "users": [
+    {
+      "sudo": true,
+      "username": "luci",
+      "enc_password": "$6$REPLACE_ME$REPLACE_ME_REPLACE_ME_REPLACE_ME_REPLACE_ME"
+    }
+  ],
+  "root_enc_password": "$6$REPLACE_ME$REPLACE_ME_REPLACE_ME_REPLACE_ME_REPLACE_ME"
+}

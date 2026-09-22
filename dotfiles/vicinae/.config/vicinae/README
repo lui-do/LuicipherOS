@@ -1,0 +1,7 @@
+# LuicipherOS Vicinae v0.1 — primary Raycast-like launcher (SUPER+Space in lua/binds.lua).
+# Vicinae is configured via its GUI (vicinae toggle -> Settings); this dir pins
+# intent + documents the Hyprland bind. v0.2: clipboard + portal limits pass.
+# Bind: SUPER+Space -> `vicinae toggle || fuzzel` (fallback keeps shell usable if
+# the Vicinae daemon is not running). Daemon autostart: `vicinae server` in
+# lua/autostart.lua (best-effort, `|| true`).
+# AUR: vicinae (see config/packages-arch). Flatpak: none upstream (see flatpaks-user.list comment).

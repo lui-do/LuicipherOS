@@ -1,0 +1,6 @@
+/* LuicipherOS swaync v0.1 — dark base; v0.2 full theme to match Quickshell shell (or drop with notification center). */
+.notification-row { outline: none; }
+.notification { background: #1e1e2e; color: #cdd6f4; border: 1px solid #313244; border-radius: 8px; }
+.control-center { background: #181825; color: #cdd6f4; border: 1px solid #313244; }
+.widget-title { color: #89b4fa; }
+.widget-dnd { color: #cdd6f4; }
