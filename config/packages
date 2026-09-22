@@ -1,0 +1,89 @@
+# config/packages — pacman source of truth (Arch-native, v0.1)
+# IDEA: declarative package management without NixOS.
+# - Add a line -> `luci sync` installs it.
+# - Remove a line -> `luci sync --prune` uninstalls it (after confirm).
+# - One package per line, `#` = comment. No versions pinned in v0.1 (track Arch Extra).
+# - AUR packages live in packages-arch, NOT here.
+# - Protected base (kernel, firmware, drivers) lives in protected-packages and is never pruned.
+
+# --- base / boot / firmware (never prune, see protected-packages) ---
+base
+base-devel
+linux
+linux-firmware
+linux-firmware-amdgpu
+amd-ucode
+systemd-boot-pacman-hook
+
+# --- networking / bluetooth / power (laptop+desktop compat) ---
+networkmanager
+iwd
+bluez
+bluez-utils
+blueman
+power-profiles-daemon
+brightnessctl
+powertop
+
+# --- audio / video plumbing ---
+pipewire
+wireplumber
+pipewire-pulse
+pipewire-alsa
+pavucontrol
+playerctl
+
+# --- Hyprland core (stays pacman-owned: PAM/SUID + live compositor risk, see ADR-0001) ---
+hyprland
+hyprlock
+hypridle
+hyprland-qtutils
+xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk
+uwsm
+
+# --- keyboard-driven shell: launcher / bar / notify / lock / screenshots ---
+waybar
+fuzzel
+# rofi-wayland  # ALT: pick ONE launcher in grill (fuzzel=simple, rofi=themed like Omarchy/ML4W)
+swaync
+# mako  # ALT to swaync, decide in grill
+wlogout
+wl-clipboard
+cliphist
+grim
+slurp
+swappy
+
+# --- terminal / files / editor ---
+kitty
+yazi
+neovim
+git
+stow
+curl
+wget
+unzip
+
+# --- fonts / theming ---
+ttf-jetbrains-mono-nerd
+noto-fonts
+noto-fonts-emoji
+nwg-look
+
+# --- AMD GPU stack for target desktop (RX 7900 XT gfx1100) ---
+mesa
+lib32-mesa
+vulkan-radeon
+lib32-vulkan-radeon
+xf86-video-amdgpu
+rocm-hip-runtime
+hip-runtime-amd
+vulkan-tools
+radeontop
+
+# --- virtualization / compat helpers (broad laptop/desktop claim) ---
+flatpak
+distrobox
+xdg-user-dirs
+polkit-gnome

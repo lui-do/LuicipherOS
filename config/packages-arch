@@ -1,0 +1,13 @@
+# config/packages-arch — AUR source of truth (v0.1, minimal)
+# IDEA: keep AUR surface tiny in v0.1 to avoid soname-breakage (quickshell/matugen/awww break monthly).
+# - Same declarative rule: add -> install, remove -> prune (yay/paru).
+# - AUR helper: yay-bin default (grill locked: easiest onboarding, precompiled; paru valid ALT, scripts accept either).
+# - Hyprland extras that are NOT in Extra go here; everything else prefers Extra/Flatpak.
+
+yay-bin
+vicinae
+# quickshell        # DEFER to v0.2 (themed shell, breaks often)
+# hyprpanel         # ALT to waybar, decide in grill
+# matugen           # DEFER, theming engine
+# awww              # ML4W wallpaper daemon successor to swww, decide in grill
+# protonup-qt       # gaming helper, decide in grill (or flatpak?)

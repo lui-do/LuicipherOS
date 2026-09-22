@@ -1,0 +1,23 @@
+# config/protected-packages — NEVER auto-remove (prune guardrail)
+# IDEA: `luci sync --prune` diffs `pacman -Qqe` against desired lists.
+# Anything here is excluded from pruning even if missing from packages/packages-arch.
+# This prevents one typo from uninstalling kernel / firmware / compositor / networking on next reboot.
+base
+base-devel
+linux
+linux-firmware
+linux-firmware-amdgpu
+amd-ucode
+networkmanager
+iwd
+bluez
+pipewire
+wireplumber
+hyprland
+hyprlock
+hypridle
+xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk
+flatpak
+sudo
+git

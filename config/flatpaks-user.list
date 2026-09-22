@@ -1,0 +1,8 @@
+# config/flatpaks-user.list — per-user Flatpaks (no sudo, personal)
+# FORMAT: <remote> <app-id> [branch]. Add -> install --user, remove -> prune removes.
+# Put here: dev/personal apps (editors, notes, secrets) so shared system stays lean.
+flathub com.visualstudio.code stable
+flathub md.obsidian.Obsidian stable
+flathub org.keepassxc.KeePassXC stable
+# Raycast-like layer (OPTIONAL, v0.2): pick ONE, see grill Q1
+# flathub io.github.vicinae.Vicinae stable  # if/when flatpak exists; else AUR vicinae

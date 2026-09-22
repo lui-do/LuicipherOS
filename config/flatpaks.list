@@ -1,0 +1,17 @@
+# config/flatpaks.list — Flatpak source of truth (v0.1)
+# IDEA: Flatpak has no native --from-file (see flatpak#5186), so this file + ensure-flatpaks.sh IS the declarative layer.
+# - Format: <remote> <app-id> [branch]. `#` = comment.
+# - Add a line -> `luci sync` installs it. Remove a line -> `luci sync --prune` uninstalls it.
+# - System-wide (flatpak system) by default for multi-user OS feel; user flag supported via --user in script.
+# - Prefer Flatpak for: browsers, IDEs, media, Blender (isolation), ComfyUI — keeps Arch base clean.
+# - Do NOT put here: Hyprland, portals, lock, drivers (must stay pacman, PAM/GL traps, see ADR-0001).
+
+# <remote> <app-id> [branch]
+flathub org.mozilla.firefox stable
+flathub md.obsidian.Obsidian stable
+flathub com.obsproject.Studio stable
+flathub org.blender.Blender stable
+flathub com.visualstudio.code stable
+flathub org.keepassxc.KeePassXC stable
+# flathub com.brave.Browser stable  # ALT to firefox, decide in grill
+# flathub org.videolan.VLC stable
