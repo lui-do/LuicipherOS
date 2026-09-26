@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# luicipheros-install — live-env entry point for the netinstall ISO.
+# Flow: preflight -> clone/pull repo -> archinstall (JSON + creds) ->
+# reboot into target -> bootstrap runs there (NOT here: bootstrap installs
+# into the running system, and the live env is throwaway).
+# USAGE (on the booted ISO): luicipheros-install [--vm] [--yes]
+#   --vm   relax GPU/ReBAR checks (smoke runs)
+#   --yes  skip the final confirm before archinstall writes to disk
+set -euo pipefail
+
+VM=false; YES=false
+for a in "$@"; do
+  case "$a" in
+    --vm) VM=true ;;
+    --yes|--noconfirm) YES=true ;;
+    -h|--help) echo "Usage: $0 [--vm] [--yes]"; exit 0 ;;
+  esac
+done
+
+REPO_URL="https://github.com/lui-do/LuicipherOS.git"
+WORK="$HOME/luicipheros-install"
+
+echo "==> LuicipherOS netinstall (live env: $(uname -r))"
+if [[ -d "$WORK/.git" ]]; then
+  echo "==> updating existing checkout"
+  git -C "$WORK" pull --ff-only
+else
+  git clone "$REPO_URL" "$WORK"
+fi
+cd "$WORK"
+echo "==> repo: $(git log --oneline -1)"
+
+if [[ "$VM" == true ]]; then
+  ./install/preflight.sh --vm
+else
+  ./install/preflight.sh --target
+fi
+
+echo ""
+echo "==> EDIT-ME before install (in another TTY or now):"
+echo "    $WORK/install/archinstall-desktop.json  (device, btrfs GiB size, hostname)"
+echo "    creds: openssl passwd -6 'pw' -> /tmp/creds.json (see creds.example.json)"
+echo "    lsblk disks: $(lsblk -d -n -o NAME,SIZE | tr '\n' ' ')"
+if [[ "$YES" == false ]]; then
+  read -r -p "Run archinstall now? [y/N] " ans
+  [[ "$ans" == "y" || "$ans" == "Y" ]] || { echo "aborted (repo kept at $WORK)"; exit 1; }
+fi
+
+archinstall --config "$WORK/install/archinstall-desktop.json" --creds /tmp/creds.json
+
+echo ""
+echo "==> base installed. Next:"
+echo "    1) reboot into the new system (remove media / fix boot order)"
+echo "    2) git clone $REPO_URL && cd LuicipherOS"
+echo "    3) ./install/bootstrap.sh   (add --preflight-mode=vm --no-flatpak for smoke)"

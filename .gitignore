@@ -1,0 +1,3 @@
+# build artifacts, never commit
+iso/pacman.conf
+out/

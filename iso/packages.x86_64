@@ -1,0 +1,21 @@
+# iso/packages.x86_64 — live-env packages for the netinstall ISO.
+# MINIMAL on purpose: just enough to fetch the repo and run archinstall.
+# Everything in config/packages is installed into the TARGET later.
+archinstall
+git
+python
+sudo
+nano
+vim
+networkmanager
+iwd
+wireless_tools
+wpa_supplicant
+smartmontools
+usbutils
+pciutils
+efibootmgr
+dosfstools
+btrfs-progs
+openssl
+curl
