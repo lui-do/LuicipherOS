@@ -1,5 +1,5 @@
 {
-  "_note": "LuicipherOS v0.1 target-machine base. EDIT-ME before use: device, hostname, timezone, kb_layout, mirror_regions. Generate creds from archinstall-desktop.creds.example.json (never commit real passwords). Validate: python3 -m json.tool install/archinstall-desktop.json. Install: archinstall --config install/archinstall-desktop.json --creds /tmp/creds.json. Then run install/bootstrap.sh. VM smoke: set device to /dev/vda. Target (Ryzen 9600X + B650E + RX 7900 XT): /dev/nvme0n1. See TESTING.md.",
+  "_note": "LuicipherOS v0.1 target-machine base. EDIT-ME before use: device, btrfs-partition size (fits 60G VM as shipped; enlarge to disk GiB minus 2 on target), hostname, timezone, kb_layout, mirror_regions. Generate creds from archinstall-desktop.creds.example.json (never commit real passwords). Validate: python3 -m json.tool install/archinstall-desktop.json. Install: archinstall --config install/archinstall-desktop.json --creds /tmp/creds.json. Then run install/bootstrap.sh. VM smoke: set device to /dev/vda. Target (Ryzen 9600X + B650E + RX 7900 XT): /dev/nvme0n1. See TESTING.md.",
   "archinstall-language": "English",
   "audio_config": {
     "audio": "pipewire"
@@ -50,8 +50,8 @@
             "fs_type": "btrfs",
             "size": {
               "sector_size": { "unit": "B", "value": 512 },
-              "unit": "Percent",
-              "value": 100
+              "unit": "GiB",
+              "value": 55
             },
             "mount_options": ["compress=zstd"],
             "mountpoint": null,
