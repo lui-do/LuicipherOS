@@ -59,6 +59,8 @@ gradia
 
 # --- terminal / files / editor (Tabby replaces kitty: SSH manager + tabs) ---
 # NOTE: terminal itself is AUR `tabby-bin`, see config/packages-arch.
+gnome-keyring
+# Tabby secret store (SSH passwords); libsecret already implied via deps.
 yazi
 neovim
 git

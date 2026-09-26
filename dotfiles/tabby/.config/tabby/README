@@ -1,0 +1,9 @@
+# Tabby config — LuicipherOS v0.1.
+# Tabby is configured via its GUI (Settings); this repo ships NO config.yaml
+# on purpose — a shipped (even comments-only) file broke Tabby's theme
+# resolution on first run (null 'appearance' crash, VM smoke Sep 2026).
+# Vanilla defaults win; back up ~/.config/tabby/config.yaml yourself if
+# you customize.
+# Why Tabby over kitty: built-in SSH connection manager + tabs for heavy SSH
+# work, xterm-compatible TERM (no remote terminfo installs needed).
+# Bind: SUPER+T (see hypr/lua/binds.lua + lua/variables.lua).
