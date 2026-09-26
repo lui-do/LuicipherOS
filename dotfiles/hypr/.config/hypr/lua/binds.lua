@@ -7,7 +7,9 @@ hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(terminal))
 hl.bind(mainMod .. " + Space",  hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + SHIFT + D", hl.dsp.exec_cmd("fuzzel"))
 hl.bind(mainMod .. " + Q",       hl.dsp.window.close())
-hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.exec_cmd("wlogout"))
+-- SUPER+SHIFT+Q intentionally unbound: wlogout left the repos Sep 2026.
+-- v0.2: session menu lives in the Quickshell shell (power/reboot remain
+-- in the swaync buttons-grid until then).
 hl.bind(mainMod .. " + E",       hl.dsp.exec_cmd(terminal .. " -e yazi || " .. terminal .. " -- -e yazi"))
 hl.bind(mainMod .. " + N",       hl.dsp.exec_cmd("swaync-client -t -sw"))
 hl.bind(mainMod .. " + Escape",  hl.dsp.exec_cmd("hyprlock"))

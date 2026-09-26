@@ -54,6 +54,13 @@ if [[ "$STOW_ONLY" == true ]]; then
 else
   # 2) base packages (pacman + AUR, add-only)
   log "packages (add-only, no pruning)"
+  if grep -q '^\[multilib\]' /etc/pacman.conf 2>/dev/null; then
+    : # multilib already enabled
+  elif grep -q '^\#\[multilib\]' /etc/pacman.conf 2>/dev/null; then
+    log "enabling multilib (lib32 drivers need it)"
+    sudo sed -i '/^\#\[multilib\]/,/^\#Include/s/^\#//' /etc/pacman.conf
+    sudo pacman -Sy
+  fi
   "$ROOT/scripts/ensure-packages.sh" --aur-helper "$AUR_HELPER"
 fi
 

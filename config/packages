@@ -13,7 +13,8 @@ linux
 linux-firmware
 linux-firmware-amdgpu
 amd-ucode
-systemd-boot-pacman-hook
+# NOTE: no systemd-boot-pacman-hook (dropped from repos Sep 2026):
+# kernel-install handles entries; run `bootctl update` after systemd upgrades.
 
 # --- networking / bluetooth / power (laptop+desktop compat) ---
 networkmanager
@@ -37,7 +38,7 @@ playerctl
 hyprland
 hyprlock
 hypridle
-hyprland-qtutils
+# NOTE: no hyprland-qtutils (gone from repos Sep 2026, merged into hyprland).
 xdg-desktop-portal-hyprland
 xdg-desktop-portal-gtk
 uwsm
@@ -47,8 +48,8 @@ quickshell
 fuzzel
 # waybar  # REPLACED by custom Quickshell shell (dotfiles/quickshell), v0.1
 swaync
-# mako  # ALT to swaync, decided: swaync kept
-wlogout
+# NOTE: no wlogout (gone from repos Sep 2026). Session menu moves into the
+# Quickshell shell (v0.2); power/reboot stay in the swaync buttons-grid.
 wl-clipboard
 cliphist
 grim

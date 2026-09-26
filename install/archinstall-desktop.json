@@ -78,7 +78,7 @@
   },
   "mirror_config": {
     "mirror_regions": {},
-    "optional_repositories": [],
+    "optional_repositories": ["multilib"],
     "custom_servers": [],
     "custom_repositories": []
   },
