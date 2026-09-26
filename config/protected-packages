@@ -21,3 +21,7 @@ xdg-desktop-portal-gtk
 flatpak
 sudo
 git
+# boot chain (archinstall pulls these; pruning them bricks boot):
+mkinitcpio
+efibootmgr
+btrfs-progs
