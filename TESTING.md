@@ -1,5 +1,12 @@
 # TESTING.md — LuicipherOS v0.1 matrix (started for issue #1)
 
+> VM smoke 2026-09-26: PASS (QEMU/OVMF, Arch 2026.09.01 ISO). All five
+> checkpoints green: Hyprland loads, SUPER+T Tabby, SUPER+Space Vicinae,
+> SUPER+N swaync, Print region -> Gradia. Field fixes along the way:
+> sector_size object, no Percent unit (55 GiB), esp flag, multilib,
+> dropped repo-dead pkgs, yay bootstrap, boot-chain protected pkgs,
+> no shipped tabby config, dwindle:pseudotile removed. Remaining: target.
+
 Scope: target machine (Ryzen 5 9600X + ASUS B650E-PLUS WIFI + RX 7900 XT) +
 VM smoke. Compat claim stays limited until target + AMD laptop + Intel
 laptop + VM all pass (ADR-0001 consequences).
