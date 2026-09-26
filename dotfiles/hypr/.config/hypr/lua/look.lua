@@ -26,7 +26,8 @@ hl.config({
     },
 
     dwindle = {
-        pseudotile     = true,
+        -- NOTE: pseudotile was removed upstream (see ConfigValues.cpp);
+        -- preserve_split covers the sticky-split behavior.
         preserve_split = true,
     },
 
