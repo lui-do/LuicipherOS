@@ -49,7 +49,7 @@
             "flags": [],
             "fs_type": "btrfs",
             "size": {
-              "sector_size": null,
+              "sector_size": { "unit": "B", "value": 512 },
               "unit": "Percent",
               "value": 100
             },
@@ -57,7 +57,7 @@
             "mountpoint": null,
             "obj_id": "b1eaf000-0000-4000-8000-000000000002",
             "start": {
-              "sector_size": null,
+              "sector_size": { "unit": "B", "value": 512 },
               "unit": "MiB",
               "value": 1025
             },
