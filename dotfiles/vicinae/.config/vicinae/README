@@ -2,6 +2,8 @@
 # Vicinae is configured via its GUI (vicinae toggle -> Settings); this dir pins
 # intent + documents the Hyprland bind. v0.2: clipboard + portal limits pass.
 # Bind: SUPER+Space -> `vicinae toggle || fuzzel` (fallback keeps shell usable if
-# the Vicinae daemon is not running). Daemon autostart: `vicinae server` in
+# the Vicinae daemon is not running). NOTE: Vicinae also ships its own built-in
+# Alt+Space shortcut — that comes from Vicinae defaults, not this repo. Keep
+# both, or disable the built-in under Vicinae Settings -> Preferences.
 # lua/autostart.lua (best-effort, `|| true`).
 # AUR: vicinae (see config/packages-arch). Flatpak: none upstream (see flatpaks-user.list comment).

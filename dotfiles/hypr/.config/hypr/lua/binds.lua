@@ -2,8 +2,8 @@
 -- SUPER+Return Tabby, SUPER 1-9 workspaces, Print -> Gradia.
 local mainMod = "SUPER"
 
--- --- apps ---
-hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(terminal))
+-- --- apps (locked: SUPER+T Tabby, SUPER+Space Vicinae) ---
+hl.bind(mainMod .. " + T", hl.dsp.exec_cmd(terminal))
 hl.bind(mainMod .. " + Space",  hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + SHIFT + D", hl.dsp.exec_cmd("fuzzel"))
 hl.bind(mainMod .. " + Q",       hl.dsp.window.close())
