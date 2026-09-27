@@ -5,9 +5,11 @@
 # - Hyprland extras that are NOT in Extra go here; everything else prefers Extra/Flatpak.
 
 yay-bin
-vicinae
+vicinae-bin
 tabby-bin
-# NOTE: tabby-bin (prebuilt) over `tabby` (builds Electron from source).
+# NOTE: *-bin (prebuilt) over source builds. vicinae source's parallel LTO
+# compile OOM-kills cc1plus on <=3G machines (VM smoke Sep 2026); tabby
+# source builds all of Electron. Same prebuilt-over-source rule as yay-bin.
 # quickshell  # NOT here: framework is in Arch Extra (config/packages).
 # noctalia-shell  # OPT-IN v0.2: full shell; v0.1 ships custom shell.qml + plugin host
 # quickshell        # DEFER to v0.2 (themed shell, breaks often)
