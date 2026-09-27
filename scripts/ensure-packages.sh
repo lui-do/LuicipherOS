@@ -36,10 +36,12 @@ if [[ -f "$ROOT/config/packages-arch" ]]; then
     fi
   fi
   if command -v "$AUR_HELPER" &>/dev/null; then
-    # --nocleanmenu/--nodiffmenu/--noeditmenu: with existing build files yay
+    # --nodiffmenu/--noeditmenu/--cleanafter: with existing build files yay
     # stops at interactive menus even under --noconfirm (observed Sep 2026).
+    # NOTE: remove stale build dirs first on repeats; answer any PGP key
+    # import prompt by hand (no safe flag for it).
     # shellcheck disable=SC2046
-    "$AUR_HELPER" -S --needed --noconfirm --nocleanmenu --nodiffmenu --noeditmenu $(filter_list "$ROOT/config/packages-arch")
+    "$AUR_HELPER" -S --needed --noconfirm --nodiffmenu --noeditmenu --cleanafter $(filter_list "$ROOT/config/packages-arch")
   else
     echo "WARN: $AUR_HELPER still missing, skipping AUR"
   fi
