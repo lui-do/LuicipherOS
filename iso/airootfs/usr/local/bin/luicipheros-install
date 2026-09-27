@@ -49,10 +49,19 @@ ensure_creds() {
   command -v python3 &>/dev/null || { echo "FAIL: python3 missing, cannot write creds"; exit 1; }
   read -r -p "sudo username [luci]: " LUCI_USER
   LUCI_USER="${LUCI_USER:-luci}"
-  read -r -s -p "password for $LUCI_USER: " LUCI_PW; echo ""
-  [[ -n "$LUCI_PW" ]] || { echo "FAIL: empty password"; exit 1; }
-  read -r -s -p "password for root: " ROOT_PW; echo ""
-  [[ -n "$ROOT_PW" ]] || { echo "FAIL: empty password"; exit 1; }
+  ask_pw_twice() { # $1 = label, prints password to stdout; retries on mismatch
+    local label="$1" a b
+    while true; do
+      read -r -s -p "password for $label: " a; echo ""
+      [[ -n "$a" ]] || { echo "empty password, try again"; continue; }
+      read -r -s -p "confirm password for $label: " b; echo ""
+      [[ "$a" == "$b" ]] || { echo "mismatch, try again"; continue; }
+      printf '%s' "$a"
+      return 0
+    done
+  }
+  LUCI_PW="$(ask_pw_twice "$LUCI_USER")"
+  ROOT_PW="$(ask_pw_twice root)"
   export LUCI_USER LUCI_PW ROOT_PW
   python3 - <<'EOF'
 import json, os, subprocess
