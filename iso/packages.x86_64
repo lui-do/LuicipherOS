@@ -19,6 +19,8 @@ python
 sudo
 nano
 vim
+openssh
+# ^ sshd for host->guest access (slirp hostfwd); not needed by installer.
 syslinux
 networkmanager
 iwd
