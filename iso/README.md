@@ -40,6 +40,8 @@ cp iso/airootfs/usr/local/bin/luicipheros-install /usr/local/bin/luicipheros-ins
 luicipheros-install --vm
 ```
 
+## Layout
+
 ```
 iso/profiledef.sh              archiso profile (releng-based, UEFI+BIOS boot)
 iso/packages.x86_64            live-env only: archinstall, git, network, disk tools
