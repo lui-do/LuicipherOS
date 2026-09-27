@@ -7,6 +7,9 @@
 linux
 mkinitcpio-archiso
 systemd-sysvcompat
+archlinux-keyring
+# ^ provides the wkd-sync timer+service archinstall waits on. Without it
+# the install hangs forever at keyring sync with no process to blame.
 # ^ provides /usr/bin/{init,halt,reboot,poweroff,shutdown}. Without it the
 # live env mounts root then bails (/sbin/init missing). Also silences the
 # invalid-symlink noise at initramfs build time. (Verified Sep 2026.)
