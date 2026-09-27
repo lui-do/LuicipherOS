@@ -2,8 +2,10 @@
 # MINIMAL on purpose: just enough to fetch the repo and run archinstall.
 # Everything in config/packages is installed into the TARGET later.
 # NOTE: linux (kernel) is mandatory here — mkarchiso builds the ISO boot
-# images from it.
+# images from it. mkinitcpio-archiso provides the live-boot hooks; without
+# it the ISO drops to emergency mode (gpt-auto-root timeout).
 linux
+mkinitcpio-archiso
 archinstall
 git
 python
