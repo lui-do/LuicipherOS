@@ -18,7 +18,8 @@ for a in "$@"; do
 done
 
 REPO_URL="https://github.com/lui-do/LuicipherOS.git"
-WORK="$HOME/luicipheros-install"
+# Override with LUICI_WORK=path to reuse an existing clone (e.g. ~/LuicipherOS).
+WORK="${LUICI_WORK:-$HOME/luicipheros-install}"
 
 echo "==> LuicipherOS netinstall (live env: $(uname -r))"
 if [[ -d "$WORK/.git" ]]; then
