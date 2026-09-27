@@ -1,6 +1,9 @@
 # iso/packages.x86_64 — live-env packages for the netinstall ISO.
 # MINIMAL on purpose: just enough to fetch the repo and run archinstall.
 # Everything in config/packages is installed into the TARGET later.
+# NOTE: linux (kernel) is mandatory here — mkarchiso builds the ISO boot
+# images from it.
+linux
 archinstall
 git
 python
