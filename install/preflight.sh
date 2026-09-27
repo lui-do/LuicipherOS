@@ -39,7 +39,16 @@ else
 fi
 
 echo "--- network ---"
-if ping -c1 -W3 archlinux.org &>/dev/null || ping -c1 -W3 1.1.1.1 &>/dev/null; then
+net_ok() {
+  if command -v ping &>/dev/null; then
+    ping -c1 -W3 archlinux.org &>/dev/null || ping -c1 -W3 1.1.1.1 &>/dev/null
+  elif command -v curl &>/dev/null; then
+    curl -sI -m 8 https://archlinux.org &>/dev/null
+  else
+    (echo > /dev/tcp/archlinux.org/443) &>/dev/null
+  fi
+}
+if net_ok; then
   pass "network reachable"
 else
   fail "no network — archinstall + bootstrap need internet"

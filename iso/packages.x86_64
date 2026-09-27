@@ -23,6 +23,7 @@ wireless_tools
 wpa_supplicant
 smartmontools
 usbutils
+iputils
 pciutils
 efibootmgr
 dosfstools
