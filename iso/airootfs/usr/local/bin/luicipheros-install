@@ -39,8 +39,38 @@ fi
 echo ""
 echo "==> EDIT-ME before install (in another TTY or now):"
 echo "    $WORK/install/archinstall-desktop.json  (device, btrfs GiB size, hostname)"
-echo "    creds: openssl passwd -6 'pw' -> /tmp/creds.json (see creds.example.json)"
 echo "    lsblk disks: $(lsblk -d -n -o NAME,SIZE | tr '\n' ' ')"
+ensure_creds() {
+  # Interactive first-boot users: sudo user + root password -> /tmp/creds.json.
+  # Extra users are added later inside the installed OS, not here.
+  [[ -f /tmp/creds.json ]] && return 0
+  command -v openssl &>/dev/null || { echo "FAIL: openssl missing, cannot hash passwords"; exit 1; }
+  command -v python3 &>/dev/null || { echo "FAIL: python3 missing, cannot write creds"; exit 1; }
+  read -r -p "sudo username [luci]: " LUCI_USER
+  LUCI_USER="${LUCI_USER:-luci}"
+  read -r -s -p "password for $LUCI_USER: " LUCI_PW; echo ""
+  [[ -n "$LUCI_PW" ]] || { echo "FAIL: empty password"; exit 1; }
+  read -r -s -p "password for root: " ROOT_PW; echo ""
+  [[ -n "$ROOT_PW" ]] || { echo "FAIL: empty password"; exit 1; }
+  export LUCI_USER LUCI_PW ROOT_PW
+  python3 - <<'EOF'
+import json, os, subprocess
+def h(pw):
+    return subprocess.run(
+        ["openssl", "passwd", "-6", pw],
+        capture_output=True, text=True, check=True).stdout.strip()
+d = {"users": [{"sudo": True,
+                "username": os.environ["LUCI_USER"],
+                "enc_password": h(os.environ["LUCI_PW"])}],
+     "root_enc_password": h(os.environ["ROOT_PW"])}
+with open("/tmp/creds.json", "w") as f:
+    json.dump(d, f, indent=2)
+EOF
+  unset LUCI_PW ROOT_PW
+  chmod 600 /tmp/creds.json
+  python3 -m json.tool /tmp/creds.json > /dev/null && echo "==> creds written to /tmp/creds.json"
+}
+ensure_creds
 if [[ "$YES" == false ]]; then
   read -r -p "Run archinstall now? [y/N] " ans
   [[ "$ans" == "y" || "$ans" == "Y" ]] || { echo "aborted (repo kept at $WORK)"; exit 1; }
