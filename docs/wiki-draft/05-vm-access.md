@@ -30,10 +30,26 @@ ssh -p 2223 <guest-user>@127.0.0.1
 
 ## Alternative: inbound forward (needs VM restart)
 
-`qemu:commandline` with `-net user,hostfwd=tcp::2222-:22` sort of works
-but adds a SECOND slirp stack beside libvirt's own — we observed TCP
-connects with no SSH banner (forward lands nowhere). Prefer the reverse
-tunnel; if you must do inbound, remove the hack afterwards.
+When compute virsh is unavailable, virt-manager's XML editor does the job.
+VM must be **shut off** first:
+
+1. Hardware details → XML tab.
+2. Opening tag: `<domain type='kvm'>` →
+   `<domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>`
+3. Before closing `</domain>`, insert:
+   ```xml
+   <qemu:commandline>
+     <qemu:arg value='-net'/>
+     <qemu:arg value='user,hostfwd=tcp::2222-:22'/>
+   </qemu:commandline>
+   ```
+4. Apply → boot. Guest: `passwd` + `systemctl start sshd`.
+   Host: `ssh -o StrictHostKeyChecking=no -p 2222 root@127.0.0.1`.
+
+CAVEAT (observed Sep 2026): the extra `-net` adds a second slirp stack
+beside libvirt's own — TCP connects but no SSH banner arrived (forward
+lands nowhere; guest may show two NICs). Prefer the reverse tunnel;
+remove this block after use.
 
 ## Faster next time: bake it in
 
