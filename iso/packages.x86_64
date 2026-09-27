@@ -25,6 +25,10 @@ smartmontools
 usbutils
 iputils
 pciutils
+reflector
+# ^ refreshes the live mirrorlist on boot (official-ISO behavior).
+# Without it the live env inherits a stale all-commented mirrorlist
+# (pacman: no servers configured).
 efibootmgr
 dosfstools
 btrfs-progs
