@@ -19,6 +19,8 @@ python
 sudo
 nano
 vim
+terminus-font
+# ^ live TTY font (ter-v16n via vconsole.conf): : vs ; distinguishable.
 openssh
 # ^ sshd for host->guest access (slirp hostfwd); not needed by installer.
 syslinux

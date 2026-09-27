@@ -38,9 +38,17 @@ else
 fi
 
 echo ""
-echo "==> EDIT-ME before install (in another TTY or now):"
-echo "    $WORK/install/archinstall-desktop.json  (device, btrfs GiB size, hostname)"
+echo "==> EDIT-ME check (hostname/btrfs size still manual; device is automatic):"
+echo "    $WORK/install/archinstall-desktop.json"
 echo "    lsblk disks: $(lsblk -d -n -o NAME,SIZE | tr '\n' ' ')"
+# Device select: --vm -> /dev/vda, otherwise the target default.
+# Written to a COPY (/tmp/...): the repo JSON is never mutated, so `git pull`
+# stays clean. (Full lsblk picker is issue #2.)
+TARGET_DEV="/dev/nvme0n1"
+if [[ "$VM" == true ]]; then TARGET_DEV="/dev/vda"; fi
+export TARGET_DEV WORK
+python3 -c 'import json,os; p=os.environ["WORK"]+"/install/archinstall-desktop.json"; d=json.load(open(p)); d["disk_config"]["device_modifications"][0]["device"]=os.environ["TARGET_DEV"]; json.dump(d,open("/tmp/luicipheros-archinstall.json","w"),indent=2)'
+echo "==> install device: $TARGET_DEV (via /tmp/luicipheros-archinstall.json)"
 ensure_creds() {
   # Interactive first-boot users: sudo user + root password -> /tmp/creds.json.
   # Extra users are added later inside the installed OS, not here.
@@ -104,7 +112,7 @@ fi
 
 # NOTE: --skip-wkd: the wkd-sync wait hangs in minimal live envs without the
 # timer unit (and crawls through slirp even with it). ISO keys are build-fresh.
-archinstall --config "$WORK/install/archinstall-desktop.json" --creds /tmp/creds.json --skip-wkd
+archinstall --config /tmp/luicipheros-archinstall.json --creds /tmp/creds.json --skip-wkd
 
 echo ""
 echo "==> base installed. Next:"
