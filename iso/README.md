@@ -35,7 +35,7 @@ First ISO boot that reaches `archinstall` = ISO smoke PASS.
 time. Repo fixes reach it via the clone, not automatically:
 
 ```bash
-cd ~/luicipheros-install && git pull
+cd ~/LuicipherOS && git pull
 cp iso/airootfs/usr/local/bin/luicipheros-install /usr/local/bin/luicipheros-install
 luicipheros-install --vm
 ```
