@@ -11,6 +11,9 @@ and stale within weeks).
 ```bash
 sudo pacman -S --needed archiso
 cp /etc/pacman.conf iso/pacman.conf   # host mirror pool, not shipped (rots)
+# bootloader configs come from the LOCAL archiso (version-matched, not shipped):
+cp -r /usr/share/archiso/configs/releng/syslinux iso/syslinux
+cp -r /usr/share/archiso/configs/releng/efiboot iso/efiboot
 sudo mkarchiso -v -w /tmp/luici-iso-tmp -o out/ iso/
 # artifact: out/luicipheros-netinstall-*.iso — flash with dd/Etcher/Ventoy
 ```

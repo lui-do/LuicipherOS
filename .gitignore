@@ -1,3 +1,5 @@
 # build artifacts, never commit
 iso/pacman.conf
+iso/syslinux
+iso/efiboot
 out/
