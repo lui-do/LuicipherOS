@@ -6,6 +6,10 @@
 # it the ISO drops to emergency mode (gpt-auto-root timeout).
 linux
 mkinitcpio-archiso
+systemd-sysvcompat
+# ^ provides /usr/bin/{init,halt,reboot,poweroff,shutdown}. Without it the
+# live env mounts root then bails (/sbin/init missing). Also silences the
+# invalid-symlink noise at initramfs build time. (Verified Sep 2026.)
 archinstall
 git
 python
