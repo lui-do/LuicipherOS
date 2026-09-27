@@ -33,7 +33,7 @@ archinstall --config install/archinstall-desktop.json --creds /tmp/creds.json
 ./scripts/sync.sh --prune --dry-run
 ```
 
-PASS = reboot reaches Hyprland (uwsm), SUPER+Return opens Tabby,
+PASS = reboot reaches Hyprland (uwsm), SUPER+T opens Tabby,
 SUPER+Space opens Vicinae (or fuzzel fallback), Quickshell bar + swaync visible.
 
 ## 2. Target machine (Ryzen 9600X + B650E-PLUS WIFI + RX 7900 XT)

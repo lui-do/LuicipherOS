@@ -1,5 +1,5 @@
 -- lua/binds.lua — all keybindings. Locked: SUPER+Space Vicinae,
--- SUPER+Return Tabby, SUPER 1-9 workspaces, Print -> Gradia.
+-- SUPER+T Tabby, SUPER 1-9 workspaces, Print -> Gradia.
 local mainMod = "SUPER"
 
 -- --- apps (locked: SUPER+T Tabby, SUPER+Space Vicinae) ---
