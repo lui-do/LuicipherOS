@@ -71,6 +71,22 @@ EOF
   python3 -m json.tool /tmp/creds.json > /dev/null && echo "==> creds written to /tmp/creds.json"
 }
 ensure_creds
+ensure_keyring() {
+  # Fresh live boots start with NO keyring (or a broken one): without this,
+  # every pacman/archinstall run dies with keyring errors. Idempotent:
+  # healthy keyrings (>=3 master keys) are left alone.
+  local count=0
+  count=$(pacman-key --list-keys 2>/dev/null | grep -c '^pub' || true)
+  if [[ "$count" -ge 3 ]]; then return 0; fi
+  echo "==> (re)building live keyring ($count keys found, need >=3)"
+  rm -rf /etc/pacman.d/gnupg
+  pacman-key --init
+  pacman-key --populate archlinux
+  count=$(pacman-key --list-keys 2>/dev/null | grep -c '^pub' || true)
+  [[ "$count" -ge 3 ]] || { echo "FAIL: keyring still unhealthy ($count keys)"; exit 1; }
+  echo "==> keyring OK ($count keys)"
+}
+ensure_keyring
 if [[ "$YES" == false ]]; then
   read -r -p "Run archinstall now? [y/N] " ans
   [[ "$ans" == "y" || "$ans" == "Y" ]] || { echo "aborted (repo kept at $WORK)"; exit 1; }
