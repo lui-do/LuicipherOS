@@ -29,7 +29,16 @@ luicipheros-install --vm
 Expect: preflight PASS -> EDIT-ME pointers -> archinstall runs the JSON.
 First ISO boot that reaches `archinstall` = ISO smoke PASS.
 
-## Layout
+## Live-session note (script fixes without rebuilding)
+
+`/usr/local/bin/luicipheros-install` on the booted ISO is frozen at build
+time. Repo fixes reach it via the clone, not automatically:
+
+```bash
+cd ~/luicipheros-install && git pull
+cp iso/airootfs/usr/local/bin/luicipheros-install /usr/local/bin/luicipheros-install
+luicipheros-install --vm
+```
 
 ```
 iso/profiledef.sh              archiso profile (releng-based, UEFI+BIOS boot)
