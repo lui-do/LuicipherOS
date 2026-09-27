@@ -76,7 +76,9 @@ if [[ "$YES" == false ]]; then
   [[ "$ans" == "y" || "$ans" == "Y" ]] || { echo "aborted (repo kept at $WORK)"; exit 1; }
 fi
 
-archinstall --config "$WORK/install/archinstall-desktop.json" --creds /tmp/creds.json
+# NOTE: --skip-wkd: the wkd-sync wait hangs in minimal live envs without the
+# timer unit (and crawls through slirp even with it). ISO keys are build-fresh.
+archinstall --config "$WORK/install/archinstall-desktop.json" --creds /tmp/creds.json --skip-wkd
 
 echo ""
 echo "==> base installed. Next:"
