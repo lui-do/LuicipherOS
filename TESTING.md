@@ -6,6 +6,15 @@
 > sector_size object, no Percent unit (55 GiB), esp flag, multilib,
 > dropped repo-dead pkgs, yay bootstrap, boot-chain protected pkgs,
 > no shipped tabby config, dwindle:pseudotile removed. Remaining: target.
+>
+> ISO-loop 2026-09-28: PASS. Own netinstall image -> live boot ->
+> luicipheros-install -> archinstall (2m19s) -> bootstrap -> desktop,
+> same five points green. ISO field fixes: linux + mkinitcpio-archiso +
+> systemd-sysvcompat + archlinux-keyring + reflector + openssh + iputils
+> + pciutils + terminus-font in live env; releng mkinitcpio drop-in +
+> autologin + NM/reflector units; creds prompt with confirmation;
+> keyring ensure; --skip-wkd; auto device (--vm vda); vicinae-bin;
+> yay v13 flags; stow conflict backup. Remaining: target + publish ISO.
 
 Scope: target machine (Ryzen 5 9600X + ASUS B650E-PLUS WIFI + RX 7900 XT) +
 VM smoke. Compat claim stays limited until target + AMD laptop + Intel
