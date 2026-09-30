@@ -70,6 +70,7 @@ rocminfo | head                    # agents present
 python3 -c "import torch; print(torch.cuda.is_available())"  # expect True (ROCm)
 blender --background --python-expr "import bpy; print(bpy.context.preferences.addons['cycles'].preferences.compute_device_type)"  # HIP
 ollama run llama3.2:3b "1+1"       # ROCm backend serves
+lpstat -p                          # printers (CUPS must; configure via system-config-printer)
 hyprctl version                    # >= 0.55 (native Lua config)
 vicinae --version || vicinae toggle
 quickshell                         # bar renders, no QML errors

@@ -70,6 +70,15 @@ curl
 wget
 unzip
 
+# --- office (printer support is a must; suite choice pending research) ---
+papers
+cups
+cups-filters
+gutenprint
+system-config-printer
+# Suite TBD (OnlyOffice vs LibreOffice vs rest): RAM floor 8G, MS compat,
+# plugins, UI theming — see research task on the tracker.
+
 # --- fonts / theming ---
 ttf-jetbrains-mono-nerd
 noto-fonts

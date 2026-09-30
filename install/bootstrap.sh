@@ -114,6 +114,7 @@ log "enabling services (manual-only sync: no auto-sync units installed)"
 sudo systemctl enable NetworkManager 2>/dev/null || echo "  (NetworkManager enable skipped/failed)"
 sudo systemctl enable bluetooth 2>/dev/null || echo "  (bluetooth enable skipped — harmless on desktops without BT)"
 sudo systemctl enable power-profiles-daemon 2>/dev/null || echo "  (power-profiles-daemon enable skipped)"
+sudo systemctl enable cups.socket 2>/dev/null || echo "  (cups enable skipped)"
 # user dirs + portals sanity
 command -v xdg-user-dirs-update &>/dev/null && xdg-user-dirs-update || true
 
