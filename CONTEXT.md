@@ -28,6 +28,10 @@ Glossary only. No implementation details.
 
 ## Open for v0.2
 
+- screenshot tool choice: grim->Gradia (current default) vs Hyprland
+  HyprCapture trial (see docs/hyprcapture-trial.md) — user judges by feel
+- screen recording: user choice, self-installed (OpenScreen Recorder),
+  never default (anti-bloat)
 - shell workspaces widget, tray, NotificationServer center (then drop swaync)
 - swaync CSS theme (only if still kept)
 - hardware profiles, Hyprland Lua monitor overrides
