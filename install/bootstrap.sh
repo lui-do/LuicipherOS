@@ -34,7 +34,7 @@ while [[ $i -lt $# ]]; do
   i=$((i+1))
 done
 
-STOW_PKGS=(hypr quickshell swaync tabby fuzzel vicinae uwsm xdg)
+STOW_PKGS=(hypr quickshell swaync tabby fuzzel vicinae uwsm xdg termfilechooser)
 
 log() { echo "==> $1"; }
 need_cmd() { command -v "$1" &>/dev/null || { echo "FAIL: missing command: $1"; exit 1; }; }
@@ -115,6 +115,11 @@ sudo systemctl enable NetworkManager 2>/dev/null || echo "  (NetworkManager enab
 sudo systemctl enable bluetooth 2>/dev/null || echo "  (bluetooth enable skipped — harmless on desktops without BT)"
 sudo systemctl enable power-profiles-daemon 2>/dev/null || echo "  (power-profiles-daemon enable skipped)"
 sudo systemctl enable cups.socket 2>/dev/null || echo "  (cups enable skipped)"
+# greetd config is root-owned (NOT stowable): deploy from template + enable.
+if [[ -f "$ROOT/install/greetd-config.toml" ]]; then
+  sudo install -Dm644 "$ROOT/install/greetd-config.toml" /etc/greetd/config.toml
+  sudo systemctl enable greetd 2>/dev/null || echo "  (greetd enable skipped)"
+fi
 # user dirs + portals sanity
 command -v xdg-user-dirs-update &>/dev/null && xdg-user-dirs-update || true
 

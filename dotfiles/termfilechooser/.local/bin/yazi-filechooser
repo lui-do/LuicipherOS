@@ -1,0 +1,31 @@
+#!/usr/bin/env sh
+# yazi-wrapper.sh — invoked by xdg-desktop-portal-termfilechooser.
+# (Adapted from the hunkyburrito fork's contrib wrapper.)
+# Args: multiple directory save path out [debug]. Terminal comes from
+# $TERMCMD (default: tabby); VERIFY `tabby -e` on target (TESTING.md).
+set -e
+multiple="$1" directory="$2" save="$3" path="$4" out="$5"
+cmd="yazi"
+termcmd="${TERMCMD:-tabby -e}"
+if [ "$save" = "1" ]; then
+  # save a file
+  set -- --chooser-file="$out" "$path"
+elif [ "$directory" = "1" ]; then
+  # upload files from a directory
+  set -- --chooser-file="$out" --cwd-file="$out" "$path"
+elif [ "$multiple" = "1" ]; then
+  # upload multiple files
+  set -- --chooser-file="$out" "$path"
+else
+  # upload only 1 file
+  set -- --chooser-file="$out" "$path"
+fi
+command="$termcmd $cmd"
+for arg in "$@"; do
+  # escape double quotes
+  escaped=$(printf '%s' "$arg" | sed 's/"/\\"/g')
+  # shellcheck disable=SC2089
+  command="$command \"$escaped\""
+done
+# shellcheck disable=SC2090
+sh -c "$command"

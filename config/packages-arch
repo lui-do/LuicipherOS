@@ -7,6 +7,13 @@
 yay-bin
 vicinae-bin
 tabby-bin
+helium-browser-bin
+# ^ default browser (Helium only; no Firefox anywhere). AUR page documents a
+# manual PGP key import on first install: answer Y by hand, no safe flag.
+# Source-build helium-browser is broken/outdated — never use it.
+# xdg-desktop-portal-termfilechooser-hunkyburrito-git  # OPT-IN file picker
+# (yazi wrapper shipped in dotfiles/termfilechooser). VERIFY name on target:
+# archived upstream, -git fork. Default stays GTK until proven.
 # NOTE: *-bin (prebuilt) over source builds. vicinae source's parallel LTO
 # compile OOM-kills cc1plus on <=3G machines (VM smoke Sep 2026); tabby
 # source builds all of Electron. Same prebuilt-over-source rule as yay-bin.
@@ -17,6 +24,9 @@ tabby-bin
 # matugen           # DEFER, theming engine
 # awww              # ML4W wallpaper daemon successor to swww, decide in grill
 # protonup-qt       # gaming helper, decide in grill (or flatpak?)
+# hyprcapture?      # HOLD: real (plugin+Qt overlay, region/window/full +
+# recording, wiki-listed) but ABI-pinned to Hyprland + young (May 2026).
+# Current grim+slurp->Gradia is proven; revisit for RECORDING needs only.
 # helium-browser-bin  # VERIFY on target (yay -Ss) before enabling: default
 # browser switchover (Firefox stays until then). UI defaults/shortcuts/plugins
 # pass lands after, via Chromium policies + extension force-install.

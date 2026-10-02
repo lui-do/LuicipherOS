@@ -1,0 +1,4 @@
+# Opt-in yazi file picker (portal backend). See `config` in this dir.
+# Default stays GTK until this path is proven on target (backend is an
+# archived-upstream -git fork: fine to try, wrong to default to).
+# Flip: hyprland-portals.conf FileChooser, restart the portal, zenity test.

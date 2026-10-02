@@ -1,6 +1,7 @@
 # config/flatpaks-system.list — system-wide Flatpaks (shared OS feel, needs sudo)
 # FORMAT: <remote> <app-id> [branch]. Add -> install system-wide, remove -> prune removes.
-# Put here: browsers, media, Blender, OBS — apps every user on the machine should have.
-flathub org.mozilla.firefox stable
+# Put here: media, Blender, OBS — apps every user on the machine should have.
+# NOTE: NO Firefox (Helium is the only browser, via AUR helium-browser-bin).
+# Upstream refuses Flatpak (Chromium sandbox); no flatpak exists.
 flathub org.blender.Blender stable
 flathub com.obsproject.Studio stable

@@ -1,0 +1,9 @@
+# /etc/greetd/config.toml — graphical login (greetd + tuigreet, no DE baggage).
+# Installed by install/bootstrap.sh (root-owned, NOT stowable). TTYs 2-6 keep
+# plain logins as fallback. Session launches through uwsm like the TTY path.
+[terminal]
+vt = 1
+
+[default_session]
+command = "tuigreet --time --remember --cmd 'uwsm start hyprland'"
+user = "greeter"

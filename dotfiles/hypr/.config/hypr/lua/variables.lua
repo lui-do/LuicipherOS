@@ -2,5 +2,5 @@
 terminal    = "tabby"
 fileManager = "yazi"
 menu        = "vicinae toggle || fuzzel"
-browser     = "firefox"
+browser     = "helium-browser"
 shotDir     = "~/Pictures/Screenshots"

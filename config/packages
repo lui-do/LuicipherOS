@@ -91,6 +91,15 @@ noto-fonts
 noto-fonts-emoji
 nwg-look
 
+# --- login (greetd + tuigreet; TTYs stay as fallback) ---
+greetd
+tuigreet
+
+# --- STT plumbing (app choice open: shortlist vocalinux vs Handy on target) ---
+wtype
+# Wayland text injection every STT app needs. Decide the app on hardware
+# (mic + ROCm present): vocalinux (AUR, AMD Vulkan) vs Handy (open, offline).
+
 # --- AMD GPU stack for target desktop (RX 7900 XT gfx1100) ---
 mesa
 lib32-mesa

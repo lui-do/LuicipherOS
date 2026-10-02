@@ -1,0 +1,11 @@
+# DORMANT opt-in: yazi as the portal file picker (uploads/downloads).
+# The default stays GTK (reliable for Slack today). To switch:
+#   1. yay -S xdg-desktop-portal-termfilechooser-hunkyburrito-git
+#      (AUR -git, original archived; VERIFY name still current: yay -Ss)
+#   2. Ensure ~/.local/bin is on PATH (uwsm env already prepends it).
+#   3. In dotfiles/xdg hyprland-portals.conf: FileChooser gtk -> termfilechooser
+#   4. systemctl --user restart xdg-desktop-portal; test: zenity --file-selection
+# This config file selects the wrapper above. See README.md in this dir.
+[filechooser]
+cmd=yazi-filechooser
+default_dir=$HOME/Downloads
