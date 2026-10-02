@@ -10,7 +10,8 @@ tabby-bin
 helium-browser-bin
 # ^ default browser (Helium only; no Firefox anywhere). AUR page documents a
 # manual PGP key import on first install: answer Y by hand, no safe flag.
-# Source-build helium-browser is broken/outdated — never use it.
+# Source-build helium-browser is broken/outdated — never use it. Upstream
+# AppImage is the fallback if -bin lags (manual updates, untracked by sync).
 # xdg-desktop-portal-termfilechooser-hunkyburrito-git  # OPT-IN file picker
 # (yazi wrapper shipped in dotfiles/termfilechooser). VERIFY name on target:
 # archived upstream, -git fork. Default stays GTK until proven.
