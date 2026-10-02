@@ -72,6 +72,12 @@ unzip
 
 # --- office (printer support is a must; suite choice pending research) ---
 papers
+libreoffice-fresh
+ttf-caladea
+ttf-carlito
+# ^ metric-compatible Cambria/Calibri stand-ins: the #1 OOXML layout fix.
+# MS core fonts (Arial/Times/Verdana): AUR ttf-ms-fonts — VERIFY on target
+# (yay -Ss) before adding; Aptos: check AUR ttf-aptos same way. TDF tip.
 cups
 cups-filters
 gutenprint
