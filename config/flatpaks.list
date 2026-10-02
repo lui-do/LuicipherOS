@@ -7,7 +7,7 @@
 # - Do NOT put here: Hyprland, portals, lock, drivers (must stay pacman, PAM/GL traps, see ADR-0001).
 
 # <remote> <app-id> [branch]
-flathub org.mozilla.firefox stable
+# NOTE: legacy file, system scope. Firefox REMOVED (Helium only now).
 flathub md.obsidian.Obsidian stable
 flathub com.obsproject.Studio stable
 flathub org.blender.Blender stable
