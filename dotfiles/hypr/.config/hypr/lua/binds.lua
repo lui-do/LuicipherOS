@@ -33,12 +33,14 @@ hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen())
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 
--- --- screenshots: region -> file -> Gradia editor; SUPER+S -> clipboard ---
+-- --- screenshots: region -> file -> Gradia editor; window variant; SUPER+S -> clipboard ---
 hl.bind("Print", hl.dsp.exec_cmd(
     "mkdir -p " .. shotDir .. " && f=" .. shotDir .. "/shot-$(date +%Y%m%d-%H%M%S).png"
     .. " && grim -g \"$(slurp)\" \"$f\" && gradia \"$f\""
 ))
+hl.bind(mainMod .. " + SHIFT + Print", hl.dsp.exec_cmd("screenshot-window.sh"))
 hl.bind(mainMod .. " + S", hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
+-- full webpage capture = browser DevTools (Helium), not an OS bind.
 
 -- --- media / brightness ---
 hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })

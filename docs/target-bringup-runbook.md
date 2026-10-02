@@ -77,6 +77,11 @@ SUPER+N swaync, Print region -> Gradia editor.
 ROCm: `rocminfo`, `python3 -c "import torch; print(torch.cuda.is_available())"`
 expect True, Blender HIP device, `ollama run llama3.2:3b "1+1"`.
 Office: `lpstat -p`, LibreOffice opens a .docx.
+Portals (Flatpak file upload): from a Flatpak app (e.g. Slack), attach a
+file — the GTK file dialog MUST open. If not: `XDG_CURRENT_DESKTOP`
+should be `Hyprland`, and `systemctl --user status xdg-desktop-portal*`
+must show the hyprland + gtk backends. (yazi can NOT serve upload
+dialogs — portal picker only; yazi stays the keyboard file manager.)
 Fonts: `yay -Ss ttf-ms-fonts ttf-aptos` -> add winners to lists.
 
 Green across = close issue #1.

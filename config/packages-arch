@@ -17,3 +17,6 @@ tabby-bin
 # matugen           # DEFER, theming engine
 # awww              # ML4W wallpaper daemon successor to swww, decide in grill
 # protonup-qt       # gaming helper, decide in grill (or flatpak?)
+# helium-browser-bin  # VERIFY on target (yay -Ss) before enabling: default
+# browser switchover (Firefox stays until then). UI defaults/shortcuts/plugins
+# pass lands after, via Chromium policies + extension force-install.
