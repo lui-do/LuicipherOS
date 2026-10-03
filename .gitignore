@@ -3,3 +3,4 @@ iso/pacman.conf
 iso/syslinux
 iso/efiboot
 out/
+screenshotVM/
