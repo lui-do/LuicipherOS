@@ -22,6 +22,28 @@ REPO_URL="https://github.com/lui-do/LuicipherOS.git"
 WORK="${LUICI_WORK:-$HOME/LuicipherOS}"
 
 echo "==> LuicipherOS netinstall (live env: $(uname -r))"
+ensure_dns() {
+  # Live resolvers break in the wild (slirp gateway DNS ignored, stale
+  # resolv.conf, IPv6-only answers). Self-heal BEFORE anything needs names:
+  # if the default route's gateway answers DNS, pin the uplink to it.
+  getent hosts archlinux.org &>/dev/null && return 0
+  echo "==> DNS broken, attempting repair via default-route gateway"
+  local gw iface
+  gw=$(ip route show default 2>/dev/null | awk '{print $3}' | head -1)
+  iface=$(ip route show default 2>/dev/null | awk '{print $5}' | head -1)
+  [[ -n "$gw" && -n "$iface" ]] || { echo "FAIL: no default route"; exit 1; }
+  if command -v resolvectl &>/dev/null; then
+    resolvectl dns "$iface" "$gw"
+    systemctl restart systemd-resolved 2>/dev/null || true
+    sleep 3
+  else
+    printf 'nameserver %s\n' "$gw" > /etc/resolv.conf
+  fi
+  getent hosts archlinux.org &>/dev/null \
+    || { echo "FAIL: DNS still broken (tried gateway $gw)"; exit 1; }
+  echo "==> DNS OK via $gw"
+}
+ensure_dns
 if [[ -d "$WORK/.git" ]]; then
   echo "==> updating existing checkout"
   git -C "$WORK" pull --ff-only
