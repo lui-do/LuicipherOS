@@ -9,7 +9,10 @@
 >
 > ISO-loop 2026-09-28: PASS. Own netinstall image -> live boot ->
 > luicipheros-install -> archinstall (2m19s) -> bootstrap -> desktop,
-> same five points green. ISO field fixes: linux + mkinitcpio-archiso +
+> same five points green. Re-verified Oct 2026 on fresh Oct-02 artifact:
+> autologin, Terminus, device auto-select, password confirmation, greetd
+> login, Helium, GTK portal picker (Ctrl+O) all green. TUI picker
+> (termfilechooser+yazi) stays opt-in until proven on target. ISO field fixes: linux + mkinitcpio-archiso +
 > systemd-sysvcompat + archlinux-keyring + reflector + openssh + iputils
 > + pciutils + terminus-font in live env; releng mkinitcpio drop-in +
 > autologin + NM/reflector units; creds prompt with confirmation;
