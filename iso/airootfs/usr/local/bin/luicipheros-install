@@ -80,12 +80,16 @@ ensure_creds() {
   read -r -p "sudo username [luci]: " LUCI_USER
   LUCI_USER="${LUCI_USER:-luci}"
   ask_pw_twice() { # $1 = label, prints password to stdout; retries on mismatch
+    # NOTE: this runs inside $(...) so EVERYTHING except the final password
+    # must go to stderr. A single `echo` to stdout lands inside the password
+    # (hash of "\n\n<typed>" != typed at login). That bug locked out two
+    # installs before the one-line prompt gave it away (Oct 2026).
     local label="$1" a b
     while true; do
-      read -r -s -p "password for $label: " a; echo ""
-      [[ -n "$a" ]] || { echo "empty password, try again"; continue; }
-      read -r -s -p "confirm password for $label: " b; echo ""
-      [[ "$a" == "$b" ]] || { echo "mismatch, try again"; continue; }
+      read -r -s -p "password for $label: " a; echo "" >&2
+      [[ -n "$a" ]] || { echo "empty password, try again" >&2; continue; }
+      read -r -s -p "confirm password for $label: " b; echo "" >&2
+      [[ "$a" == "$b" ]] || { echo "mismatch, try again" >&2; continue; }
       printf '%s' "$a"
       return 0
     done
