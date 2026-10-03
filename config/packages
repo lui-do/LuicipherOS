@@ -86,6 +86,8 @@ system-config-printer
 # plugins, UI theming — see research task on the tracker.
 
 # --- fonts / theming ---
+terminus-font
+# ^ TTY font (ter-v16n via /etc/vconsole.conf deployed by bootstrap).
 ttf-jetbrains-mono-nerd
 noto-fonts
 noto-fonts-emoji

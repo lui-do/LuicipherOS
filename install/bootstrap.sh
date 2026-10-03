@@ -120,6 +120,10 @@ if [[ -f "$ROOT/install/greetd-config.toml" ]]; then
   sudo install -Dm644 "$ROOT/install/greetd-config.toml" /etc/greetd/config.toml
   sudo systemctl enable greetd 2>/dev/null || echo "  (greetd enable skipped)"
 fi
+# console font is root-owned too: deploy alongside.
+if [[ -f "$ROOT/install/vconsole.conf" ]]; then
+  sudo install -Dm644 "$ROOT/install/vconsole.conf" /etc/vconsole.conf
+fi
 # user dirs + portals sanity
 command -v xdg-user-dirs-update &>/dev/null && xdg-user-dirs-update || true
 
