@@ -95,7 +95,7 @@ nwg-look
 
 # --- login (greetd + tuigreet; TTYs stay as fallback) ---
 greetd
-tuigreet
+greetd-tuigreet
 
 # --- STT plumbing (app choice open: shortlist vocalinux vs Handy on target) ---
 wtype
