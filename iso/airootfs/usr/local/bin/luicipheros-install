@@ -131,6 +131,8 @@ ensure_keyring() {
   echo "==> keyring OK ($count keys)"
 }
 ensure_keyring
+echo "==> verifying mirror sync (archinstall inherits this mirrorlist)"
+pacman -Syy || { echo "FAIL: mirror sync failed — fix /etc/pacman.d/mirrorlist, then re-run"; exit 1; }
 if [[ "$YES" == false ]]; then
   read -r -p "Run archinstall now? [y/N] " ans
   [[ "$ans" == "y" || "$ans" == "Y" ]] || { echo "aborted (repo kept at $WORK)"; exit 1; }
