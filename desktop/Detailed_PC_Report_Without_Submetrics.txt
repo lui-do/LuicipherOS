@@ -1,0 +1,52 @@
+﻿============================================================
+ SYSTEM & MOTHERBOARD INFORMATION
+============================================================
+Manufacturer:  ASUSTeK COMPUTER INC.
+Product/Model: TUF GAMING B650E-PLUS WIFI
+Version:       Rev 1.xx
+BIOS Version:  4004
+BIOS Date:     2026-09-16
+System Type:   x64-based PC
+
+============================================================
+ PROCESSOR (CPU) DETAILS
+============================================================
+Name:           AMD Ryzen 5 9600X 6-Core Processor
+Cores / Threads:6 Cores / 12 Threads
+Base Clock:     3.9 GHz
+Architecture:   AMD64 Family 26 Model 68 Stepping 0
+
+============================================================
+ PHYSICAL MEMORY (RAM) DETAILS
+============================================================
+Slot DIMM 1: 16 GB | Speed: 4800 MT/s | Form: 8 | Manufacturer: Apacer | Part: GD2.5931WT.00J
+Slot DIMM 1: 16 GB | Speed: 4800 MT/s | Form: 8 | Manufacturer: Apacer | Part: GD2.5931WT.00J
+------------------------------------------------------------
+Total System Memory: 32 GB
+
+============================================================
+ STORAGE & DISK DRIVES
+============================================================
+Model:        KINGSTON SNV3S1000G
+Interface:    SCSI
+Media Type:   Fixed hard disk media
+Capacity:     931.51 GB
+Partitions:   3
+-
+Model:        General UDisk USB Device
+Interface:    USB
+Media Type:   Removable Media
+Capacity:     7.5 GB
+Partitions:   1
+-
+============================================================
+ GRAPHICS CARD (GPU) DETAILS
+============================================================
+Name:         AMD Radeon(TM) Graphics
+Driver Ver:   32.0.21045.5002
+Resolution:   x @ Hz
+-
+Name:         AMD Radeon RX 7900 XT
+Driver Ver:   32.0.31041.1004
+Resolution:   3840x2160 @ 60Hz
+-
