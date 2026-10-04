@@ -109,11 +109,11 @@ elif ls /sys/bus/pci/devices/*/resizable_bar &>/dev/null; then
   pass "resizable_bar sysfs node present (check: cat /sys/bus/pci/devices/*/resizable_bar)"
   cat /sys/bus/pci/devices/*/resizable_bar 2>/dev/null || true
 else
-  warn "no resizable_bar node — enable Above-4G Decoding + ReBAR in BIOS (ASUS B650E-PLUS WIFI), then re-check; ROCm/DDIR benefit"
+  warn "no resizable_bar node — enable Above-4G Decoding + ReBAR in BIOS (ASUS TUF GAMING B650E-PLUS WIFI), then re-check; ROCm/DDIR benefit"
 fi
 
 echo "--- BIOS / EXPO checklist (manual, cannot auto-detect reliably) ---"
-echo "  [ ] ASUS B650E-PLUS WIFI BIOS >= mid-2024 AGESA (ComboAM5 PI)"
+echo "  [ ] ASUS TUF GAMING B650E-PLUS WIFI BIOS >= mid-2024 AGESA (ComboAM5 PI)"
 echo "  [ ] EXPO enabled for RAM kit (verify: dmidecode -t memory | grep -i mt/s)"
 echo "  [ ] Above-4G Decoding + ReBAR enabled"
 echo "  [ ] 2x separate PCIe 8-pin cables to GPU (no daisy-chain pigtail)"

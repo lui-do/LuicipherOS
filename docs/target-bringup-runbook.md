@@ -1,4 +1,4 @@
-# Target bring-up runbook — Ryzen 5 9600X + ASUS B650E-PLUS WIFI + RX 7900 XT
+# Target bring-up runbook — Ryzen 5 9600X + ASUS TUF GAMING B650E-PLUS WIFI + RX 7900 XT
 
 From cables to running LuicipherOS. Assumes the install USB holds our
 netinstall ISO (see `iso/README.md`) and the repo is pushed.

@@ -9,7 +9,7 @@ Glossary only. No implementation details.
 - **Sync (luci sync)**: idempotent reconciler in `scripts/sync.sh`. Default = install missing only. `--prune` = also uninstall extras. LOCKED v0.1: manual-only, no auto-sync on boot (grill Q5).
 - **Protected package**: base package never auto-removed (`config/protected-packages`: kernel, firmware, drivers, compositor, networking).
 - **Extra**: explicitly installed package/app not in desired + protected sets. Previewed before prune, never silently removed.
-- **Target machine**: Ryzen 5 9600X + ASUS B650E-PLUS WIFI + RX 7900 XT 20GB. v0.1 is tuned here, tested elsewhere.
+- **Target machine**: Ryzen 5 9600X + ASUS TUF GAMING B650E-PLUS WIFI + RX 7900 XT 20GB. v0.1 is tuned here, tested elsewhere.
 - **Hardware profile**: per-machine overlay (monitors, `AQ_DRM_DEVICES`, power) under `profiles/` (v0.2).
 - **Keyboard-driven shell**: Hyprland (native Lua `hyprland.lua`, 0.55+) + Vicinae (primary, Raycast-like, SUPER+Space) + fuzzel (fallback) + Quickshell custom shell (bar + plugin host) + swaync + Tabby + Gradia screenshots + lock/idle + portals, all SUPER-key first.
 

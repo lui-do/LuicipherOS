@@ -19,7 +19,7 @@
 > keyring ensure; --skip-wkd; auto device (--vm vda); vicinae-bin;
 > yay v13 flags; stow conflict backup. Remaining: target + publish ISO.
 
-Scope: target machine (Ryzen 5 9600X + ASUS B650E-PLUS WIFI + RX 7900 XT) +
+Scope: target machine (Ryzen 5 9600X + ASUS TUF GAMING B650E-PLUS WIFI + RX 7900 XT) +
 VM smoke. Compat claim stays limited until target + AMD laptop + Intel
 laptop + VM all pass (ADR-0001 consequences).
 
