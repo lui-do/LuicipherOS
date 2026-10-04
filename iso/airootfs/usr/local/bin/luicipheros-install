@@ -22,6 +22,27 @@ REPO_URL="https://github.com/lui-do/LuicipherOS.git"
 WORK="${LUICI_WORK:-$HOME/LuicipherOS}"
 
 echo "==> LuicipherOS netinstall (live env: $(uname -r))"
+ensure_link() {
+  # Ethernet is automatic via NetworkManager. WiFi needs SSID + passphrase.
+  echo "Connection type:"
+  echo "  1) Ethernet (automatic)"
+  echo "  2) WiFi"
+  read -r -p "Choose [1/2]: " LINK
+  [[ "$LINK" == "2" ]] || return 0
+  command -v nmcli &>/dev/null || { echo "FAIL: nmcli missing"; exit 1; }
+  command -v rfkill &>/dev/null && rfkill unblock wifi || true
+  echo "==> scanning (5s)..."
+  nmcli device wifi rescan 2>/dev/null || true
+  sleep 5
+  nmcli -f SSID,SIGNAL,SECURITY device wifi list | head -15
+  read -r -p "SSID: " SSID
+  [[ -n "$SSID" ]] || { echo "FAIL: empty SSID"; exit 1; }
+  read -r -s -p "WiFi password: " WPA; echo ""
+  nmcli device wifi connect "$SSID" password "$WPA" \
+    || { echo "FAIL: could not join $SSID (wrong password?)"; exit 1; }
+  echo "==> joined $SSID"
+}
+ensure_link
 ensure_dns() {
   # Live resolvers break in the wild (slirp gateway DNS ignored, stale
   # resolv.conf, IPv6-only answers). Self-heal BEFORE anything needs names:
