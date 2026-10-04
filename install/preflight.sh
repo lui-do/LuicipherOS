@@ -87,7 +87,12 @@ else
   else
     warn "no VGA/3D PCI device listed"
   fi
-  if lspci -nn 2>/dev/null | grep -qi "744c\|7900"; then
+  # NOTE: capture first, grep second (herestring, no pipe). A piped
+  # `lspci | grep -q` under `set -o pipefail` misreports: grep -q exits on
+  # first match, lspci can SIGPIPE on the closed pipe, pipefail turns that
+  # into pipeline failure -> false FAIL on present hardware (Oct 2026).
+  PCI_LIST="$(lspci -nn 2>/dev/null || true)"
+  if grep -qi "744c\|7900" <<<"$PCI_LIST"; then
     pass "RX 7900 XT (744c) PCI ID detected"
   else
     MSG="not RX 7900 XT PCI ID — OK on non-target, FAIL with --target"
