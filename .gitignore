@@ -4,3 +4,4 @@ iso/syslinux
 iso/efiboot
 out/
 screenshotVM/
+docs/*.pdf
