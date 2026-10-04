@@ -19,6 +19,14 @@ for i = 1, 9 do
     hl.bind(mainMod .. " + " .. i,         hl.dsp.focus({ workspace = i }))
     hl.bind(mainMod .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
 end
+-- --- same, for Czech layout (number row types symbols, not digits) ---
+-- Unshifted cz row: + ě š č ř ž ý á í (positions 1-9).
+local czNums = { "plus", "ecaron", "scaron", "ccaron", "rcaron", "zcaron", "yacute", "aacute", "iacute" }
+for i = 1, 9 do
+    hl.bind(mainMod .. " + " .. czNums[i],         hl.dsp.focus({ workspace = i }))
+    hl.bind(mainMod .. " + SHIFT + " .. czNums[i], hl.dsp.window.move({ workspace = i }))
+end
+-- NOTE: Alt+Shift toggles cz/us layout (kb_options in lua/look.lua).
 
 -- --- focus / move (vim keys) ---
 hl.bind(mainMod .. " + H", hl.dsp.focus({ direction = "left" }))

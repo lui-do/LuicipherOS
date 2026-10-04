@@ -37,8 +37,9 @@ hl.config({
     },
 
     input = {
-        kb_layout    = "cz",
-        kb_variant   = "qwerty",
+        kb_layout    = "cz,us",
+        kb_variant   = "qwerty,",
+        kb_options   = "grp:alt_shift_toggle",
         follow_mouse = 1,
         sensitivity  = 0,
         touchpad = {
