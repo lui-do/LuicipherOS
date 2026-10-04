@@ -38,7 +38,8 @@ ensure_link() {
   read -r -p "SSID: " SSID
   [[ -n "$SSID" ]] || { echo "FAIL: empty SSID"; exit 1; }
   read -r -s -p "WiFi password: " WPA; echo ""
-  nmcli device wifi connect "$SSID" password "$WPA" \
+  # --ask: no secret agent in the live env, nmcli must prompt/handle directly.
+  nmcli --ask device wifi connect "$SSID" password "$WPA" \
     || { echo "FAIL: could not join $SSID (wrong password?)"; exit 1; }
   echo "==> joined $SSID"
 }
