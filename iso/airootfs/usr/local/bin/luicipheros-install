@@ -23,6 +23,11 @@ WORK="${LUICI_WORK:-$HOME/LuicipherOS}"
 
 echo "==> LuicipherOS netinstall (live env: $(uname -r))"
 ensure_link() {
+  # Already online (manual nmcli, ethernet autosense)? Skip the question.
+  if getent hosts github.com &>/dev/null; then
+    echo "==> already online, skipping connection setup"
+    return 0
+  fi
   # Ethernet is automatic via NetworkManager. WiFi needs SSID + passphrase.
   echo "Connection type:"
   echo "  1) Ethernet (automatic)"
