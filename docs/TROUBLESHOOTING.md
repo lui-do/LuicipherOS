@@ -3,6 +3,22 @@
 Every entry below happened at least once during VM/ISO smoke (Sep-Oct 2026).
 Deeper background lives in `docs/wiki-draft/04-troubleshooting.md`.
 
+## GPU: amdgpu DMUB cold-boot loop (RX 7900 XT, Oct 2026, CONFIRMED firmware regression)
+
+- Symptom: cold boot hangs in `Error queueing DMUB command: status=2` storm,
+  preceded by `SMU: No response` + `Failed to power gate JPEG/VCN`. Warm
+  reboots boot clean. Failed boots leave NO journal (hang before flush).
+- Eliminated, in order: missing blobs (all present), `pcie_aspm=off` (loops),
+  `amd_iommu=off` (loops), ReBAR off (loops), kernel 7.2 vs LTS 6.18 (both loop).
+- Bisected: `linux-firmware[-amdgpu] 20260916` = bad, `20250708` = clean cold
+  boot. Same family as drm/amd#4737 (SMU crashes, firmware 20251125).
+- Live with it: pin the pair in `/etc/pacman.conf` under `[options]`:
+  `IgnorePkg = linux-firmware linux-firmware-amdgpu`. Unpin after upstream fix.
+- Recovery from a hung boot: hold power 5-10s, unplug + drain 10s, boot menu
+  `e` + `module_blacklist=amdgpu` (framebuffer session, no accel).
+- Upstream draft: `docs/upstream-drm-amd-coldboot-dmub.md` (needs board model
+  + VBIOS to file).
+
 ## Install: archinstall JSON rejected
 
 - `TypeError` in `SectorSize.parse_args` → a `size`/`start` has
