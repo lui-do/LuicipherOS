@@ -126,8 +126,11 @@ if [[ -f "$ROOT/install/vconsole.conf" ]]; then
 fi
 # amdgpu cold-boot race (Navi31): keep driver soft-blacklisted, load late.
 # Template + unit deploy together; APPLIES ONLY where AMD VGA hardware exists
-# (lspci [1002:]), so VMs/Intel/NVIDIA machines are untouched.
-if lspci -nn 2>/dev/null | grep -qi '\[1002:'; then
+# ([1002:] = AMD graphics vendor ID), so VMs/Intel/NVIDIA are untouched.
+# NOTE: capture-then-grep (no `lspci | grep -q` pipe): the ID sorts late in
+# lspci output, grep -q exits early, SIGPIPE + pipefail = false negative.
+AMD_PCI_LIST="$(lspci -nn 2>/dev/null || true)"
+if grep -qi '\[1002:' <<<"$AMD_PCI_LIST"; then
   if ! grep -q "blacklist amdgpu" /etc/modprobe.d/* 2>/dev/null; then
     echo "blacklist amdgpu" | sudo tee /etc/modprobe.d/amdgpu-coldboot.conf > /dev/null
     LATE_REBUILD=true
