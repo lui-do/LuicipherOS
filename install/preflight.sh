@@ -113,6 +113,10 @@ if [[ "$MODE" == "vm" ]]; then
 elif ls /sys/bus/pci/devices/*/resizable_bar &>/dev/null; then
   pass "resizable_bar sysfs node present (check: cat /sys/bus/pci/devices/*/resizable_bar)"
   cat /sys/bus/pci/devices/*/resizable_bar 2>/dev/null || true
+elif lspci -v 2>/dev/null | grep -qE '\[size=32G\]'; then
+  # Ground truth over sysfs cosmetics: a mapped 32G BAR means ReBAR works
+  # even when the resizable_bar node is absent (Oct 2026, Navi31).
+  pass "32G prefetchable BAR mapped (ReBAR active despite missing sysfs node)"
 else
   warn "no resizable_bar node — enable Above-4G Decoding + ReBAR in BIOS (ASUS TUF GAMING B650E-PLUS WIFI), then re-check; ROCm/DDIR benefit"
 fi
