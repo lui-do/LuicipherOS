@@ -124,6 +124,27 @@ fi
 if [[ -f "$ROOT/install/vconsole.conf" ]]; then
   sudo install -Dm644 "$ROOT/install/vconsole.conf" /etc/vconsole.conf
 fi
+# amdgpu cold-boot race (Navi31): keep driver soft-blacklisted, load late.
+# Template + unit deploy together; APPLIES ONLY where AMD VGA hardware exists
+# (lspci [1002:]), so VMs/Intel/NVIDIA machines are untouched.
+if lspci -nn 2>/dev/null | grep -qi '\[1002:'; then
+  if ! grep -q "blacklist amdgpu" /etc/modprobe.d/* 2>/dev/null; then
+    echo "blacklist amdgpu" | sudo tee /etc/modprobe.d/amdgpu-coldboot.conf > /dev/null
+    LATE_REBUILD=true
+  else
+    LATE_REBUILD=false
+  fi
+  if [[ -f "$ROOT/install/amdgpu-late.service" ]]; then
+    sudo install -Dm644 "$ROOT/install/amdgpu-late.service" /etc/systemd/system/amdgpu-late.service
+    sudo systemctl enable amdgpu-late 2>/dev/null || echo "  (amdgpu-late enable skipped)"
+  fi
+  if [[ "$LATE_REBUILD" == true ]]; then
+    echo "==> amdgpu soft-blacklist added, rebuilding initramfs"
+    sudo mkinitcpio -P
+  fi
+else
+  echo "  (no AMD GPU detected, skipping amdgpu-late)"
+fi
 # user dirs + portals sanity
 command -v xdg-user-dirs-update &>/dev/null && xdg-user-dirs-update || true
 

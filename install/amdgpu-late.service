@@ -1,0 +1,19 @@
+# Late amdgpu load — cold-boot DMUB race workaround (RX 7900 XT, Oct 2026).
+# Early-boot amdgpu probe hits an unready SMU (status=2 storm); the same
+# driver loaded a minute later initializes cleanly every time. So the
+# driver stays soft-blacklisted (see /etc/modprobe.d/amdgpu-coldboot.conf)
+# and this unit loads it just before login appears.
+# Deployed by install/bootstrap.sh (root-owned). To revert: disable unit +
+# remove the modprobe.d conf + mkinitcpio -P.
+[Unit]
+Description=Late amdgpu load (cold-boot DMUB race workaround)
+Before=greetd.service
+After=systemd-udev-trigger.service systemd-modules-load.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/modprobe amdgpu
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
