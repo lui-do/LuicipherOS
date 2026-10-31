@@ -7,11 +7,13 @@ sync realizes it) on plain Arch, with a SUPER-key desktop (Hyprland native Lua, 
 Quickshell, Tabby, Gradia). v0.1 is tuned for one target machine (Ryzen 5 9600X + ASUS TUF GAMING
 B650E-PLUS WIFI + RX 7900 XT 20GB) and tested in a QEMU/OVMF VM.
 
-Current status (from `TESTING.md` and git history, last commit 2026-10-06):
+Current status (from `TESTING.md`, git history and the 2026-10-31 session logs):
 
 - VM smoke and ISO-loop PASS (2026-09-26, 2026-09-28; re-verified Oct 2026).
-- Target-machine bring-up in progress; open DMUB cold-boot issue on the 7900 XT
-  (see `docs/dmub-coldboot-casefile.md`).
+- The target desktop runs LuicipherOS (user-reported); `luci sync` has never been run on it.
+- Open boot/GPU issue on the 7900 XT: amdgpu storms (DMUB/SMU errors) when loaded early in
+  boot on kernel 7.2.11; loading it by hand about 3 minutes after boot works. Tracked in
+  issue #11 and `docs/dmub-coldboot-casefile.md`.
 - Compatibility claim stays limited until target + AMD laptop + Intel laptop + VM all pass
   (ADR-0001).
 
@@ -22,9 +24,9 @@ Current status (from `TESTING.md` and git history, last commit 2026-10-06):
 - Documentation reference: this file is the canonical blueprint; operational history lives in
   `.agent/CONTINUITY.md`; vocabulary lives in `CONTEXT.md`.
 - Project version: v0.1 (draft), per `README.md`.
-- Last documentation sync: 2026-10-31 (against commit `d53f205`).
-- Issue tracker: GitHub Issues via `gh` CLI (`docs/agents/issue-tracker.md`). Main tracking
-  issue: #1.
+- Last documentation sync: 2026-10-31 (against commit `1a41e82`).
+- Issue tracker: GitHub Issues via `gh` CLI (`docs/agents/issue-tracker.md`). Issue #1 (v0.1)
+  is closed. Open boot/GPU issue: #11.
 - Triage labels: five canonical roles mapped 1:1 to label strings
   (`docs/agents/triage-labels.md`).
 - Domain docs: single-context layout, `CONTEXT.md` + `docs/adr/` (`docs/agents/domain.md`).
@@ -112,12 +114,22 @@ sudo mkarchiso -v -w /tmp/luici-iso-tmp -o out/ iso/
 5. Lint, formatter, package manager for the repo itself: > TODO: none configured beyond
    `bash -n`. [NEEDS TEAM INPUT] (e.g. shellcheck, shfmt).
 
+6. Target-machine maintenance (installed Arch desktop, run as the admin account):
+
+```bash
+sudo pacman -Syu                  # always a FULL upgrade; never install single packages first
+sudo snapper -c root list         # snap-pac takes pre/post snapshots around pacman runs
+sudo bootctl update               # after systemd upgrades
+sudo umount /boot && sudo fsck.fat -n /dev/nvme0n1p1; sudo mount /boot   # ESP check
+```
+
 ## Code Style & Conventions
 
 - Languages: Bash (scripts, installer), JSON (archinstall), Lua (Hyprland), QML (Quickshell),
   Markdown (docs). > TODO: document formatting rules per language. [NEEDS TEAM INPUT]
 - Hyprland config is native Lua only: `hyprland.lua` plus `lua/` modules loaded with
-  `require()`. The hyprlang `.conf` format is deprecated since 0.55; do not add it.
+  `require()`. The hyprlang `.conf` format is deprecated since 0.55 and dropped in 0.57; do
+  not add it.
 - uwsm users keep environment in `~/.config/uwsm/env` and `~/.config/uwsm/env-hyprland`.
 - Dotfiles are GNU Stow packages under `dotfiles/`; root-owned files (e.g. greetd config)
   are not stowable and are deployed by `install/bootstrap.sh`.
@@ -134,6 +146,10 @@ sudo mkarchiso -v -w /tmp/luici-iso-tmp -o out/ iso/
   4. Keep `"silent": false` for first runs so a human reviews disk and users.
 - Package names are exact: use `greetd-tuigreet`, not `tuigreet`.
 - Browser: `helium-browser-bin` only; Firefox is removed everywhere.
+- Kernel parameters for the late-load route: use `modprobe.blacklist=amdgpu` (stops automatic
+  loading only). `module_blacklist=amdgpu` blocks even a manual `modprobe` (Operation not
+  permitted) and breaks the workflow. Hard-block is for pure recovery boots.
+- The systemd-boot editor (`e` in the menu) uses a US keyboard layout, whatever the OS layout.
 
 ## Architecture Notes
 
@@ -154,17 +170,35 @@ flowchart TD
 Desired lists in `config/` declare intent; `luci sync` (`scripts/sync.sh`) realizes it. Default
 mode installs missing packages only and never touches dependencies (`-Qqd`). `--prune` also
 removes extras after a preview and confirmation, and never removes anything in
-`protected-packages` (kernel, firmware, drivers, compositor, networking). System and user
-flatpak scopes prune independently. Sync is manual-only by design: no auto-sync on boot.
+`protected-packages` (kernel, firmware, drivers, compositor, networking). Prune compares only
+explicitly installed pacman packages and flatpak apps; hand-installed binaries, AppImages and
+language-tool installs are never touched. System and user flatpak scopes prune independently,
+and the user scope depends on which account runs the script. Sync is manual-only by design:
+no auto-sync on boot.
 
 Desktop stack (locked in v0.1): Hyprland (>= 0.55, native Lua) under uwsm, greetd + tuigreet
 login, Vicinae launcher on SUPER+Space (fuzzel fallback), custom Quickshell bar and plugin
 host, swaync notifications (kept until the shell has its own center), Tabby terminal,
 grim + slurp -> Gradia screenshots, GTK portal file picker (termfilechooser + yazi is opt-in).
 Hyprland, lock screen, portals and drivers stay pacman-owned because of PAM/SUID and GL traps.
+Session start: the repo greetd command runs `uwsm start hyprland`, which prints a 5 second
+warning; the "Hyprland (uwsm managed)" session does not. Default to be decided (issue #11).
 
 Disk layout on the target: LUKS + btrfs with subvolumes `@`, `@home`, `@log`, `@pkg`,
-`@snapshots`, systemd-boot (per `docs/dmub-coldboot-casefile.md`).
+`@snapshots`, systemd-boot (per `docs/dmub-coldboot-casefile.md`). The ESP is FAT on
+`/dev/nvme0n1p1`, mounted at `/boot`, outside Btrfs, and is not covered by snapshots. Kernels
+and initramfs live there. Snapper config `root` snapshots `/` into `/.snapshots` (`@snapshots`);
+snap-pac adds pre/post snapshots around pacman. Snapshots are not backups (same disk).
+
+Boot entries on the desktop: `linux` (default; options include `amdgpu.runpm=0`; no amd-ucode
+initrd listed) and `arch-lts` (loads amd-ucode; no `amdgpu.runpm=0`). Menu timeout is 10 s
+(`bootctl set-timeout 10`); the default timeout was 0 (hold Space to show the menu).
+
+GPU bring-up workaround (interim, issue #11): boot with `modprobe.blacklist=amdgpu
+systemd.mask=amdgpu-late.service 3`, log in on a text console, wait about 190 s of uptime,
+`sudo modprobe amdgpu`, confirm no `Error queueing DMUB`/`Failed to power gate` lines in
+`dmesg`, then `sudo systemctl start greetd`. Hypothesis, not proven: the GPU needs time since
+power-on or a quieter boot before the driver initializes it.
 
 The ISO is a netinstall image: packages are never baked in, so every install gets current
 packages. Fixes to `luicipheros-install` reach a booted ISO only via `git pull` plus a copy
@@ -184,6 +218,11 @@ learning side-quest only.
 - ISO loop: boot the built ISO, run `luicipheros-install --vm`; reaching `archinstall` is PASS.
 - Target machine: `./install/preflight.sh --target`, then the ROCm/desktop verification list in
   `TESTING.md` §2 (`rocminfo`, PyTorch ROCm, Blender HIP, Ollama, `lpstat -p`, `hyprctl version`).
+- Target boot checks (issue #11): after a boot, `lsmod | grep amdgpu`, then
+  `sudo dmesg | grep -ciE 'Error queueing DMUB|Failed to power gate'` must print 0. Test one
+  change per attempt (normal boot with the enabled unit, delay variant, firmware retest).
+- Dev station: libvirt/QEMU VM for installer and boot tests, Podman container for script
+  tests. Install status of the QEMU stack on the desktop: UNCONFIRMED.
 - Sync contract: install missing only; `--prune --dry-run` previews; `--prune` confirms unless
   `--yes`; honors `protected-packages`; scopes prune independently.
 - CI: none yet (planned for v0.3: CI + VM test matrix).
@@ -198,6 +237,12 @@ learning side-quest only.
 - Privileged paths: PAM/SUID components (lock screen, keyring, greetd) stay system packages.
 - AUR surface is kept tiny (yay-bin, vicinae-bin, helium-browser-bin, tabby-bin); review any
   addition.
+- Containers: membership in the `docker` group is root-equivalent. Prefer rootless Podman
+  (installed). Docker engine presence on the desktop is UNCONFIRMED; `docker-compose` is.
+- Hard power-offs leave the FAT ESP dirty; keep `dosfstools` installed (`fsck.fat`) and prefer
+  clean shutdowns.
+- mkinitcpio >= 42: Arch news says TPM2-based LUKS unlocking needs manual intervention.
+  > TODO: confirm whether TPM2 unlock is used before upgrading mkinitcpio. [NEEDS TEAM INPUT]
 - Dependency scanning: > TODO: none configured. [NEEDS TEAM INPUT]
 - Secret scanning: > TODO: none configured in CI. Scan diffs manually before pushing.
 - License: MIT (`LICENSE`) covers original files. Third-party software installed via the lists
@@ -210,11 +255,20 @@ learning side-quest only.
 - Never enable auto-sync on boot or add a unit that runs `sync.sh`; manual-only is LOCKED.
 - Never remove or weaken `config/protected-packages`, or make `--prune` run without preview
   and confirmation.
+- Do not run `luci sync --prune` on the desktop until the extras inventory is done and the
+  dev-tool packages are in `config/packages` (see CONTINUITY.md). Run `sync.sh` as the daily
+  account (`work`), never as root; `luci` is the admin account.
 - Never re-add Firefox, waybar, kitty, or swappy; they were deliberately removed.
 - Never add hyprlang `.conf` Hyprland configs.
 - Do not run `archinstall`, `sync.sh --prune`, `mkarchiso`, or anything writing to disks, on
   the host without an explicit user instruction.
-- Do not change `install/amdgpu-late.service` enablement; it is DISABLED pending test.
+- `amdgpu-late.service` is ENABLED on the desktop (earlier docs said disabled). Do not change
+  its enablement or content without an explicit instruction; see issue #11.
+- Do not edit the ESP (`/boot/loader/entries`, `loader.conf`) without an explicit instruction.
+  Never use `module_blacklist=` for the late-load route (use `modprobe.blacklist=`).
+- Always run a full `pacman -Syu` before installing any single package; take or confirm a
+  Snapper snapshot first.
+- Do not recommend hard power-offs unless the machine is unresponsive; prefer clean shutdowns.
 - Do not publish the ISO under Releases until a VM boot reaches archinstall (see `iso/README.md`).
 - Do not claim broad hardware compatibility before the matrix passes (ADR-0001).
 - Record unverified claims as `> TODO:` or `[NEEDS TEAM INPUT]`; mark target-only results as
@@ -236,6 +290,11 @@ learning side-quest only.
   DankMaterialShell and Omarchy widgets.
 - Opt-in features: termfilechooser + yazi portal picker (dormant), HyprCapture screenshot trial
   (`docs/hyprcapture-trial.md`), `amdgpu-late.service` (AMD hardware only).
+- Kernel parameters in use: `amdgpu.runpm=0` (default entry), `modprobe.blacklist=amdgpu`,
+  `systemd.mask=amdgpu-late.service`, `3` (text login). `/etc/modprobe.d/amdgpu-coldboot.conf`
+  holds the soft blacklist on the desktop.
+- Optional boot entry `arch-lateload.conf` (late-load parameters baked in): proposed;
+  whether it exists and is the default is UNCONFIRMED.
 - Planned: hardware profiles under `profiles/` (v0.2), optional Nix layer (v0.3).
 - Environment variables: `AQ_DRM_DEVICES` (per-machine, planned via profiles). Feature flags:
   > TODO: none documented. [NEEDS TEAM INPUT]
@@ -249,6 +308,7 @@ learning side-quest only.
 - `docs/TROUBLESHOOTING.md` – FAQ from smoke failures (includes the DMUB cold-boot entry).
 - `docs/target-bringup-runbook.md` – hardware-day plan.
 - `docs/dmub-coldboot-casefile.md` and `docs/upstream-drm-amd-coldboot-dmub.md` – open GPU issue.
+- Issue #11 – Oct 31 timeline, findings, workaround and checklist.
 - `docs/hyprcapture-trial.md` – reversible screenshot-tool trial.
 - `docs/agents/` – issue tracker, triage labels, domain docs.
 - `iso/README.md` – ISO build and test.
