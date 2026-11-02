@@ -1,7 +1,12 @@
 # config/flatpaks-system.list — system-wide Flatpaks (shared OS feel, needs sudo)
 # FORMAT: <remote> <app-id> [branch]. Add -> install system-wide, remove -> prune removes.
 # Put here: media, Blender, OBS — apps every user on the machine should have.
+# 2026-11-02: VS Code, Obsidian and KeePassXC moved here from flatpaks-user.list because they
+# are installed system-wide on the desktop (see docs/inventory-2026-11-02.md).
 # NOTE: NO Firefox (Helium is the only browser, via AUR helium-browser-bin).
 # Upstream refuses Flatpak (Chromium sandbox); no flatpak exists.
 flathub org.blender.Blender stable
 flathub com.obsproject.Studio stable
+flathub com.visualstudio.code stable
+flathub md.obsidian.Obsidian stable
+flathub org.keepassxc.KeePassXC stable

@@ -25,3 +25,5 @@ git
 mkinitcpio
 efibootmgr
 btrfs-progs
+# recovery kernel (the arch-lts boot entry points at it; pruning it removes the fallback):
+linux-lts

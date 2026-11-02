@@ -118,3 +118,34 @@ flatpak
 distrobox
 xdg-user-dirs
 polkit-gnome
+
+# --- declared from the 2026-11-02 desktop inventory (installed by hand, kept as-is) ---
+# Source: docs/inventory-2026-11-02.md. Keep package lines free of inline comments:
+# the scripts expand every non-comment line as a package name.
+# recovery kernel, snapshots, ESP tools
+linux-lts
+linux-lts-headers
+snapper
+snap-pac
+dosfstools
+# network, firewall, memory
+firewalld
+wpa_supplicant
+zram-generator
+# containers and dev tools
+podman
+docker-compose
+python-pip
+socat
+# audio plumbing (also pulled in as dependencies of other packages)
+gst-plugin-pipewire
+pipewire-jack
+libpulse
+# files and removable disks
+7zip
+rsync
+vim
+udiskie
+udisks2
+# planned dev-station packages, NOT installed yet (uncomment only after installing them):
+# qemu-desktop libvirt virt-manager edk2-ovmf dnsmasq swtpm
