@@ -39,6 +39,11 @@ Times marked (approx.) were reconstructed from terminal screenshots and journal 
   with the Oct 31 results; fix the stale "unit DISABLED" statement.
 - 2026-10-31T20:39Z [USER] TODO (cosmetic): rtkit, wireless-regdb, swaync config not found for
   user `work`; check dotfile stow state per account.
+- 2026-11-03T08:57Z [ASSUMPTION] Pending blank-start observations: Caps Lock response,
+  monitor-only power cycle and another HDMI input/port. Nov 3 results are not reported.
+  DisplayPort and shutdown-path experiments remain proposals, not established fixes.
+- 2026-11-03T08:57Z [ASSUMPTION] Next project task proposed in conversation: audit the five
+  sync-script items from the inventory document after the docs update; scope still to verify.
 
 ## [DECISIONS]
 
@@ -68,7 +73,8 @@ Times marked (approx.) were reconstructed from terminal screenshots and journal 
 - 2026-10-31T13:45Z (approx.) [USER] Keep choosing the "Hyprland (uwsm managed)" session until
   the greetd default is fixed.
 - 2026-10-31T13:48Z (approx.) [ASSUMPTION] A persistent boot entry `arch-lateload.conf` with
-  the workaround parameters, set as default, was proposed. Whether it was created: UNCONFIRMED.
+  the workaround parameters, set as default, was proposed. Whether it was created: UNCONFIRMED
+  at that time. See the Nov 3 user report under [DISCOVERIES] for subsequent evidence.
 
 ## [PROGRESS]
 
@@ -104,6 +110,26 @@ Times marked (approx.) were reconstructed from terminal screenshots and journal 
   initialized clean on 7.2.11. `systemctl start greetd` then reached Hyprland; the session was
   stable for 10+ minutes with no new DMUB/SMU lines.
 - 2026-10-31T13:48Z [TOOL] Issue #11 created for the boot/GPU problem and follow-ups.
+- 2026-11-03T08:50Z [ASSUMPTION] Earlier-session summary in this conversation records a blank
+  Nov 1 power-on and a normal Nov 2 power-on. The assistant's existing issue #11 comment
+  describes hard power-off recovery for Nov 1. These historical details were carried forward
+  from that summary, not newly re-tested in this session.
+- 2026-11-03T08:41Z [USER] Morning power-on showed a black screen with nothing appearing.
+  After another power-off/power-on the boot options appeared and the user chose the default
+  entry. Exact time of the failed attempt is UNCONFIRMED.
+- 2026-11-03T08:49Z [USER] User reported being on the desktop.
+- 2026-11-03T08:50Z [USER] Screenshot: saved boot -1 starts Nov 2 at 12:49:22 CET and ends
+  at 23:01:28 CET; current boot starts Nov 3 at 09:40:22 CET. `uptime -s` reports
+  2026-11-03 09:37:48 local time (08:37:48Z). No separate boot for the failed attempt is
+  visible in the supplied list. Journal timestamps alone do not establish clean shutdown.
+- 2026-11-03T08:50Z [TOOL] An update comment was posted to issue #11:
+  https://github.com/lui-do/LuicipherOS/issues/11#issuecomment-6599309547 .
+- 2026-11-03T08:54Z [USER] Supplied kernel command line includes `amdgpu.runpm=0
+  modprobe.blacklist=amdgpu systemd.mask=amdgpu-late.service 3`.
+- 2026-11-03T08:57Z [USER] Supplied monotonic journal line:
+  `[  415.378081] LuicipherOS kernel: amdgpu 0000:03:00.0: enabling device (0006 -> 0007)`.
+  First matching device message is about 6 min 55 s after kernel start. This is not a
+  completed-initialization timestamp; the earlier error-check result remains unreported.
 
 ## [DISCOVERIES]
 
@@ -159,6 +185,17 @@ Times marked (approx.) were reconstructed from terminal screenshots and journal 
 - 2026-10-31T13:35Z (approx.) [USER] `coredumpctl` tail shows at least 7 Hyprland crashes
   (SIGSEGV/SIGTRAP) between Oct 28 and Oct 31 plus a hypridle abort, before and during the
   problem. Causes UNCONFIRMED.
+- 2026-11-03T08:57Z [USER] User reports choosing the default late-load entry (called
+  `arch-lateload` in this conversation); supplied command line matches the workaround.
+  Exact entry filename and persistent default setting have not been independently read.
+- 2026-11-03T08:57Z [ASSUMPTION] Existing conversation summary counts three blank starts
+  among four selected starts after amdgpu sessions (Oct 31, Nov 1 and Nov 3 blank; Nov 2
+  normal). This is a small observational series, not proof of a causal relationship.
+  No saved boot for the Nov 3 failed attempt is visible; this does not prove the kernel
+  never ran or establish the failure stage.
+- 2026-11-03T08:57Z [USER] The earlier grep `amdgpu.*(probe|initializ)` matched the kernel
+  command line. The narrower `amdgpu 0000` grep returned the PCI-device enabling message
+  at 415.378081 s. Reaching the desktop does not establish an error-free kernel log.
 
 ## [OUTCOMES]
 
@@ -171,3 +208,6 @@ Times marked (approx.) were reconstructed from terminal screenshots and journal 
 - 2026-10-31T13:45Z (approx.) [USER] Target desktop usable via the late-load workaround.
   Normal boot path (default entry, enabled unit) still UNRESOLVED; tracked in issue #11.
 - 2026-10-31T20:39Z [ASSUMPTION] Machine state since 13:48Z is UNCONFIRMED (user was away).
+- 2026-11-03T08:57Z [USER] Desktop recovered on the second start using the reported default
+  late-load entry. Early-load DMUB/SMU behavior and the separate blank-start symptom remain
+  unresolved. Today's error-check result is UNCONFIRMED.

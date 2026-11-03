@@ -7,13 +7,19 @@ sync realizes it) on plain Arch, with a SUPER-key desktop (Hyprland native Lua, 
 Quickshell, Tabby, Gradia). v0.1 is tuned for one target machine (Ryzen 5 9600X + ASUS TUF GAMING
 B650E-PLUS WIFI + RX 7900 XT 20GB) and tested in a QEMU/OVMF VM.
 
-Current status (from `TESTING.md`, git history and the 2026-10-31 session logs):
+Current status (from `TESTING.md`, git history and session reports through 2026-11-03):
 
 - VM smoke and ISO-loop PASS (2026-09-26, 2026-09-28; re-verified Oct 2026).
 - The target desktop runs LuicipherOS (user-reported); `luci sync` has never been run on it.
 - Open boot/GPU issue on the 7900 XT: amdgpu storms (DMUB/SMU errors) when loaded early in
-  boot on kernel 7.2.11; loading it by hand about 3 minutes after boot works. Tracked in
-  issue #11 and `docs/dmub-coldboot-casefile.md`.
+  boot on kernel 7.2.11; manual late loading is the interim workaround. On Nov 3 the first
+  amdgpu PCI-device message was at 415.378081 s uptime and the user reached the desktop;
+  the error-check result was not reported. Tracked in issue #11 and
+  `docs/dmub-coldboot-casefile.md`.
+- A separate blank-start symptom is tracked in issue #11: blank starts were reported on
+  Oct 31, Nov 1 and Nov 3; Nov 2 was normal. A hard power-off followed by another start
+  restored the picture in the reported blank-start cases. Cause and relation to amdgpu
+  remain UNCONFIRMED.
 - Compatibility claim stays limited until target + AMD laptop + Intel laptop + VM all pass
   (ADR-0001).
 
@@ -24,7 +30,8 @@ Current status (from `TESTING.md`, git history and the 2026-10-31 session logs):
 - Documentation reference: this file is the canonical blueprint; operational history lives in
   `.agent/CONTINUITY.md`; vocabulary lives in `CONTEXT.md`.
 - Project version: v0.1 (draft), per `README.md`.
-- Last documentation sync: 2026-10-31 (against commit `1a41e82`).
+- Last documentation sync: 2026-11-03 (session-report update; previous code review against
+  commit `1a41e82`, not a fresh full-repository audit).
 - Issue tracker: GitHub Issues via `gh` CLI (`docs/agents/issue-tracker.md`). Issue #1 (v0.1)
   is closed. Open boot/GPU issue: #11.
 - Triage labels: five canonical roles mapped 1:1 to label strings
@@ -150,6 +157,10 @@ sudo umount /boot && sudo fsck.fat -n /dev/nvme0n1p1; sudo mount /boot   # ESP c
   loading only). `module_blacklist=amdgpu` blocks even a manual `modprobe` (Operation not
   permitted) and breaks the workflow. Hard-block is for pure recovery boots.
 - The systemd-boot editor (`e` in the menu) uses a US keyboard layout, whatever the OS layout.
+- To locate the first amdgpu PCI-device message, use
+  `journalctl -k -b -o short-monotonic --no-pager | grep -m1 'amdgpu 0000'`.
+  The earlier `amdgpu.*(probe|initializ)` grep matched the kernel command line instead.
+  A first device message is not evidence of completed initialization or an error-free boot.
 
 ## Architecture Notes
 
@@ -190,15 +201,25 @@ Disk layout on the target: LUKS + btrfs with subvolumes `@`, `@home`, `@log`, `@
 and initramfs live there. Snapper config `root` snapshots `/` into `/.snapshots` (`@snapshots`);
 snap-pac adds pre/post snapshots around pacman. Snapshots are not backups (same disk).
 
-Boot entries on the desktop: `linux` (default; options include `amdgpu.runpm=0`; no amd-ucode
+Boot entries on the desktop: the user reports selecting the default late-load entry on
+2026-11-03 (called `arch-lateload` in the session). Its supplied command line includes
+`amdgpu.runpm=0 modprobe.blacklist=amdgpu systemd.mask=amdgpu-late.service 3`.
+The exact entry filename and persistent default setting have not been independently read.
+Previously recorded entries are `linux` (options include `amdgpu.runpm=0`; no amd-ucode
 initrd listed) and `arch-lts` (loads amd-ucode; no `amdgpu.runpm=0`). Menu timeout is 10 s
-(`bootctl set-timeout 10`); the default timeout was 0 (hold Space to show the menu).
+(`bootctl set-timeout 10`); the original timeout was 0 (hold Space to show the menu).
 
 GPU bring-up workaround (interim, issue #11): boot with `modprobe.blacklist=amdgpu
 systemd.mask=amdgpu-late.service 3`, log in on a text console, wait about 190 s of uptime,
 `sudo modprobe amdgpu`, confirm no `Error queueing DMUB`/`Failed to power gate` lines in
 `dmesg`, then `sudo systemctl start greetd`. Hypothesis, not proven: the GPU needs time since
 power-on or a quieter boot before the driver initializes it.
+
+Blank-start observations (issue #11): before considering a hard power-off, record whether
+Caps Lock responds, whether a monitor-only power cycle restores the picture, and whether
+another HDMI input/port helps. Do not equate a black screen with an unresponsive computer.
+Prefer a clean shutdown when possible. On recovery, record `journalctl --list-boots | tail -3`
+and `uptime -s`. Absence of a separate saved boot does not prove that the kernel never ran.
 
 The ISO is a netinstall image: packages are never baked in, so every install gets current
 packages. Fixes to `luicipheros-install` reach a booted ISO only via `git pull` plus a copy
@@ -221,6 +242,9 @@ learning side-quest only.
 - Target boot checks (issue #11): after a boot, `lsmod | grep amdgpu`, then
   `sudo dmesg | grep -ciE 'Error queueing DMUB|Failed to power gate'` must print 0. Test one
   change per attempt (normal boot with the enabled unit, delay variant, firmware retest).
+- Blank-start checks: record Caps Lock, monitor-only power-cycle and other-HDMI results.
+  Nov 3 results were not reported. DisplayPort and changes to the shutdown path remain
+  proposed tests, not established fixes; do not unload a live display driver as a routine step.
 - Dev station: libvirt/QEMU VM for installer and boot tests, Podman container for script
   tests. Install status of the QEMU stack on the desktop: UNCONFIRMED.
 - Sync contract: install missing only; `--prune --dry-run` previews; `--prune` confirms unless
@@ -239,8 +263,10 @@ learning side-quest only.
   addition.
 - Containers: membership in the `docker` group is root-equivalent. Prefer rootless Podman
   (installed). Docker engine presence on the desktop is UNCONFIRMED; `docker-compose` is.
-- Hard power-offs leave the FAT ESP dirty; keep `dosfstools` installed (`fsck.fat`) and prefer
-  clean shutdowns.
+- Hard power-offs can leave the FAT ESP dirty; keep `dosfstools` installed (`fsck.fat`) and
+  prefer clean shutdowns. Do not prescribe unconditional automatic repair. Any filesystem
+  check or repair must target the verified device with the filesystem unmounted; review a
+  read-only check first and obtain explicit approval before repairs.
 - mkinitcpio >= 42: Arch news says TPM2-based LUKS unlocking needs manual intervention.
   > TODO: confirm whether TPM2 unlock is used before upgrading mkinitcpio. [NEEDS TEAM INPUT]
 - Dependency scanning: > TODO: none configured. [NEEDS TEAM INPUT]
@@ -269,6 +295,7 @@ learning side-quest only.
 - Always run a full `pacman -Syu` before installing any single package; take or confirm a
   Snapper snapshot first.
 - Do not recommend hard power-offs unless the machine is unresponsive; prefer clean shutdowns.
+  A black screen alone does not establish unresponsiveness; record the diagnostic checks first.
 - Do not publish the ISO under Releases until a VM boot reaches archinstall (see `iso/README.md`).
 - Do not claim broad hardware compatibility before the matrix passes (ADR-0001).
 - Record unverified claims as `> TODO:` or `[NEEDS TEAM INPUT]`; mark target-only results as
@@ -293,8 +320,9 @@ learning side-quest only.
 - Kernel parameters in use: `amdgpu.runpm=0` (default entry), `modprobe.blacklist=amdgpu`,
   `systemd.mask=amdgpu-late.service`, `3` (text login). `/etc/modprobe.d/amdgpu-coldboot.conf`
   holds the soft blacklist on the desktop.
-- Optional boot entry `arch-lateload.conf` (late-load parameters baked in): proposed;
-  whether it exists and is the default is UNCONFIRMED.
+- Late-load entry: user reports booting the default entry on 2026-11-03; supplied parameters
+  match the workaround. Read `bootctl list` and loader configuration before claiming the
+  exact filename or independently verified persistent default setting.
 - Planned: hardware profiles under `profiles/` (v0.2), optional Nix layer (v0.3).
 - Environment variables: `AQ_DRM_DEVICES` (per-machine, planned via profiles). Feature flags:
   > TODO: none documented. [NEEDS TEAM INPUT]
@@ -308,7 +336,7 @@ learning side-quest only.
 - `docs/TROUBLESHOOTING.md` – FAQ from smoke failures (includes the DMUB cold-boot entry).
 - `docs/target-bringup-runbook.md` – hardware-day plan.
 - `docs/dmub-coldboot-casefile.md` and `docs/upstream-drm-amd-coldboot-dmub.md` – open GPU issue.
-- Issue #11 – Oct 31 timeline, findings, workaround and checklist.
+- Issue #11 – Oct 31 timeline, findings, workaround and checklist; Nov 3 blank-start update.
 - `docs/hyprcapture-trial.md` – reversible screenshot-tool trial.
 - `docs/agents/` – issue tracker, triage labels, domain docs.
 - `iso/README.md` – ISO build and test.
