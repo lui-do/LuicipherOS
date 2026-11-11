@@ -1,6 +1,6 @@
 # Desktop inventory, 2026-11-02
 
-Read-only snapshot of what is installed on the target desktop and how `luci sync` sees it.
+Read-only snapshot of what is installed on the target desktop and how `lui sync` sees it.
 Nothing was removed or installed to produce it. Repo state: commit `162fe9c`.
 
 ## Method

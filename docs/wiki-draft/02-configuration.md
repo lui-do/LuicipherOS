@@ -15,7 +15,7 @@ Arch-native + Nix-style files, with break-prevention guardrails
 Timeshift/Snapper snapshot before sync, separate `/home`).
 
 Glossary (`CONTEXT.md`): **desired list** = source-of-truth files;
-**sync (`luci sync`)** = idempotent reconciler in `scripts/sync.sh`;
+**sync (`lui sync`)** = idempotent reconciler in `scripts/sync.sh`;
 **protected package** = base package never auto-removed; **extra** =
 explicitly installed package/app not in desired + protected sets
 (previewed before prune, never silently removed).

@@ -13,7 +13,7 @@ v0.1 = (a) Arch-native + Nix-style files (not NixOS). Own bootstrap + dotfiles, 
 ## Rationale — LFS learning vs Nix reproducibility + break prevention
 
 - Better for shipping: Nix reproducibility ON Arch + guards. LFS teaches toolchain/compile order but ships no OS faster and adds security/update burden solo.
-- Break prevention on Arch (locked): manual-only `luci sync`, `protected-packages`, explicit-only prune + confirm + `--dry-run`, tiny AUR surface (yay-bin + vicinae), weekly `Syu` test + `last-known-good` tag, Timeshift/Snapper snapshot before sync, separate `/home`.
+- Break prevention on Arch (locked): manual-only `lui sync`, `protected-packages`, explicit-only prune + confirm + `--dry-run`, tiny AUR surface (yay-bin + vicinae), weekly `Syu` test + `last-known-good` tag, Timeshift/Snapper snapshot before sync, separate `/home`.
 - Nix GL/PAM traps stay: `/run/opengl-driver` + nixGL for GPU apps, hyprlock/keyring must stay system — hence Nix only for CLI/dev/dotfiles later.
 
 ## Consequences

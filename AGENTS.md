@@ -1,7 +1,7 @@
 # Project Overview
 
 LuicipherOS is an Arch-based, Hyprland-first, keyboard-driven OS configuration: dotfiles, an
-`archinstall` profile, a bootstrap flow and declarative package lists, reconciled by `luci sync`.
+`archinstall` profile, a bootstrap flow and declarative package lists, reconciled by `lui sync`.
 It is not a forked distro in v0.1. Elevator pitch: NixOS-style declarative apps (edit a list,
 sync realizes it) on plain Arch, with a SUPER-key desktop (Hyprland native Lua, Vicinae,
 Quickshell, Tabby, Gradia). v0.1 is tuned for one target machine (Ryzen 5 9600X + ASUS TUF GAMING
@@ -10,7 +10,7 @@ B650E-PLUS WIFI + RX 7900 XT 20GB) and tested in a QEMU/OVMF VM.
 Current status (from `TESTING.md`, git history and session reports through 2026-11-03):
 
 - VM smoke and ISO-loop PASS (2026-09-26, 2026-09-28; re-verified Oct 2026).
-- The target desktop runs LuicipherOS (user-reported); `luci sync` has never been run on it.
+- The target desktop runs LuicipherOS (user-reported); `lui sync` has never been run on it.
 - Open boot/GPU issue on the 7900 XT: amdgpu storms (DMUB/SMU errors) when loaded early in
   boot on kernel 7.2.11; manual late loading is the interim workaround. On Nov 3 the first
   amdgpu PCI-device message was at 415.378081 s uptime and the user reached the desktop;
@@ -63,8 +63,8 @@ LuicipherOS/
 ├── install/               # archinstall JSON, preflight, bootstrap, boot-time units
 ├── iso/                   # archiso netinstall profile
 ├── research/              # background research notes
-├── scripts/               # luci CLI, sync and ensure-* reconcilers, screenshot helper
-└── tests/                 # shell tests (test_luci.sh, test_sync.sh)
+├── scripts/               # lui CLI, sync and ensure-* reconcilers, screenshot helper
+└── tests/                 # shell tests (test_lui.sh, test_sync.sh)
 ```
 
 - `.agents/` holds agent skills; do not hand-edit what `skills-lock.json` pins.
@@ -80,7 +80,7 @@ LuicipherOS/
   `bootstrap.sh`, `preflight.sh`, `greetd-config.toml`, `vconsole.conf`, `amdgpu-late.service`.
 - `iso/` has `profiledef.sh`, `packages.x86_64`, `airootfs/`, `README.md`.
 - `research/` currently has `office-suites.md`.
-- `scripts/` has `luci.sh` (the `luci` CLI), `sync.sh`, `ensure-packages.sh`,
+- `scripts/` has `lui.sh` (the `lui` CLI), `sync.sh`, `ensure-packages.sh`,
   `ensure-flatpaks.sh`, `screenshot-window.sh`.
 
 ## Build & Development Commands
@@ -110,20 +110,20 @@ archinstall --config install/archinstall-desktop.json --creds /tmp/creds.json
 3. Reconcile packages (manual only, never automatic):
 
 ```bash
-luci status                 # read-only: preview what is out of sync
-luci sync                   # install missing only
-luci sync --prune           # remove extras (confirms; honors protected-packages)
+lui status                 # read-only: preview what is out of sync
+lui sync                   # install missing only
+lui sync --prune           # remove extras (confirms; honors protected-packages)
 ```
 
-`luci` is `scripts/luci.sh`, installed to `/usr/local/bin/luci` by `bootstrap.sh`. Running
-`./scripts/luci.sh ...` from a clone is equivalent. It resolves the tree via `$LUCI_ROOT`, then
+`lui` is `scripts/lui.sh`, installed to `/usr/local/bin/lui` by `bootstrap.sh`. Running
+`./scripts/lui.sh ...` from a clone is equivalent. It resolves the tree via `$LUI_ROOT`, then
 `/opt/LuicipherOS`, then the tree it lives in, then `~/LuicipherOS`. Never run it as root; it
 calls `sudo` itself for the privileged steps.
 
 4. Run the tests (no Arch, no root required):
 
 ```bash
-./tests/test_luci.sh
+./tests/test_lui.sh
 ./tests/test_sync.sh
 ```
 
@@ -197,7 +197,7 @@ flowchart TD
     PROT[config/protected-packages] --> SYNC
 ```
 
-Desired lists in `config/` declare intent; `luci sync` (`scripts/sync.sh`) realizes it. Default
+Desired lists in `config/` declare intent; `lui sync` (`scripts/sync.sh`) realizes it. Default
 mode installs missing packages only and never touches dependencies (`-Qqd`). `--prune` also
 removes extras after a preview and confirmation, and never removes anything in
 `protected-packages` (kernel, firmware, drivers, compositor, networking). Prune compares only
@@ -250,7 +250,7 @@ learning side-quest only.
 ## Testing Strategy
 
 - Static: `bash -n`, `python3 -m json.tool`, `sync.sh --prune --dry-run` (see TESTING.md §0).
-- Unit/regression: `tests/test_sync.sh` covers the sync contract and `tests/test_luci.sh` covers
+- Unit/regression: `tests/test_sync.sh` covers the sync contract and `tests/test_lui.sh` covers
   the CLI (tree discovery, delegation, `status`, argument pass-through). Both are pure bash with
   mocked `pacman`/`flatpak`/`sudo`, need no Arch and no root, and are safe to run anywhere.
 - VM smoke: QEMU/OVMF, Arch ISO, 4G RAM, 60G disk. PASS means Hyprland (uwsm) loads,
@@ -305,7 +305,7 @@ learning side-quest only.
 - Never enable auto-sync on boot or add a unit that runs `sync.sh`; manual-only is LOCKED.
 - Never remove or weaken `config/protected-packages`, or make `--prune` run without preview
   and confirmation.
-- Do not run `luci sync --prune` on the desktop until the extras inventory is done and the
+- Do not run `lui sync --prune` on the desktop until the extras inventory is done and the
   dev-tool packages are in `config/packages` (see CONTINUITY.md). Run `sync.sh` as the daily
   account (`work`), never as root; `luci` is the admin account.
 - Never re-add Firefox, waybar, kitty, or swappy; they were deliberately removed.
@@ -337,7 +337,7 @@ learning side-quest only.
 
 ## Extensibility Hooks
 
-- Desired lists in `config/`: add a package or flatpak by editing the list, then `luci sync`.
+- Desired lists in `config/`: add a package or flatpak by editing the list, then `lui sync`.
 - Preflight modes: `install/preflight.sh --vm | --target`; bootstrap
   `--preflight-mode=vm|target` and `--no-flatpak`.
 - `scripts/sync.sh` flags: `--prune`, `--dry-run`, `--yes`; AUR helper flag (yay-bin default,

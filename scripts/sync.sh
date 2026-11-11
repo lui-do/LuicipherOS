@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# scripts/sync.sh — LuicipherOS declarative reconciler (v0.1, "luci sync")
+# scripts/sync.sh — LuicipherOS declarative reconciler (v0.1, "lui sync")
 # IDEA: single entry point for "edit lists -> get system".
-# - `luci sync` (default): INSTALL missing only. Safe to run anytime, safe on boot.
-# - `luci sync --prune`: install missing + UNINSTALL extras not in lists (with confirm + protected guard).
+# - `lui sync` (default): INSTALL missing only. Safe to run anytime, safe on boot.
+# - `lui sync --prune`: install missing + UNINSTALL extras not in lists (with confirm + protected guard).
 #   - pacman extras = (explicitly installed) - (desired + protected). Deps (-Qqd) are NEVER touched.
 #   - flatpak extras = (installed apps) - (desired app IDs).
 # - v0.1 LOCKED: manual-only (grill Q5). No systemd auto-sync; run by hand.
@@ -18,7 +18,7 @@ for a in "$@"; do
   esac
 done
 
-echo "=== luci sync (v0.1, manual-only) ==="
+echo "=== lui sync (v0.1, manual-only) ==="
 if [[ "$DRY_RUN" == true ]]; then echo "(dry-run: no changes will be made)"; fi
 
 # 1) ADD path (always, both scopes)

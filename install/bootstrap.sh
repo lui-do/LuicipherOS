@@ -148,13 +148,13 @@ if grep -qi '\[1002:' <<<"$AMD_PCI_LIST"; then
 else
   echo "  (no AMD GPU detected, skipping amdgpu-late)"
 fi
-# 5b) CLI: install `luci` system-wide so reconciling is one word, not a path.
-# The script resolves the tree at runtime ($LUCI_ROOT, /opt/LuicipherOS,
+# 5b) CLI: install `lui` system-wide so reconciling is one word, not a path.
+# The script resolves the tree at runtime ($LUI_ROOT, /opt/LuicipherOS,
 # ~/LuicipherOS, then its own location), so the installed copy keeps working
 # when the tree moves to the shared location planned for multi-user.
-if [[ -f "$ROOT/scripts/luci.sh" ]]; then
-  sudo install -Dm755 "$ROOT/scripts/luci.sh" /usr/local/bin/luci
-  echo "  installed: /usr/local/bin/luci  (try: luci status)"
+if [[ -f "$ROOT/scripts/lui.sh" ]]; then
+  sudo install -Dm755 "$ROOT/scripts/lui.sh" /usr/local/bin/lui
+  echo "  installed: /usr/local/bin/lui  (try: lui status)"
 fi
 
 # user dirs + portals sanity
@@ -165,8 +165,8 @@ echo ""
 echo "--- post-bootstrap ---"
 echo "  snapshot hint: sudo snapper -c root create --description 'luicipheros-bootstrap' \\"
 echo "    || sudo timeshift --create --comments 'luicipheros-bootstrap'"
-echo "  next: luci sync                   # add-only reconcile"
-echo "  then: luci status                 # preview what is out of sync"
+echo "  next: lui sync                   # add-only reconcile"
+echo "  then: lui status                 # preview what is out of sync"
 echo "  then: reboot -> Hyprland (uwsm) -> SUPER+T tabby, SUPER+Space Vicinae"
 echo "  verify: TESTING.md matrix (VM smoke, then target checklist)"
 log "bootstrap done"

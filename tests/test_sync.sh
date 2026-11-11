@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tests/test_sync.sh — contract tests for scripts/sync.sh ("luci sync").
+# tests/test_sync.sh — contract tests for scripts/sync.sh ("lui sync").
 # Seams (CLI behavior, pre-agreed per issue #1 step 2):
 #   1. add-only default: installs missing, never removes
 #   2. --prune --dry-run: previews extras, changes nothing

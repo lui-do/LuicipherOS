@@ -66,7 +66,7 @@ history, one holding the November detail); no entry was dropped.
 
 - 2026-10-31T10:50Z [USER] TODO: add dev-station packages (snapper, snap-pac, qemu-desktop,
   libvirt, virt-manager, edk2-ovmf, dnsmasq, swtpm, podman) to `config/packages` BEFORE any
-  `luci sync --prune`; otherwise prune lists them as extras. Also add `dosfstools`.
+  `lui sync --prune`; otherwise prune lists them as extras. Also add `dosfstools`.
 
 - 2026-10-31T10:50Z [USER] TODO: inventory hand-installed packages/flatpaks with
   `./scripts/sync.sh --prune --dry-run` and sort into keep (add to lists) or remove.
@@ -76,7 +76,7 @@ history, one holding the November detail); no entry was dropped.
 - 2026-10-31T10:07Z [CODE] v0.2: hardware profiles (`profiles/`), power/HiDPI, shell workspaces
   widget, tray, NotificationServer center (then drop swaync), screenshot tool decision.
 
-- 2026-10-31T10:07Z [CODE] v0.3: optional Nix layer, `luci sync` as a binary, CI + VM matrix.
+- 2026-10-31T10:07Z [CODE] v0.3: optional Nix layer, `lui sync` as a binary, CI + VM matrix.
 
 - 2026-10-31T10:07Z [CODE] Next on target: decide whether `amdgpu-late.service` helps; run
   `systemctl disable amdgpu-late` test (unrun per casefile). See the 2026-10-31T20:39Z entry:
@@ -91,21 +91,30 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-21T20:00Z [USER] v0.2 scope candidates: hardware profiles, power/HiDPI, shell
   notification center (to retire swaync), HiDPI monitor overrides, optional Nix layer (v0.3).
 
-- 2026-09-21T20:00Z [CODE] v0.3 candidates: `luci sync` as a binary, CI plus VM test matrix.
+- 2026-09-21T20:00Z [CODE] v0.3 candidates: `lui sync` as a binary, CI plus VM test matrix.
 
 ## [DECISIONS]
+- 2026-11-11T21:43Z `[USER]` Renamed the CLI from `luci` to `lui`; `lui` is also the GitHub owner
+  handle, and `luci` collided with the admin account name. Scope was surgical because "luci" means
+  four different things in this repo: the **CLI** (renamed: `scripts/lui.sh`,
+  `/usr/local/bin/lui`, `LUI_ROOT`, `LUI_VERSION`, `lui sync|status|root`), the **admin user
+  account** (untouched: `archinstall-desktop.creds.example.json`, the bring-up runbook, the
+  inventory doc, `config/flatpaks-user.list`), the **Quickshell palette token** (`property var
+  luci` in `shell.qml` / `swayncIndicator.qml`; **not** renamed, pending a separate decision), and
+  the project name `LuicipherOS` (untouched). Earlier entries in this log were updated to the new
+  CLI name for consistency; the rename changes no behaviour.
 
-- 2026-11-11T21:36Z `[USER]` Ship a real `luci` command instead of documenting a repo path:
-  `scripts/luci.sh`, installed to `/usr/local/bin/luci` by `bootstrap.sh`. `luci sync` is the
-  single reconcile entry point; `luci status` is the read-only preview. Tree resolution is
-  `$LUCI_ROOT` -> `/opt/LuicipherOS` -> the tree the script lives in -> `~/LuicipherOS`, chosen so
+- 2026-11-11T21:36Z `[USER]` Ship a real `lui` command instead of documenting a repo path:
+  `scripts/lui.sh`, installed to `/usr/local/bin/lui` by `bootstrap.sh`. `lui sync` is the
+  single reconcile entry point; `lui status` is the read-only preview. Tree resolution is
+  `$LUI_ROOT` -> `/opt/LuicipherOS` -> the tree the script lives in -> `~/LuicipherOS`, chosen so
   the same installed copy keeps working when the tree later moves to a shared system location
   (the multi-user plan). The CLI refuses to run as root, matching the AGENTS.md rule that sync runs
   as the daily account and calls `sudo` itself. Sync stays manual-only: no timer, unit or hook.
 - 2026-11-11T21:36Z `[USER]` Declare `jq`, `sudo`, `mkinitcpio`, `btrfs-progs` and `efibootmgr` in
-  `config/packages`. `jq` was an undeclared extra, so `luci sync --prune` would have uninstalled a
+  `config/packages`. `jq` was an undeclared extra, so `lui sync --prune` would have uninstalled a
   general-purpose tool that plugins and scripts reach for. The other four were already in
-  `protected-packages` (never pruned) but undeclared; declaring them makes `luci status` honest.
+  `protected-packages` (never pruned) but undeclared; declaring them makes `lui status` honest.
 
 - 2026-11-11T16:05Z [USER] Two clones are intentional, not drift: `/home/work/LuicipherOS` is the
   **live/deployed** copy that the `~/.config` stow symlinks resolve into, and this clone
@@ -181,11 +190,11 @@ history, one holding the November detail); no entry was dropped.
 
 ## [PROGRESS]
 
-- 2026-11-11T21:36Z `[TOOL]` Delivered issue #5. Added `scripts/luci.sh` (subcommands `sync`,
-  `status`, `root`, `version`, `help`; EUID guard; runtime tree resolution), `tests/test_luci.sh`
-  (11 checks, all pass), and a bootstrap step installing the CLI to `/usr/local/bin/luci`. Declared
+- 2026-11-11T21:36Z `[TOOL]` Delivered issue #5. Added `scripts/lui.sh` (subcommands `sync`,
+  `status`, `root`, `version`, `help`; EUID guard; runtime tree resolution), `tests/test_lui.sh`
+  (11 checks, all pass), and a bootstrap step installing the CLI to `/usr/local/bin/lui`. Declared
   five packages in `config/packages`. Static checks pass, `tests/test_sync.sh` still 17/17. The
-  live `luci status` on the target now reports 2 pacman extras (down from 3): `python-rich` and
+  live `lui status` on the target now reports 2 pacman extras (down from 3): `python-rich` and
   `yay-bin-debug`, both undeclared leftovers rather than missing declarations.
 
 - 2026-11-11T21:17Z `[TOOL]` Filed the 2026-11-11 findings as GitHub issues. New: **#13** instant
@@ -254,7 +263,7 @@ history, one holding the November detail); no entry was dropped.
 
 - 2026-10-31T10:30Z [USER] Desktop: Snapper root config created; `/.snapshots` remounted from
   `@snapshots` (subvolid 260); snapper-timeline and snapper-cleanup timers active; baseline
-  snapshot #1 "baseline before luci sync". Changes are on the machine, not yet in repo lists.
+  snapshot #1 "baseline before lui sync". Changes are on the machine, not yet in repo lists.
 
 - 2026-10-31T10:07Z [TOOL] AGENTS.md rewritten to the 11-section template; this file created.
   Existing archinstall field notes and agent-skill pointers were preserved.
@@ -293,9 +302,9 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
-- 2026-11-11T21:39Z `[TOOL]` Two file-mode traps found while adding the `luci` CLI.
+- 2026-11-11T21:39Z `[TOOL]` Two file-mode traps found while adding the `lui` CLI.
   (1) `core.filemode=false` (set earlier in this clone to silence 160 phantom `.agents/skills/**`
-  644->755 changes) also makes git **strip the executable bit on commit**, so `scripts/luci.sh`
+  644->755 changes) also makes git **strip the executable bit on commit**, so `scripts/lui.sh`
   landed as 644 and the deployed clone could not run it. The real fix is not the config knob but
   restoring the worktree: 102 `.agents/**` files plus 57 other tracked files were wrongly `755` on
   disk while the index said `644`. `git ls-files -s | awk '$1=="100644"' | xargs chmod 644`

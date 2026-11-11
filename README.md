@@ -6,7 +6,7 @@ Arch-based, Hyprland-first, keyboard-driven OS-config. Target-tuned for Ryzen 5 
 
 1. **Declarative apps without NixOS** (see `config/`, `scripts/sync.sh`, ADR-0001):
    - `config/packages` (pacman) + `config/packages-arch` (AUR) + `config/flatpaks-system.list` + `config/flatpaks-user.list` are source of truth (`config/flatpaks.list` = legacy compat, system scope).
-   - `luci sync` = install missing only. `luci sync --prune` = + uninstall extras (confirm + `protected-packages` guard).
+   - `lui sync` = install missing only. `lui sync --prune` = + uninstall extras (confirm + `protected-packages` guard).
    - Reboot does nothing by itself; no auto-sync units (manual-only, locked).
    - Hyprland/lock/portals/drivers stay pacman-owned (PAM/SUID + GL traps).
 
@@ -53,7 +53,7 @@ chmod +x scripts/*.sh install/*.sh
 
 - v0.1: target-machine installer + dotfiles + sync (2-4 wks)
 - v0.2: hardware profiles (laptop-amd/intel, desktop-7900xt), power/HiDPI
-- v0.3: optional Nix layer, `luci sync` as binary, CI + VM test matrix
+- v0.3: optional Nix layer, `lui sync` as binary, CI + VM test matrix
 
 ## License
 
