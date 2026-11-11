@@ -293,6 +293,16 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-11T21:39Z `[TOOL]` Two file-mode traps found while adding the `luci` CLI.
+  (1) `core.filemode=false` (set earlier in this clone to silence 160 phantom `.agents/skills/**`
+  644->755 changes) also makes git **strip the executable bit on commit**, so `scripts/luci.sh`
+  landed as 644 and the deployed clone could not run it. The real fix is not the config knob but
+  restoring the worktree: 102 `.agents/**` files plus 57 other tracked files were wrongly `755` on
+  disk while the index said `644`. `git ls-files -s | awk '$1=="100644"' | xargs chmod 644`
+  cleared all of it, and `core.filemode` is now `true` again. New executable files must be staged
+  with `git update-index --chmod=+x` if the bit is ever lost.
+  (2) Never work around a mode problem with `core.filemode=false` in this repo; it silently
+  breaks the next script added.
 
 - 2026-11-11T20:55Z [TOOL] Shell-alternative evaluation for the
   "lots of customisability plus plugins" requirement. Facts: **Amane** is 0.1.2, experimental,
