@@ -36,16 +36,38 @@ OUT=$(LUI_ROOT="$T/not-a-tree" bash "$LUI" root 2>&1); RC=$?
   && ok "non-tree LUI_ROOT rejected" || bad "bad root accepted: rc=$RC out=$OUT"
 
 echo "== 2. sync delegates and passes arguments through =="
-[[ "$(run sync)" == "SYNC-CALLED: " ]] \
+[[ "$(run sync)" == *"SYNC-CALLED:"* ]] \
   && ok "bare sync delegates" || bad "bare sync: $(run sync)"
-[[ "$(run sync --prune --dry-run)" == "SYNC-CALLED: --prune --dry-run" ]] \
+[[ "$(run sync --prune --dry-run)" == *"SYNC-CALLED: --prune --dry-run"* ]] \
   && ok "sync passes flags through" || bad "flag pass-through: $(run sync --prune --dry-run)"
-[[ "$(run sync --prune --yes)" == "SYNC-CALLED: --prune --yes" ]] \
+[[ "$(run sync --prune --yes)" == *"SYNC-CALLED: --prune --yes"* ]] \
   && ok "sync passes --yes" || bad "--yes pass-through: $(run sync --prune --yes)"
 
-echo "== 3. status is read-only =="
-[[ "$(run status)" == "SYNC-CALLED: --prune --dry-run" ]] \
-  && ok "status maps to --prune --dry-run" || bad "status wrong: $(run status)"
+echo "== 3. status is read-only and names the tree =="
+STATUS_OUT=$(run status)
+[[ "$STATUS_OUT" == *"SYNC-CALLED: --prune --dry-run"* ]] \
+  && ok "status maps to --prune --dry-run" || bad "status wrong: $STATUS_OUT"
+[[ "$STATUS_OUT" == *"tree: $T/tree"* ]] \
+  && ok "status prints the resolved tree" || bad "no tree banner: $STATUS_OUT"
+
+echo "== 3b. home fallback warns (stale-clone guard) =="
+# A copy of the CLI with LUI_ROOT unset and /opt absent resolves to $HOME/LuicipherOS.
+mkdir -p "$T/fakehome/LuicipherOS/scripts" "$T/fakebin"
+cp "$T/tree/scripts/sync.sh" "$T/fakehome/LuicipherOS/scripts/sync.sh"
+# the copy must NOT sit inside a tree, so its own-tree rule misses and the
+# $HOME/LuicipherOS fallback is what resolves
+cp "$LUI" "$T/fakebin/lui"
+OUT=$(env -u LUI_ROOT HOME="$T/fakehome" bash "$T/fakebin/lui" status 2>&1)
+[[ "$OUT" == *"[home-fallback]"* ]] \
+  && ok "tree banner marks the fallback" || bad "fallback not labelled: $OUT"
+[[ "$OUT" != *"WARNING:"* ]] \
+  && ok "safe path does not warn (no cry-wolf)" || bad "spurious warning on status: $OUT"
+OUT=$(env -u LUI_ROOT HOME="$T/fakehome" bash "$T/fakebin/lui" sync --prune --dry-run 2>&1)
+[[ "$OUT" == *"WARNING: this is this user's own clone"* ]] \
+  && ok "prune on the fallback warns loudly" || bad "no prune warning: $OUT"
+OUT=$(env -u LUI_ROOT HOME="$T/fakehome" LUI_ROOT="$T/tree" bash "$T/fakebin/lui" sync --prune --dry-run 2>&1)
+[[ "$OUT" != *"WARNING:"* ]] \
+  && ok "no warning when LUI_ROOT is set" || bad "spurious warning: $OUT"
 
 echo "== 4. version / help / unknown =="
 [[ "$(run version)" == lui\ * ]] \
