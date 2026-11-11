@@ -302,6 +302,20 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-11T21:48Z `[TOOL]` Near-miss that validates the multi-user concern. Running `lui` as the
+  **admin account** `luci` resolved to `/home/luci/LuicipherOS` via the `$HOME/LuicipherOS`
+  clone predates `eb68366` (2026-11-02, which declared the hand-installed packages), so `lui status`
+  reported **23 pacman extras, 21 of which are declared** in the canonical tree. `lui sync --prune`
+  run there would have removed 21 real packages. Two facts make this reachable rather than
+  hypothetical: `/home/luci` is `drwx------` and `/home/work` is `drwxr-x---`, so `luci` **cannot
+  read** the canonical tree at `/home/work/LuicipherOS` and the fallback is the only path available
+  to that account. Fix: `lui sync`/`status` now always print `tree: <path> @ <sha> [<source>]`, and
+  `--prune` from a `home-fallback` tree prints an explicit staleness warning (safe paths stay quiet,
+  so the warning keeps its meaning). Covered by `tests/test_lui.sh` (16 checks).
+- 2026-11-11T21:48Z `[ASSUMPTION]` Until a shared tree exists, reconcile from exactly ONE canonical
+  tree, and never run `--prune` from a per-user clone. The per-user-clone model is not merely
+  inconvenient; it is unsafe, because prune trusts the tree it is run from. This promotes the
+  shared-tree item from a convenience to a correctness requirement.
 - 2026-11-11T21:39Z `[TOOL]` Two file-mode traps found while adding the `lui` CLI.
   (1) `core.filemode=false` (set earlier in this clone to silence 160 phantom `.agents/skills/**`
   644->755 changes) also makes git **strip the executable bit on commit**, so `scripts/lui.sh`
