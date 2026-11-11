@@ -128,6 +128,13 @@ linux-lts-headers
 snapper
 snap-pac
 dosfstools
+# boot chain, filesystem tools, privilege escalation.
+# These four are also in protected-packages; declaring them here records intent
+# so `luci status` shows a clean tree instead of unexplained extras.
+btrfs-progs
+efibootmgr
+mkinitcpio
+sudo
 # network, firewall, memory
 firewalld
 wpa_supplicant
@@ -137,6 +144,7 @@ podman
 docker-compose
 python-pip
 socat
+jq
 # audio plumbing (also pulled in as dependencies of other packages)
 gst-plugin-pipewire
 pipewire-jack

@@ -63,8 +63,8 @@ LuicipherOS/
 ├── install/               # archinstall JSON, preflight, bootstrap, boot-time units
 ├── iso/                   # archiso netinstall profile
 ├── research/              # background research notes
-├── scripts/               # sync and ensure-* reconcilers, screenshot helper
-└── tests/                 # shell tests (currently test_sync.sh)
+├── scripts/               # luci CLI, sync and ensure-* reconcilers, screenshot helper
+└── tests/                 # shell tests (test_luci.sh, test_sync.sh)
 ```
 
 - `.agents/` holds agent skills; do not hand-edit what `skills-lock.json` pins.
@@ -80,7 +80,8 @@ LuicipherOS/
   `bootstrap.sh`, `preflight.sh`, `greetd-config.toml`, `vconsole.conf`, `amdgpu-late.service`.
 - `iso/` has `profiledef.sh`, `packages.x86_64`, `airootfs/`, `README.md`.
 - `research/` currently has `office-suites.md`.
-- `scripts/` has `sync.sh`, `ensure-packages.sh`, `ensure-flatpaks.sh`, `screenshot-window.sh`.
+- `scripts/` has `luci.sh` (the `luci` CLI), `sync.sh`, `ensure-packages.sh`,
+  `ensure-flatpaks.sh`, `screenshot-window.sh`.
 
 ## Build & Development Commands
 
@@ -109,12 +110,24 @@ archinstall --config install/archinstall-desktop.json --creds /tmp/creds.json
 3. Reconcile packages (manual only, never automatic):
 
 ```bash
-./scripts/sync.sh                    # install missing only
-./scripts/sync.sh --prune --dry-run  # preview extras
-./scripts/sync.sh --prune            # remove extras (confirms; honors protected-packages)
+luci status                 # read-only: preview what is out of sync
+luci sync                   # install missing only
+luci sync --prune           # remove extras (confirms; honors protected-packages)
 ```
 
-4. Build the netinstall ISO (on Arch with `archiso`):
+`luci` is `scripts/luci.sh`, installed to `/usr/local/bin/luci` by `bootstrap.sh`. Running
+`./scripts/luci.sh ...` from a clone is equivalent. It resolves the tree via `$LUCI_ROOT`, then
+`/opt/LuicipherOS`, then the tree it lives in, then `~/LuicipherOS`. Never run it as root; it
+calls `sudo` itself for the privileged steps.
+
+4. Run the tests (no Arch, no root required):
+
+```bash
+./tests/test_luci.sh
+./tests/test_sync.sh
+```
+
+5. Build the netinstall ISO (on Arch with `archiso`):
 
 ```bash
 sudo pacman -S --needed archiso
@@ -124,10 +137,10 @@ cp -r /usr/share/archiso/configs/releng/efiboot iso/efiboot
 sudo mkarchiso -v -w /tmp/luici-iso-tmp -o out/ iso/
 ```
 
-5. Lint, formatter, package manager for the repo itself: > TODO: none configured beyond
+6. Lint, formatter, package manager for the repo itself: > TODO: none configured beyond
    `bash -n`. [NEEDS TEAM INPUT] (e.g. shellcheck, shfmt).
 
-6. Target-machine maintenance (installed Arch desktop, run as the admin account):
+7. Target-machine maintenance (installed Arch desktop, run as the admin account):
 
 ```bash
 sudo pacman -Syu                  # always a FULL upgrade; never install single packages first
@@ -237,8 +250,9 @@ learning side-quest only.
 ## Testing Strategy
 
 - Static: `bash -n`, `python3 -m json.tool`, `sync.sh --prune --dry-run` (see TESTING.md §0).
-- Unit/regression: `tests/test_sync.sh` covers the sync contract. > TODO: confirm how to run it
-  and whether it needs Arch; add it to the documented commands. [NEEDS TEAM INPUT]
+- Unit/regression: `tests/test_sync.sh` covers the sync contract and `tests/test_luci.sh` covers
+  the CLI (tree discovery, delegation, `status`, argument pass-through). Both are pure bash with
+  mocked `pacman`/`flatpak`/`sudo`, need no Arch and no root, and are safe to run anywhere.
 - VM smoke: QEMU/OVMF, Arch ISO, 4G RAM, 60G disk. PASS means Hyprland (uwsm) loads,
   SUPER+T opens Tabby, SUPER+Space opens Vicinae, Quickshell bar and swaync are visible, and
   Print -> region -> Gradia works.

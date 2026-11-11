@@ -95,6 +95,18 @@ history, one holding the November detail); no entry was dropped.
 
 ## [DECISIONS]
 
+- 2026-11-11T21:36Z `[USER]` Ship a real `luci` command instead of documenting a repo path:
+  `scripts/luci.sh`, installed to `/usr/local/bin/luci` by `bootstrap.sh`. `luci sync` is the
+  single reconcile entry point; `luci status` is the read-only preview. Tree resolution is
+  `$LUCI_ROOT` -> `/opt/LuicipherOS` -> the tree the script lives in -> `~/LuicipherOS`, chosen so
+  the same installed copy keeps working when the tree later moves to a shared system location
+  (the multi-user plan). The CLI refuses to run as root, matching the AGENTS.md rule that sync runs
+  as the daily account and calls `sudo` itself. Sync stays manual-only: no timer, unit or hook.
+- 2026-11-11T21:36Z `[USER]` Declare `jq`, `sudo`, `mkinitcpio`, `btrfs-progs` and `efibootmgr` in
+  `config/packages`. `jq` was an undeclared extra, so `luci sync --prune` would have uninstalled a
+  general-purpose tool that plugins and scripts reach for. The other four were already in
+  `protected-packages` (never pruned) but undeclared; declaring them makes `luci status` honest.
+
 - 2026-11-11T16:05Z [USER] Two clones are intentional, not drift: `/home/work/LuicipherOS` is the
   **live/deployed** copy that the `~/.config` stow symlinks resolve into, and this clone
   (`/home/work/dev/personal/projects/IT/LuicipherOS`) is **development**. Dotfile changes made here
@@ -168,6 +180,13 @@ history, one holding the November detail); no entry was dropped.
   LFS learning only. Time of day UNCONFIRMED (date from ADR).
 
 ## [PROGRESS]
+
+- 2026-11-11T21:36Z `[TOOL]` Delivered issue #5. Added `scripts/luci.sh` (subcommands `sync`,
+  `status`, `root`, `version`, `help`; EUID guard; runtime tree resolution), `tests/test_luci.sh`
+  (11 checks, all pass), and a bootstrap step installing the CLI to `/usr/local/bin/luci`. Declared
+  five packages in `config/packages`. Static checks pass, `tests/test_sync.sh` still 17/17. The
+  live `luci status` on the target now reports 2 pacman extras (down from 3): `python-rich` and
+  `yay-bin-debug`, both undeclared leftovers rather than missing declarations.
 
 - 2026-11-11T21:17Z `[TOOL]` Filed the 2026-11-11 findings as GitHub issues. New: **#13** instant
   `0x00800800` platform resets (`bug`, `needs-triage`), **#14** `03:00.2` D3hot->D0 refusal and GPU
