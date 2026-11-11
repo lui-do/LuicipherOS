@@ -169,6 +169,14 @@ history, one holding the November detail); no entry was dropped.
 
 ## [PROGRESS]
 
+- 2026-11-11T21:17Z `[TOOL]` Filed the 2026-11-11 findings as GitHub issues. New: **#13** instant
+  `0x00800800` platform resets (`bug`, `needs-triage`), **#14** `03:00.2` D3hot->D0 refusal and GPU
+  wedge (`bug`, `ready-for-human`), **#15** move the session lock to after resume (`bug`,
+  `ready-for-agent`), **#16** shell/compositor evaluation (`enhancement`, `needs-triage`), **#17**
+  wall-socket trial (`needs-info`). The lockscreen item was **not** duplicated: **#12** already
+  tracked it, so the root cause, the applied fix (`31dc053`), the remaining manual-suspend exposure
+  and the closed checklist were added there as a comment. Open issues now: 11-17 plus 2-5, 8-10.
+
 - 2026-11-11T21:10Z `[TOOL]` Reconciled the two diverged working copies with origin. The dev clone
   was rebased onto `origin/main` (`bb7815f`); its local `AGENTS.md` and untracked
   `.agent/CONTINUITY.md` were replaced by origin's versions and then union-merged back. `AGENTS.md`
