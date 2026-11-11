@@ -25,7 +25,7 @@ Current status (from `TESTING.md`, git history and session reports through 2026-
 
 ## Operational Metadata
 
-- Unified Agent Prompts version: `v1.0`
+- Unified Agent Prompts version: `v1.0` (initialized 2026-11-10).
 - Prompt source: "Project Documentation & Maintenance" prompt (AGENTS.md + CONTINUITY.md).
 - Documentation reference: this file is the canonical blueprint; operational history lives in
   `.agent/CONTINUITY.md`; vocabulary lives in `CONTEXT.md`.
@@ -37,6 +37,11 @@ Current status (from `TESTING.md`, git history and session reports through 2026-
 - Triage labels: five canonical roles mapped 1:1 to label strings
   (`docs/agents/triage-labels.md`).
 - Domain docs: single-context layout, `CONTEXT.md` + `docs/adr/` (`docs/agents/domain.md`).
+- Two working copies exist and are intentional: `/home/work/LuicipherOS` is the deployed copy
+  whose stow symlinks are live in `~/.config`, and the development clone is where changes are
+  authored. Dotfile edits made in the dev clone do not reach the running desktop until they are
+  committed and pulled (or copied) into the deployed clone. Never edit the deployed clone by
+  assumption.
 
 ## Repository Structure
 
@@ -44,6 +49,7 @@ Current status (from `TESTING.md`, git history and session reports through 2026-
 LuicipherOS/
 ├── .agent/CONTINUITY.md   # operational log (this documentation task)
 ├── .agents/skills/        # agent skills (pinned by skills-lock.json)
+├── .opencode/             # local OpenCode plugin/session state (sessions gitignored)
 ├── AGENTS.md              # this blueprint
 ├── CONTEXT.md             # glossary + locked decisions
 ├── README.md              # user-facing overview, install, roadmap
@@ -277,7 +283,11 @@ learning side-quest only.
 ## Agent Guardrails
 
 - Never commit secrets, credentials, password hashes, or local artifacts (VM screenshots,
-  runbook PDFs, ISO outputs).
+  runbook PDFs, ISO outputs). Concretely, never touch or commit `screenshotVM/` (gitignored),
+  `docs/*.pdf`, `.opencode/sessions/`, or `/tmp/creds.json`.
+- Never run `sync.sh --prune` (without `--dry-run`) on a user's live machine, `mkarchiso` without
+  an explicit request, `pacman -Rns` outside the guarded prune path, or partition-writing commands
+  against a physical disk. Dry-run and confirm first.
 - Never enable auto-sync on boot or add a unit that runs `sync.sh`; manual-only is LOCKED.
 - Never remove or weaken `config/protected-packages`, or make `--prune` run without preview
   and confirmation.
@@ -286,6 +296,11 @@ learning side-quest only.
   account (`work`), never as root; `luci` is the admin account.
 - Never re-add Firefox, waybar, kitty, or swappy; they were deliberately removed.
 - Never add hyprlang `.conf` Hyprland configs.
+- Do not edit `.agents/skills/**` or vendored skill content unless the task is explicitly about
+  skills; treat them as read-only snapshots pinned by `skills-lock.json`.
+- Preserve locked decisions (see `CONTEXT.md`): Vicinae primary + fuzzel fallback, Quickshell bar,
+  Tabby, swaync until a shell notification center exists, manual-only sync, pacman-owned compositor
+  and portals. Reopen only with an explicit user decision and a new/updated ADR.
 - Do not run `archinstall`, `sync.sh --prune`, `mkarchiso`, or anything writing to disks, on
   the host without an explicit user instruction.
 - `amdgpu-late.service` is ENABLED on the desktop (earlier docs said disabled). Do not change
