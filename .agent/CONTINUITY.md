@@ -302,6 +302,12 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-11T21:52Z `[TOOL]` Confirmed on the live machine. `lui status` as `luci` now prints
+  `tree: /home/luci/LuicipherOS @ a86019d [home-fallback]` and reports 23 extras; as `work` it
+  prints `tree: /home/work/LuicipherOS @ 1cc76c9 [home-fallback]` and reports 2. `a86019d` is the
+  SIGPIPE-proof AMD-gate commit and predates `eb68366` (the 2026-11-02 inventory that declared the
+  21 packages), which is exactly why the counts diverge. Two clones, two different answers to the
+  same question, now visible instead of silent.
 - 2026-11-11T21:48Z `[TOOL]` Near-miss that validates the multi-user concern. Running `lui` as the
   **admin account** `luci` resolved to `/home/luci/LuicipherOS` via the `$HOME/LuicipherOS`
   clone predates `eb68366` (2026-11-02, which declared the hand-installed packages), so `lui status`
