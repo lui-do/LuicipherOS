@@ -169,6 +169,16 @@ history, one holding the November detail); no entry was dropped.
 
 ## [PROGRESS]
 
+- 2026-11-11T21:10Z `[TOOL]` Reconciled the two diverged working copies with origin. The dev clone
+  was rebased onto `origin/main` (`bb7815f`); its local `AGENTS.md` and untracked
+  `.agent/CONTINUITY.md` were replaced by origin's versions and then union-merged back. `AGENTS.md`
+  now carries origin's blueprint plus the local-only guardrails. `CONTINUITY.md` is a union of both
+  copies: 151 entries, verified zero dropped against either source, deduped and re-sorted
+  newest-first, tags normalised to plain `[TAG]`. Committed as `08cecbb`. The deployed clone was
+  reset to that commit (its `c9bca0a` had been rewritten by the rebase); both clones now match and
+  are clean. `git config core.filemode false` was set in the dev clone, which removed 160
+  mode-only phantom changes from `git status` without altering any file.
+
 - 2026-11-10T23:10Z [TOOL] Read-only investigation of the 2026-10-27 shutdown photos and a
   56-boot reset-reason census. No BIOS, package, graphics config, boot entry, suspend, or GitHub
   write was performed.
