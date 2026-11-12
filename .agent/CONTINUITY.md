@@ -10,6 +10,21 @@ On 2026-11-11 this log was union-merged from two diverged copies (one holding th
 history, one holding the November detail); no entry was dropped.
 
 ## [PLANS]
+- 2026-11-12T14:11Z `[TOOL]` MemTest86 test plan finalised. Tool: **MemTest86+ v9.00** (GPL v2,
+  2026-10-15), Linux x86_64 ISO `mt86plus_9.00_x86_64.iso.zip`, sha256
+  `55d378c0d7d2e1a99edb6a1ff4bd5c78c179801b1f7cfe5893786c397bc19702`, written to USB with `dd`.
+  Chosen because v9 adds a **Bus Stress Test aimed specifically at DDR5 EXPO/XMP training
+  instability** ("signal integrity failures ... or XMP/EXPO training issues"), which is exactly the
+  working hypothesis, plus an SPD integrity check. The machine is UEFI with **Secure Boot already
+  disabled**, so the unsigned-image caveat does not apply. The USB route touches neither the ESP nor
+  the LUKS disk; the `memtest86+-efi` package was rejected because it writes to `/boot` and adds a
+  boot entry, which AGENTS.md forbids without an explicit instruction. Released 2026-10-15.
+- 2026-11-12T14:11Z `[TOOL]` Machine facts for the test: board ASUS TUF GAMING B650E-PLUS
+  WIFI, BIOS 4004
+  (2026-09-16), UEFI, Secure Boot disabled, TPM2 present. Disks at the time of writing: `nvme0n1`
+  931.5G KINGSTON SNV3S1000G (`nvme0n1p1` 1G vfat `/boot`, `nvme0n1p2` 860G LUKS -> btrfs root)
+  and `zram0` 4G swap. **No USB device was attached**, so the stick still has to be plugged in and
+  identified. ASUS boot menu is F8; BIOS setup is DEL.
 - 2026-11-12T13:19Z `[TOOL]` Proposed next diagnostic, pending approval, cheapest first: (1)
   `sudo modprobe amd64_edac` to register memory controllers and expose correctable/uncorrectable
   error counters
