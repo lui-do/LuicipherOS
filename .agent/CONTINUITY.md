@@ -10,6 +10,13 @@ On 2026-11-11 this log was union-merged from two diverged copies (one holding th
 history, one holding the November detail); no entry was dropped.
 
 ## [PLANS]
+- 2026-11-12T13:19Z `[TOOL]` Proposed next diagnostic, pending approval, cheapest first: (1)
+  `sudo modprobe amd64_edac` to register memory controllers and expose correctable/uncorrectable
+  error counters
+  during normal use - no reboot, no config change, reversible; (2) MemTest86 from USB, which tests
+  the memory at its BIOS-configured speed including EXPO, as the definitive test; (3) EXPO off in
+  BIOS as a single-variable trial; (4) PSU swap only if the first three pass. Ruled out for the
+  lockup: thermal (temps normal), GPU (no GPU error of any kind), OOM, suspend.
 
 - 2026-11-11T11:11Z [TOOL] Proposed next test, pending approval: set `control=on` for the GPU's
   auxiliary PCI functions and observe DMUB errors, shutdown stalls and resets. Requires sudo but no
@@ -302,6 +309,28 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-12T13:19Z `[USER]` First-hand observation of the 2026-11-12 freeze, which settles its
+  nature. The user was in Helium; the mouse cursor would not move; **Caps Lock did not toggle its
+  LED**; the fans kept spinning; the monitor stayed on with a frozen image; and power-off required a
+  **long press**.
+  Caps Lock not toggling means the kernel was not processing input, and the fans still running means
+  the machine was powered and not thermally shut down. This is a **hard kernel lockup**, not a dead
+  display: the whole system stopped executing while power stayed on. A long press is a hardware cut,
+  so no software shutdown occurred and nothing was flushed to disk.
+- 2026-11-12T13:19Z `[TOOL]` **No memory-error visibility exists on this machine.** `amd64_edac` is
+  built as a module (`CONFIG_EDAC_AMD64=m`, alias `fam001A` covers Zen 5 / Granite Ridge) but is
+  **not loaded**, and `/sys/devices/system/edac/mc/` is empty, so no EDAC memory controller is
+  registered and no
+  correctable/uncorrectable counters exist. `dmidecode` is not installed, so DRAM speed and EXPO
+  state cannot be read without root. A memory fault causing a hard lockup would therefore be
+  completely invisible today.
+- 2026-11-12T13:19Z `[ASSUMPTION]` Failure classes C and D are probably **one underlying
+  CPU/memory/power fault with two outcomes**: `0x00800800` ("internal CPU shutdown event occurred")
+  is the CPU-level event
+  that resets, and the 2026-11-12 lockup is the same class of event that hangs instead. Both are
+  CPU-level, both leave no useful trace, and both need a hardware cut or reset. This supersedes the
+  earlier framing of `0x00800800` as memory-or-PSU, and it does not change the conclusion that the
+  GPU D3hot wedge (class A) is a separate, understood problem.
 - 2026-11-12T13:13Z `[TOOL]` Investigated the 2026-11-12 freeze. Boot `ef23e494` ran 13:39:12 to
   13:53:57 and its journal **stops mid-session** with no shutdown sequence, no suspend, no OOM
   kill, and no coredump. The kernel logged nothing at all after 13:40:44 (boot messages only), and
