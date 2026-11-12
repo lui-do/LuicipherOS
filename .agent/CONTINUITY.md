@@ -309,6 +309,11 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-12T13:35Z `[TOOL]` Issue #13 rewritten so it is self-consistent: the Summary now lists
+  both symptoms (instant resets and the 2026-11-12 lockup) as one likely CPU-level fault; the
+  Evidence table uses the kernel's own reset-reason wording; "Ruled out" gains thermal, OOM/suspend
+  and GPU; the test plan marks `modprobe amd64_edac` done-and-unavailable and keeps MemTest86 first.
+  The earlier "partially superseded" banner was removed now that the body matches the comment.
 - 2026-11-12T13:34Z `[TOOL]` `sudo modprobe amd64_edac` **failed**: `could not insert
   'amd64_edac': No such device`. The CPU is family 26 (0x1A, Zen 5 / Granite Ridge) and the
   module's aliases do include
