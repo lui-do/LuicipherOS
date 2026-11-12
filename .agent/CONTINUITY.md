@@ -10,6 +10,21 @@ On 2026-11-11 this log was union-merged from two diverged copies (one holding th
 history, one holding the November detail); no entry was dropped.
 
 ## [PLANS]
+- 2026-11-12T22:41Z `[USER]` Test plan agreed and written up as
+  `docs/memtest-and-bios-test-plan.md`. Sequence: (1) MemTest86+ at **current** settings first, so
+  it tests the machine as it fails; (2) then record the Ai Tweaker baseline in BIOS before changing
+  anything; (3) then single-variable BIOS tests in order - Ai Overclock Tuner (EXPO) to Auto, Memory
+  Context Restore to Disabled, Precision Boost Overdrive, Curve Optimizer, Power Supply Idle Control
+  to Typical Current Idle, with SoC voltage observed only. **Decision rule: if MemTest86 reports any
+  error, EXPO is disabled to Auto immediately** and MemTest86 is re-run to confirm. If MemTest86 is
+  clean, EXPO is not the cause and the suspect list starts at Memory Context Restore / PBO / Curve
+  Optimizer.
+- 2026-11-12T22:41Z `[TOOL]` The LuicipherOS netinstall stick (14.4 GB DataTraveler,
+  `LUICI_202610`) was formatted to FAT32 `MEMTEST` to serve as the MemTest86+ F6 report target.
+  Its image was backed up first to `/home/work/luici-installer-backup.img` (2 GB) and verified with
+  `blkid` (LABEL and iso9660 intact) and `fdisk` (both partitions present), so the installer is
+  restorable with a single `dd`. The MemTest86+ stick is written and verified (`sdc`,
+  `MT86PLUS_64`).
 - 2026-11-12T14:11Z `[TOOL]` MemTest86 test plan finalised. Tool: **MemTest86+ v9.00** (GPL v2,
   2026-10-15), Linux x86_64 ISO `mt86plus_9.00_x86_64.iso.zip`, sha256
   `55d378c0d7d2e1a99edb6a1ff4bd5c78c179801b1f7cfe5893786c397bc19702`, written to USB with `dd`.
