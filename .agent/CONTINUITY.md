@@ -309,6 +309,20 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-12T13:34Z `[TOOL]` `sudo modprobe amd64_edac` **failed**: `could not insert
+  'amd64_edac': No such device`. The CPU is family 26 (0x1A, Zen 5 / Granite Ridge) and the
+  module's aliases do include
+  `cpu:type:x86,ven0002fam001Amod*:feature:*`, so it claims support, but init returns `ENODEV`
+  and `/sys/devices/system/edac/mc/` stays empty. Even if it bound, this is consumer DDR5 without
+  ECC, so there would be no correctable errors to count. EDAC is therefore a **dead end** as an
+  early-warning system here. The kernel's MCE decoder is active (`MCE: In-kernel MCE decoding
+  enabled`), so an uncorrectable machine check would still be logged; none has appeared in any
+  retained boot.
+- 2026-11-12T13:34Z `[TOOL]` Updated GitHub issue #13 at the user's request: retitled to "CPU-level
+  events: instant resets (0x00800800) and hard lockups, cause unknown"; annotated the body as
+  partially
+  superseded; and added a comment with the corrected reset-reason decoding, the 2026-11-12 lockup
+  evidence, the EDAC dead end, and the revised test plan (MemTest86 -> EXPO off -> PSU).
 - 2026-11-12T13:19Z `[USER]` First-hand observation of the 2026-11-12 freeze, which settles its
   nature. The user was in Helium; the mouse cursor would not move; **Caps Lock did not toggle its
   LED**; the fans kept spinning; the monitor stayed on with a frozen image; and power-off required a
