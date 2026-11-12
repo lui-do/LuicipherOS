@@ -302,6 +302,28 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-12T13:13Z `[TOOL]` Investigated the 2026-11-12 freeze. Boot `ef23e494` ran 13:39:12 to
+  13:53:57 and its journal **stops mid-session** with no shutdown sequence, no suspend, no OOM
+  kill, and no coredump. The kernel logged nothing at all after 13:40:44 (boot messages only), and
+  userspace logged nothing after 13:53:57 except a scheduled tmpfiles job. No `Refused to change
+  power state`, no DMUB/DMCUB error, no `gfxoff`, no `SMU: No response`, no vblank timeout: this is
+  **not** the D3hot/DMUB wedge and **not** an OOM. The only kernel warning of note is
+  `i2c-designware-pci 0000:03:00.3: timeout in disabling adapter` at boot, and Hyprland emitted ten
+  `pixman_region32_*: Invalid rectangle passed` / `*** BUG ***` lines in the three seconds after
+  start, which is startup noise, not a precursor three minutes later. No MCE, no hardware error and
+  no thermal throttling appear in any retained boot, and temperatures are normal (GPU edge 47 C,
+  junction 56 C, mem 70 C; Tctl 58 C). **The logs contain no explanation for the freeze.**
+- 2026-11-12T13:13Z `[TOOL]` Reset-reason decoding corrected. The kernel strings are: `0x00200800` =
+  "ACPI power state transition occurred" (22 boots, the normal case), `0x00080800` = "software wrote
+  0x6 to reset control register 0xCF9" (3 boots, a software-initiated reset), and `0x00800800` =
+  "**internal CPU shutdown event occurred**" (2 boots). The `0x00800800` class is therefore a
+  CPU-level event, not a memory or PSU event as earlier assumed. Boot `db50dd3d` reports
+  `0x00200800` for `ef23e494`'s end, which is the same value a clean poweroff produces, so it does
+  not by itself prove the OS handled a power-button event.
+- 2026-11-12T13:13Z `[ASSUMPTION]` The 2026-11-12 freeze is a **new, distinct failure class (D)**: a
+  silent stop with no kernel trace, no reset-reason signature and no recovery path in the logs. It
+  cannot be diagnosed from the journal. What is needed is the user's observation at the moment of
+  the freeze.
 - 2026-11-11T21:52Z `[TOOL]` Confirmed on the live machine. `lui status` as `luci` now prints
   `tree: /home/luci/LuicipherOS @ a86019d [home-fallback]` and reports 23 extras; as `work` it
   prints `tree: /home/work/LuicipherOS @ 1cc76c9 [home-fallback]` and reports 2. `a86019d` is the
@@ -614,6 +636,14 @@ history, one holding the November detail); no entry was dropped.
   flag required (details in AGENTS.md Code Style).
 
 ## [OUTCOMES]
+- 2026-11-12T13:13Z `[USER]` Asked whether the `luci` admin account can be renamed to `lui`.
+  Answered and written up as `docs/rename-admin-account.md`: possible, and safer than a typical
+  rename because
+  `usermod -l` keeps the UID so file ownership is unaffected, but **blocked** because `usermod`
+  refuses to rename a user with running processes and `luci` is the only sudoer. Recommended
+  approach is a temporary second `wheel` account; recommended decision is **do not rename now**,
+  since it is cosmetic and the shared-tree work makes the account name irrelevant. Also recorded
+  that `work` **is** in `wheel` and is blocked only by having no usable password.
 
 - 2026-11-11T16:35Z [TOOL] The hypridle change is committed as `c9bca0a` ("fix(hypr): drop
   DPMS-off and auto-suspend listeners") touching only that one file; `chmod 644` was restored
