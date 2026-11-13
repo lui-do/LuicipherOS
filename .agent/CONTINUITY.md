@@ -339,6 +339,10 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-13T14:36Z `[USER]` Verified on the board: the two DIMMs are in **DIMM_A2 and DIMM_B2**,
+  which is the manual's recommended population for two modules. DIMM slot placement is therefore
+  **ruled out**. This also means MemTest86's `Slot 1` / `Slot 3` labels are its own numbering
+  (SPD-address order), not A1/B1 - do not read them as physical slot positions in future reports.
 - 2026-11-13T12:41Z `[TOOL]` **Correction: there is no memory test result.** The F6 report the user
   saved (`MT86P_01.TXT`) ends with `Passes completed: 0`, `Errors: 0`, `Final Result: In progress
   (running for 00:00:07)`. It is a **seven-second snapshot** taken to prove F6 worked, not a
