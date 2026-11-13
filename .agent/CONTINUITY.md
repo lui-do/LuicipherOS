@@ -339,6 +339,30 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-13T12:19Z `[TOOL]` **The 2026-11-13 MemTest86 session gave the best evidence
+  yet: the machine reset with `0x00800800` while MemTest86 was running, and
+  MemTest86 reported zero errors.**
+  Timeline (all verified): 2026-11-12 23:47:04 a clean `sudo reboot` by `luci` entered MemTest86
+  (the journal shows a full shutdown sequence, `Unmounted /boot`,
+  `The system will reboot now!`); MemTest86 ran
+  **4 h 23 m**; at **2026-11-13 04:10:42** the machine reset - `btime` is 1794539442, and boot 0
+  reports `Previous system reset reason [0x00800800]: internal CPU shutdown event occurred`. The
+  machine then sat at the LUKS prompt until the user unlocked it around 10:44, which is why the
+  persistent journal has no entries in the MemTest86 window (journald writes only after root is
+  mounted).
+- 2026-11-13T12:19Z `[ASSUMPTION]` This is the **fifth** `0x00800800` event (2026-10-19,
+  2026-10-27, 2026-11-05, 2026-11-10, 2026-11-13) and the first under a known, controlled
+  workload. The combination of
+  **zero memory errors plus a CPU-level reset under sustained load** argues that the fault is **not
+  memory data corruption**: the memory delivered correct data and the system died anyway. That
+  demotes EXPO as a cause of data errors and promotes **power delivery (PSU/VRM) or CPU-level
+  instability**. The ~4 h 23 m time-to-failure under sustained heavy load is the signature of
+  something that degrades with heat or sustained power draw rather than a random bit flip.
+- 2026-11-13T12:19Z `[TOOL]` Caveat on the memory result: the saved F6 report covers the
+  **first pass only**, so it does not tell us how many passes completed in the 4 h 23 m
+  A re-run would be
+  valuable less as a memory test than as a **reproducibility test** - a second reset under the same
+  conditions would convert an intermittent fault into a repeatable one.
 - 2026-11-12T13:35Z `[TOOL]` Issue #13 rewritten so it is self-consistent: the Summary now lists
   both symptoms (instant resets and the 2026-11-12 lockup) as one likely CPU-level fault; the
   Evidence table uses the kernel's own reset-reason wording; "Ruled out" gains thermal, OOM/suspend
