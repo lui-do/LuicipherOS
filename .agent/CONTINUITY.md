@@ -339,6 +339,22 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-13T22:49Z `[USER]` Thermal test result: `Tctl` held **77-81 C** under a sustained all-core
+  load (`yes` loop, all cores, 20-30 min). That is a plateau with a comfortable margin to the ~95 C
+  throttle point, and on a 65 W 9600X with an ARCTIC Freezer 36 it is exactly what a healthy cooler
+  produces. **CPU thermal is ruled out** as the cause of the load-induced resets. Caveats recorded:
+  the `yes` loop is an ALU-only load (a heavier AVX workload could run warmer, but there is ~15 C of
+  headroom); the test ran 20-30 min rather than the 4 h 23 m the fault took, though a flat plateau
+  implies steady state; and **no motherboard/VRM temperature sensor is exposed** - `nct6775` is
+  available but not loaded, and loading it on this board would need `acpi_enforce_resources=lax`,
+  i.e. a boot-parameter change, so VRM temperature remains unmeasurable for now.
+- 2026-11-13T22:49Z `[USER]` The `sudo pacman -Syu` was **declined at the confirmation prompt**
+  (`n`), so no packages were installed and the diagnostic baseline is intact (linux 7.2.11, mesa
+  26.2.6, systemd 262.1, running kernel 7.2.11). The package database is nevertheless **synced**,
+  leaving 169 packages pending, including **linux 7.2.11 -> 7.3.4** and mesa 26.2.6 -> 26.2.7. The
+  system is therefore in a partial-upgrade state: single-package installs are unsafe until a full
+  `-Syu` is run, and that upgrade is deliberately **held** because a new kernel would destroy the
+  baseline.
 - 2026-11-13T14:36Z `[USER]` Verified on the board: the two DIMMs are in **DIMM_A2 and DIMM_B2**,
   which is the manual's recommended population for two modules. DIMM slot placement is therefore
   **ruled out**. This also means MemTest86's `Slot 1` / `Slot 3` labels are its own numbering
