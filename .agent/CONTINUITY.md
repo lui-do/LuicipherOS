@@ -339,6 +339,25 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-13T12:41Z `[TOOL]` **Correction: there is no memory test result.** The F6 report the user
+  saved (`MT86P_01.TXT`) ends with `Passes completed: 0`, `Errors: 0`, `Final Result: In progress
+  (running for 00:00:07)`. It is a **seven-second snapshot** taken to prove F6 worked, not a
+  completed pass. The earlier entry concluding "MemTest86 found zero errors" was based on the user's
+  description and is **withdrawn**. Memory remains unmeasured at EXPO speed. The reset-under-load
+  finding stands: the machine did reset at 04:10:42 during the session.
+- 2026-11-13T12:41Z `[TOOL]` What the report does establish: `IMC: DDR5-6000 / CAS 38-48-48-96`, so
+  **EXPO is enabled** (not JEDEC 4800); memory is `2 x 16384 MB DDR5-6000 Apacer GD2.5931WT.00J`
+  reported in **Slots 1 and 3**. On AM5 the two-DIMM recommendation is normally A2/B2 (2nd and 4th),
+  so the physical slot population needs verifying against the board manual - a known cause of
+  instability at DDR5-6000. MemTest86's slot numbering may not map 1:1 to A1/B1, so this must be
+  checked on the board, not inferred.
+- 2026-11-13T12:41Z `[USER]` Hardware inventory (all components new): CPU cooler **ARCTIC Freezer 36
+  Black**; PSU **Cooler Master "Elite Gold" 850 W**; RAM **Apacer PANTHER 32 GB DDR5-6000 CL38**
+  (2x16, EXPO); case darkFlash Aquarius Mesh. 850 W is correctly sized for a 65 W 9600X plus a ~315
+  W RX 7900 XT, so capacity is not the issue; the "Elite" tier is a budget line, and since
+  everything is new a manufacturing defect is more plausible than wear. No spare PSU is available,
+  so a PSU swap is not currently testable. `lm_sensors` **is installed** (`sensors` present);
+  `s-tui`, `btop`, `nvtop` and `stress-ng` are available in the repos but not installed.
 - 2026-11-13T12:27Z `[USER]` Correction to the load context of the earlier events.
   They were **not** at idle: the user was running Helium (Chromium) with 10-15 tabs plus
   a terminal with agents, i.e. real
