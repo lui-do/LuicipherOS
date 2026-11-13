@@ -339,6 +339,15 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-13T12:27Z `[USER]` Correction to the load context of the earlier events.
+  They were **not** at idle: the user was running Helium (Chromium) with 10-15 tabs plus
+  a terminal with agents, i.e. real
+  moderate-to-heavy load. Combined with the 2026-11-13 reset during 4 h 23 m of sustained MemTest86
+  load, **every known event is load-induced**. This demotes **Curve Optimizer**, whose classic
+  signature is instability at *idle and light load* (the CPU cannot hold the low idle voltage), and
+  promotes **power delivery (PSU / motherboard VRM)**. It also means the 2026-11-13 event happened
+  with the desktop already moved to the wall socket, so the power strip is not implicated in it.
+  Thermal remains open and unmeasured: nothing has recorded CPU temperature under sustained load.
 - 2026-11-13T12:19Z `[TOOL]` **The 2026-11-13 MemTest86 session gave the best evidence
   yet: the machine reset with `0x00800800` while MemTest86 was running, and
   MemTest86 reported zero errors.**
