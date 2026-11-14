@@ -339,6 +339,24 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-14T14:36Z `[USER]` **New symptom reported, distinct from the hard lockup: a blank start
+  with the system alive.** On the morning of 2026-11-14, before the MemTest86 run, three attempts to
+  boot Linux normally produced a **blank screen while Caps Lock still toggled its LED** - i.e. the
+  kernel was running and processing input, and only the display had failed. F8 then displayed the
+  firmware boot menu normally, and MemTest86 was selected from it. This is the "blank start" symptom
+  already tracked in issue #11, and it is **not** the 2026-11-12 event, where Caps Lock did **not**
+  toggle and the whole system was hung. Diagnostic value: a toggling Caps Lock separates a dead
+  display from a dead kernel, and this event is the former.
+- 2026-11-14T14:36Z `[TOOL]` Why those failed boots left no journal trace: `journalctl --list-boots`
+  shows no boot between `d67af159` (ending 2026-11-13 23:50:27, a **clean** shutdown - `Reached
+  target Shutdown`, `Unmounted /boot`) and `22ce242a` (2026-11-14 12:12:24). The persistent journal
+  is only written after `/var/log` is mounted, which is after the LUKS unlock, so a boot whose
+  screen is blank at the LUKS prompt can never be recorded. The blank screen therefore happens at or
+  before the initramfs stage. On a working boot this session shows the sequence `simpledrm` ->
+  `Console: switching to colour frame buffer device 128x48` (the text console, where the LUKS prompt
+  appears), with `amdgpu` only initialising minutes later after the manual late-load. So the blank
+  start is a **firmware-framebuffer / display handoff failure, before amdgpu is even loaded**, not
+  an amdgpu driver failure.
 - 2026-11-14T14:31Z `[USER]` **MemTest86 re-run produced a clean full pass AND a reproduction.**
   Report `MT86P_02.TXT`: `Passes completed: 1`, `Errors: 0`, `ECC Errors: 0`, `Final Result: PASS
   (running for 00:21:37)` - all twelve tests clean, including Test 03 (Bus stress, R/W turnaround)
