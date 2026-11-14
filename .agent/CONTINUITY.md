@@ -226,6 +226,16 @@ history, one holding the November detail); no entry was dropped.
   LFS learning only. Time of day UNCONFIRMED (date from ADR).
 
 ## [PROGRESS]
+- 2026-11-14T22:26Z `[TOOL]` The five untracked project items from the original 7-item list are now
+  GitHub issues, so the whole backlog is visible: **#18** shared multi-user settings tree
+  (correctness item, supersedes the per-user-clone model), **#19** `luci update` one-word system
+  update + notification (depends on #18), **#20** replace Tabby with a terminal that has SSH/remote
+  workflow, theming and a borderless mode (kitty excluded by AGENTS.md), **#21** rice Hyprland + a
+  GUI/TUI config tool (note: every mainstream Hyprland GUI editor targets the legacy .conf format,
+  so it fights the native-Lua lock), **#22** Vicinae theming (the deferred half; apps half done via
+  config/local-apps). All labelled `enhancement` + `needs-triage`, cross-linked: #19 -> #18, #21 and
+  #22 -> #16 (shell decision). This closes the tracking gap where 5 of the 7 items lived only in
+  conversation.
 - 2026-11-14T22:19Z `[TOOL]` `generate-local-apps` is now wired into the CLI and the reconcile. `lui
   sync` runs it automatically on the add-only path (so `config/local-apps` is realized every sync),
   and a new `lui local-apps [--remove]` subcommand drives the generator directly for targeted use.
