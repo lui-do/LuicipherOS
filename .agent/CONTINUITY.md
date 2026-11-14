@@ -339,6 +339,22 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-14T17:08Z `[TOOL]` Checked the Arch "random freeze" thread (id 279589) the user
+  found. It was
+  actually solved as a **NIC PCIe AER fault** (`r8169` Uncorrected (Fatal), `device recovery
+  failed` -> panic), fixed with `r8168-dkms`; the thread's general lesson is that AER errors can
+  stem from **ASPM**. Applied to this machine: the wired NIC is a **Realtek RTL8125 2.5GbE
+  (`0a:00.0`, driver `r8169`)**, and a full-boot scan for *true* AER/PCIe errors found **zero**
+  (the 280 raw `pcieport` lines are all benign `PME: Signaling with IRQ` wake-ups), and zero errors
+  on the NIC specifically. So the thread's cause is not present here. It does not explain the
+  `0x00800800` MemTest86 reset anyway: that reproduces bare-metal (no `r8169`, no NIC traffic) and
+  is a CPU-internal event, not a PCIe link error. What it does contribute is **ASPM** as a cheap
+  BIOS toggle, recorded to fold into the EXPO-off test (do not change two things at once).
+- 2026-11-14T17:08Z `[ASSUMPTION]` ASPM is now a plausible cause for the **Linux-side**
+  PCIe power-state
+  symptoms only (the blank start #11, the GPU D3hot wedge #14), not for the bare-metal MemTest86
+  reset. Priority therefore: run the EXPO-off test first (the last clearable variable for the
+  reset); ASPM is a secondary BIOS experiment for the display/GPU class of symptoms.
 - 2026-11-14T16:53Z `[USER]` **BIOS baseline recorded** (first time these values have been read):
   `Ai Overclock Tuner` = **EXPO I** (enabled); `Memory Context Restore` = auto; `Precision Boost
   Overdrive` = **auto**; `Curve Optimizer` = **auto**; `Power Supply Idle Control` = auto;
