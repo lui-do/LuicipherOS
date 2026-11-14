@@ -339,6 +339,31 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-14T16:53Z `[USER]` **BIOS baseline recorded** (first time these values have been read):
+  `Ai Overclock Tuner` = **EXPO I** (enabled); `Memory Context Restore` = auto; `Precision Boost
+  Overdrive` = **auto**; `Curve Optimizer` = **auto**; `Power Supply Idle Control` = auto;
+  `CPU SoC voltage` = **1.272 V** (auto). **PBO and Curve Optimizer are therefore both ruled out** -
+  the strongest earlier hypothesis for light-load instability was that an aggressive negative CO
+  offset was set, and it is not set at all. VSOC at 1.272 V is inside AMD's ~1.30 V ceiling but on
+  the high side for DDR5-6000; it is chosen by the board's auto rules *because EXPO is enabled*, so
+  disabling EXPO should also lower it.
+- 2026-11-14T16:53Z `[USER]` Another **hard lockup**, 2026-11-14 evening, while using Helium:
+  animations (including text) **slowed progressively until the machine froze**, and then Caps Lock
+  and Ctrl+Alt+Fn both did nothing, so the kernel was dead. A hard power-off was required. The
+  progressive slowdown before death is a new detail - it suggests something **degrading under load**
+  rather than an instantaneous fault. The previous boot ended at 17:01:43 with no clean-shutdown
+  markers and no panic or lockup message in the journal, and the next boot reports `0x00080800:
+  software wrote 0x6 to reset control register 0xCF9` - a different ending from the `0x00800800`
+  events. That value is ambiguous: `panic=0`, `hardlockup_panic=0` and `softlockup_panic=0`, so the
+  kernel would not self-reboot, and a four-second power-button hold does not reliably clear the
+  register, so the CF9 reading may be stale.
+- 2026-11-14T16:53Z `[ASSUMPTION]` **The failure rate is increasing.** The `0x00800800` resets ran
+  roughly weekly (2026-10-19, 10-27, 11-05, 11-10), but 2026-11-12 to 11-14 produced, in three days:
+  a hard lockup, a blank start (three attempts), a `0x00800800` reset and a second hard lockup. Some
+  of that is explained by now running MemTest86 deliberately, but the 2026-11-14 evening lockup
+  happened under ordinary Helium use. A rising failure rate on brand-new, shop-assembled hardware
+  points at a **degrading or marginal component** and strengthens the case for warranty action
+  rather than further software-side tuning.
 - 2026-11-14T14:36Z `[USER]` **New symptom reported, distinct from the hard lockup: a blank start
   with the system alive.** On the morning of 2026-11-14, before the MemTest86 run, three attempts to
   boot Linux normally produced a **blank screen while Caps Lock still toggled its LED** - i.e. the
