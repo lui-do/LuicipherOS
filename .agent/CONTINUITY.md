@@ -10,6 +10,15 @@ On 2026-11-11 this log was union-merged from two diverged copies (one holding th
 history, one holding the November detail); no entry was dropped.
 
 ## [PLANS]
+- 2026-11-14T23:07Z `[USER]` **Plan for 2026-11-16:** (1) reboot -> verify
+  `amdgpu.ppfeaturemask=0xffff7fff` is live in `/proc/cmdline` (it has been in
+  `arch-lateload.conf` since 2026-11-14 but no boot has used it yet); (2) from now,
+  record the reset reason after every boot (`journalctl -k -b | grep -m1 'Previous
+  system reset'`) to watch for new `0x00800800` events under EXPO-off + ppfeaturemask;
+  (3) then start #21 rice-up / shared-palette pipeline, building on the new
+  `luicipher/` override layering. Quickshell tokens layer is verified working; bar
+  baseline 190 MB with async plugin loading. 5 commits pending push (`git push
+  origin main`).
 - 2026-11-12T22:41Z `[USER]` Test plan agreed and written up as
   `docs/memtest-and-bios-test-plan.md`. Sequence: (1) MemTest86+ at **current** settings first, so
   it tests the machine as it fails; (2) then record the Ai Tweaker baseline in BIOS before changing
