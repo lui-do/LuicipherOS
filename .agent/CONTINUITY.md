@@ -131,6 +131,13 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-21T20:00Z [CODE] v0.3 candidates: `lui sync` as a binary, CI plus VM test matrix.
 
 ## [DECISIONS]
+- 2026-11-14T22:34Z `[USER]` **Shell decided: stay on Hyprland + Quickshell** (issue #16 closed with
+  the rationale). Quickshell wins on the two things that mattered - the customisability ceiling and
+  the native Hyprland integration (screencopy window previews / live switcher) - and has zero
+  migration cost since the bar and a plugin host already exist. AGS's only edges (lower RAM floor,
+  more maturity) do not outweigh what would be lost, and the RAM gap is <0.5% of 31 GB and
+  recoverable with documented Quickshell techniques. This unblocks #21 (Hyprland rice-up / palette
+  pipeline) and #22 (Vicinae theming), both of which build on the Quickshell base.
 - 2026-11-11T21:43Z `[USER]` Renamed the CLI from `luci` to `lui`; `lui` is also the GitHub owner
   handle, and `luci` collided with the admin account name. Scope was surgical because "luci" means
   four different things in this repo: the **CLI** (renamed: `scripts/lui.sh`,
