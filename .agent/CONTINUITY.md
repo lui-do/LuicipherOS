@@ -390,6 +390,14 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-14T23:05Z `[TOOL]` **Operational trap: `git reset --hard` on a live stow tree trips
+  Hyprland's config watcher.** While updating the deployed clone via `reset --hard` at
+  2026-11-14 23:58, git briefly *removed and recreated* `hyprland.lua`; Hyprland's file
+  watcher auto-reloaded inside that gap and latched a stale "cannot open hyprland.lua"
+  banner. The file and config were healthy; one `hyprctl reload` cleared it. Rule going
+  forward: when refreshing the deployed tree while the session runs, prefer plain `cp`
+  (in-place writes), and after any `git reset/checkout` there, run `hyprctl reload` once
+  to settle watchers. Documented in `docs/user-personalisation.md` (troubleshooting #1).
 - 2026-11-14T22:01Z `[TOOL]` Read the Arch AMDGPU wiki Troubleshooting. Two sections are relevant:
   "System freezes or reboots when idle" (GFXOFF / PowerPlay driver crashes ->
   `amdgpu.ppfeaturemask`, conservative value `0xffff7fff`, stronger `0xfffd7fff` / `0xfffd3fff` /

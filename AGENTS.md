@@ -382,6 +382,9 @@ learning side-quest only.
 - `TESTING.md` – test matrix and results.
 - `docs/TROUBLESHOOTING.md` – FAQ from smoke failures (includes the DMUB cold-boot entry).
 - `docs/target-bringup-runbook.md` – hardware-day plan.
+- `docs/user-personalisation.md` – community tutorial: shared base + per-user overrides.
+- `docs/memtest-and-bios-test-plan.md` – memory/BIOS single-variable test plan (issue #13).
+- `docs/rename-admin-account.md` – account-rename runbook (not performed; see issue notes).
 - `docs/dmub-coldboot-casefile.md` and `docs/upstream-drm-amd-coldboot-dmub.md` – open GPU issue.
 - Issue #11 – Oct 31 timeline, findings, workaround and checklist; Nov 3 blank-start update.
 - `docs/hyprcapture-trial.md` – reversible screenshot-tool trial.
