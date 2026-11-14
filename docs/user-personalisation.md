@@ -14,8 +14,8 @@ different value; **last value wins**.
 
 | App | Base (shared, read-only for you) | Your override |
 | --- | --- | --- |
-| Hyprland | `~/.config/hypr/hyprland.lua` + `lua/` modules | `~/.config/luicipher/hypr/overrides.lua` |
-| Quickshell bar | `~/.config/quickshell/tokens.json` | `~/.config/luicipher/quickshell/tokens.json` |
+| Hyprland | `~/.config/hypr/hyprland.lua` (+ `lua/`) | `~/.config/luicipher/hypr/overrides.lua` |
+| Quickshell | `~/.config/quickshell/tokens.json` | `~/.config/luicipher/quickshell/tokens.json` |
 
 A brand-new user gets the full desktop with zero setup — overrides are optional.
 
