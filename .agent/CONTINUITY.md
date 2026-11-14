@@ -895,6 +895,13 @@ history, one holding the November detail); no entry was dropped.
   flag required (details in AGENTS.md Code Style).
 
 ## [OUTCOMES]
+- 2026-11-14T21:54Z `[TOOL]` **Kernel 7.3.4 verified clean after the upgrade.** Rebooted into
+  `7.3.4-arch1-1`; `/proc/cmdline` still carries `modprobe.blacklist=amdgpu
+  systemd.mask=amdgpu-late.service 3` (the static `arch-lateload.conf` entry survived the swap);
+  amdgpu late-loaded (DMUB `0x07003300` at ~800 s, SMU initialised), **zero** amdgpu/DMUB/PM error
+  lines, HDMI-A-1 driving the display, Hyprland now `0.57.2`. This boot's predecessor reset reason
+  is `0x00200800` (clean ACPI transition from the deliberate reboot). The reset census from here on
+  runs on 7.3.4; the pre-upgrade 7.2.11 events remain the baseline.
 - 2026-11-12T13:13Z `[USER]` Asked whether the `luci` admin account can be renamed to `lui`.
   Answered and written up as `docs/rename-admin-account.md`: possible, and safer than a typical
   rename because
