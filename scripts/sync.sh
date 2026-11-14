@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # scripts/sync.sh — LuicipherOS declarative reconciler (v0.1, "lui sync")
 # IDEA: single entry point for "edit lists -> get system".
-# - `lui sync` (default): INSTALL missing only. Safe to run anytime, safe on boot.
+# - `lui sync` (default): INSTALL missing only + regenerate the local-app
+#   launcher entries from config/local-apps. Safe to run anytime, safe on boot.
 # - `lui sync --prune`: install missing + UNINSTALL extras not in lists (with confirm + protected guard).
 #   - pacman extras = (explicitly installed) - (desired + protected). Deps (-Qqd) are NEVER touched.
 #   - flatpak extras = (installed apps) - (desired app IDs).
@@ -25,6 +26,10 @@ if [[ "$DRY_RUN" == true ]]; then echo "(dry-run: no changes will be made)"; fi
 if [[ "$DRY_RUN" == false ]]; then
   "$ROOT/scripts/ensure-packages.sh"
   "$ROOT/scripts/ensure-flatpaks.sh"
+  # Realize the declarative local-app list as launcher .desktop entries
+  # (Vicinae reads .desktop files, not $PATH). Idempotent, manages only its own
+  # luci-local-* files.
+  "$ROOT/scripts/generate-local-apps.sh"
   echo "==> flatpak update + cleanup unused runtimes (system + user)"
   flatpak update -y --system || true
   flatpak update -y --user || true
@@ -32,6 +37,7 @@ if [[ "$DRY_RUN" == false ]]; then
   flatpak uninstall --unused -y --user || true
 else
   echo "[dry-run] would run ensure-packages.sh + ensure-flatpaks.sh (system+user)"
+  echo "[dry-run] would run generate-local-apps.sh (launcher entries from config/local-apps)"
 fi
 
 # 2) PRUNE path (opt-in only)

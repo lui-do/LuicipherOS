@@ -5,7 +5,8 @@
 # install/bootstrap.sh, and runnable in place from the repo.
 #
 # v0.1 subcommands:
-#   lui sync [--prune] [--dry-run] [--yes]  reconcile packages + flatpaks
+#   lui sync [--prune] [--dry-run] [--yes]  reconcile packages + flatpaks + local apps
+#   lui local-apps [--remove]              (re)generate ~/.local/bin launcher entries
 #   lui status                              read-only: what is out of sync
 #   lui root                                print the resolved tree path
 #   lui version | help
@@ -39,14 +40,16 @@ usage() {
 lui — LuicipherOS declarative reconciler
 
 USAGE
-  lui sync [--prune] [--dry-run] [--yes]   install missing packages + flatpaks
+  lui sync [--prune] [--dry-run] [--yes]   install missing packages + flatpaks + local apps
   lui status                               read-only preview of what would change
+  lui local-apps [--remove]               (re)generate ~/.local/bin launcher entries
   lui root                                 print the resolved LuicipherOS tree
   lui version                              print the CLI version
   lui help                                 this text
 
 SYNC
-  Default is add-only: installs what the lists declare, never removes.
+  Default is add-only: installs what the lists declare, never removes, and
+  regenerates the local-app launcher entries.
     --prune     also remove extras not declared in the lists (asks first)
     --dry-run   preview only; change nothing
     --yes       skip the confirmation prompt (automation only)
@@ -54,8 +57,17 @@ SYNC
   Prune honors config/protected-packages and never touches pacman
   dependencies (-Qqd). System and user flatpak scopes are handled separately.
 
+LOCAL-APPS
+  Vicinae (and any XDG launcher) reads .desktop files, not $PATH, so tools that
+  live only in ~/.local/bin are invisible to it. `lui local-apps` turns the
+  declarative config/local-apps list into managed .desktop entries
+  (luci-local-*.desktop) in ~/.local/share/applications/. It also runs
+  automatically as part of `lui sync`. To add a tool: put its basename in
+  config/local-apps, then run `lui local-apps` (or `lui sync`). Remove all
+  managed entries: `lui local-apps --remove`.
+
 TREE SELECTION
-  luci resolves the tree via $LUI_ROOT, then /opt/LuicipherOS, then the tree
+  lui resolves the tree via $LUI_ROOT, then /opt/LuicipherOS, then the tree
   this script lives in, then ~/LuicipherOS. Because --prune is destructive,
   check `lui root` and the `tree:` line before pruning: a stale clone makes
   declared packages look like extras.
@@ -139,6 +151,14 @@ case "$cmd" in
     # operation and gets the banner without the destructive-path warning.
     tree_banner "$ROOT" "$(classify_root "$ROOT")" safe
     exec "$ROOT/scripts/sync.sh" --prune --dry-run "$@"
+    ;;
+  local-apps)
+    # (Re)generate the ~/.local/bin launcher .desktop entries from
+    # config/local-apps. Passes through args like --remove. It only ever
+    # manages its own luci-local-* files, so it is a "safe" operation.
+    ROOT="$(resolve_root)"
+    tree_banner "$ROOT" "$(classify_root "$ROOT")" safe
+    exec "$ROOT/scripts/generate-local-apps.sh" "$@"
     ;;
   root)
     resolve_root

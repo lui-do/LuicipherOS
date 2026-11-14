@@ -4,9 +4,11 @@
 #   1. tree discovery: $LUI_ROOT wins; a non-tree path is rejected
 #   2. `sync` delegates to scripts/sync.sh and passes arguments through
 #   3. `status` is read-only: it runs sync.sh --prune --dry-run
+#   3b. `local-apps` delegates to scripts/generate-local-apps.sh, args pass through
 #   4. `version` / `root` / `help` behave; unknown subcommand exits 2
 #   5. never runs as root (EUID guard present in the script text)
-# Method: a fixture tree whose sync.sh is a stub that echoes its arguments.
+# Method: a fixture tree whose sync.sh and generate-local-apps.sh are stubs that
+# echo their arguments.
 # USAGE: ./tests/test_lui.sh   (exit 0 = all pass)
 set -u
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -23,7 +25,12 @@ cat > "$T/tree/scripts/sync.sh" <<'EOF'
 echo "SYNC-CALLED: $*"
 exit 0
 EOF
-chmod +x "$T/tree/scripts/sync.sh"
+cat > "$T/tree/scripts/generate-local-apps.sh" <<'EOF'
+#!/usr/bin/env bash
+echo "GEN-CALLED: $*"
+exit 0
+EOF
+chmod +x "$T/tree/scripts/sync.sh" "$T/tree/scripts/generate-local-apps.sh"
 
 run() { LUI_ROOT="$T/tree" bash "$LUI" "$@" 2>&1; }
 rc()  { LUI_ROOT="$T/tree" bash "$LUI" "$@" >/dev/null 2>&1; echo $?; }
@@ -68,6 +75,12 @@ OUT=$(env -u LUI_ROOT HOME="$T/fakehome" bash "$T/fakebin/lui" sync --prune --dr
 OUT=$(env -u LUI_ROOT HOME="$T/fakehome" LUI_ROOT="$T/tree" bash "$T/fakebin/lui" sync --prune --dry-run 2>&1)
 [[ "$OUT" != *"WARNING:"* ]] \
   && ok "no warning when LUI_ROOT is set" || bad "spurious warning: $OUT"
+
+echo "== 3c. local-apps delegates and passes args through =="
+[[ "$(run local-apps)" == *"GEN-CALLED:"* ]] \
+  && ok "local-apps delegates to the generator" || bad "local-apps: $(run local-apps)"
+[[ "$(run local-apps --remove)" == *"GEN-CALLED: --remove"* ]] \
+  && ok "local-apps passes --remove through" || bad "--remove: $(run local-apps --remove)"
 
 echo "== 4. version / help / unknown =="
 [[ "$(run version)" == lui\ * ]] \

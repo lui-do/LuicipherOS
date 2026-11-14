@@ -81,7 +81,7 @@ LuicipherOS/
 - `iso/` has `profiledef.sh`, `packages.x86_64`, `airootfs/`, `README.md`.
 - `research/` currently has `office-suites.md`.
 - `scripts/` has `lui.sh` (the `lui` CLI), `sync.sh`, `ensure-packages.sh`,
-  `ensure-flatpaks.sh`, `screenshot-window.sh`.
+  `ensure-flatpaks.sh`, `generate-local-apps.sh`, `screenshot-window.sh`.
 
 ## Build & Development Commands
 
@@ -111,14 +111,24 @@ archinstall --config install/archinstall-desktop.json --creds /tmp/creds.json
 
 ```bash
 lui status                 # read-only: preview what is out of sync
-lui sync                   # install missing only
+lui sync                   # install missing + regenerate local-app launcher entries
 lui sync --prune           # remove extras (confirms; honors protected-packages)
+lui local-apps             # just (re)generate the ~/.local/bin launcher entries
+lui local-apps --remove    # remove the managed local-app entries
 ```
 
 `lui` is `scripts/lui.sh`, installed to `/usr/local/bin/lui` by `bootstrap.sh`. Running
 `./scripts/lui.sh ...` from a clone is equivalent. It resolves the tree via `$LUI_ROOT`, then
 `/opt/LuicipherOS`, then the tree it lives in, then `~/LuicipherOS`. Never run it as root; it
 calls `sudo` itself for the privileged steps.
+
+**Local apps:** Vicinae (and any XDG launcher) reads `.desktop` files, not `$PATH`, so tools that
+live only in `~/.local/bin` are invisible to it. `config/local-apps` is the declarative list of
+which tools to expose (format: `<basename> [Display Name]`, one per line); `lui local-apps` — or
+just `lui sync`, which runs it automatically — turns that into managed `luci-local-*.desktop` files
+in `~/.local/share/applications/`. To expose a new tool: add its basename to `config/local-apps`,
+then run `lui local-apps`. CLI utilities you don't want in the launcher are simply left out of the
+list. Removing all managed entries: `lui local-apps --remove`.
 
 4. Run the tests (no Arch, no root required):
 
@@ -338,6 +348,9 @@ learning side-quest only.
 ## Extensibility Hooks
 
 - Desired lists in `config/`: add a package or flatpak by editing the list, then `lui sync`.
+- Local launcher entries: add a tool's basename to `config/local-apps`, then `lui local-apps`
+  (or `lui sync`) generates a managed `.desktop` so Vicinae finds it. Remove all with
+  `lui local-apps --remove`.
 - Preflight modes: `install/preflight.sh --vm | --target`; bootstrap
   `--preflight-mode=vm|target` and `--no-flatpak`.
 - `scripts/sync.sh` flags: `--prune`, `--dry-run`, `--yes`; AUR helper flag (yay-bin default,

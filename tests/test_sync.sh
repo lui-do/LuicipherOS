@@ -82,6 +82,7 @@ cp "$ROOT/scripts/sync.sh" "$M/scripts/"
 # stub ensure scripts (add path must run but do nothing here)
 printf '#!/usr/bin/env bash\necho "ensure-packages stub"\n' > "$M/scripts/ensure-packages.sh"
 printf '#!/usr/bin/env bash\necho "ensure-flatpaks stub"\n' > "$M/scripts/ensure-flatpaks.sh"
+printf '#!/usr/bin/env bash\necho "generate-local-apps stub"\n' > "$M/scripts/generate-local-apps.sh"
 chmod +x "$M/scripts/"*.sh
 SYNC="$M/scripts/sync.sh"
 

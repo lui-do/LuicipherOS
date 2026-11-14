@@ -226,6 +226,16 @@ history, one holding the November detail); no entry was dropped.
   LFS learning only. Time of day UNCONFIRMED (date from ADR).
 
 ## [PROGRESS]
+- 2026-11-14T22:19Z `[TOOL]` `generate-local-apps` is now wired into the CLI and the reconcile. `lui
+  sync` runs it automatically on the add-only path (so `config/local-apps` is realized every sync),
+  and a new `lui local-apps [--remove]` subcommand drives the generator directly for targeted use.
+  `sync.sh` dry-run now announces it too. Both test suites updated and green: `test_lui.sh` 18 (adds
+  delegation + `--remove` pass-through), `test_sync.sh` 17 (fixture now stubs
+  `generate-local-apps.sh`). AGENTS.md documents the whole flow (usage block, a dedicated Local apps
+  paragraph, and an extensibility hook). **The installed `/usr/local/bin/lui` still predates this**,
+  so the user must reinstall it (`sudo install -Dm755 <tree>/scripts/lui.sh /usr/local/bin/lui`) to
+  get the `local-apps` subcommand; `config/local-apps` + `scripts/generate-local-apps.sh` are in the
+  tree, and the 4 entries are already generated in work's live `~/.local/share/applications/`.
 - 2026-11-14T22:07Z `[TOOL]` Vicinae's "missing ~/.local/bin apps" problem solved. Root cause
   confirmed: Vicinae is a desktop-entry launcher that reads .desktop files from the XDG
   applications dirs, not $PATH; the user's ~/.local/share/applications/ had no .desktop files, so
