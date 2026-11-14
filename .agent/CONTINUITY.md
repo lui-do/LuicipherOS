@@ -339,6 +339,22 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-14T21:30Z `[TOOL]` Full upgrade completed 2026-11-14 22:23 (`pacman -Syu`,
+  snap-pac auto-snapshot). `linux` 7.2.11 -> **7.3.4**, `linux-lts` 6.18.59 -> **6.18.63**. The 2
+  remaining
+  "pending" packages are `linux-firmware` / `linux-firmware-amdgpu` at `[ignored]` - the deliberate
+  `IgnorePkg` pin at 20260916, so they are **not** actually left behind. Running kernel is still
+  7.2.11 until reboot. Boot entries confirmed before the upgrade: the user boots from the static
+  hand-written `arch-lateload.conf` ("manual AMD GPU load"), which points at `/vmlinuz-linux` /
+  `/initramfs-linux.img` by stable name, so the kernel swap does not drop the late-load params; the
+  auto-managed `..._linux.conf` entry carries only `amdgpu.runpm=0` and must NOT be selected on the
+  new kernel.
+- 2026-11-14T21:30Z `[ASSUMPTION]` **Baseline now has two active changes at once:** EXPO
+  off (DDR5-4800) AND kernel/mesa updated (7.3.4). For the hardware `0x00800800` reset this is fine
+  (it
+  reproduces bare-metal in MemTest86, so the kernel is irrelevant to it), but for the **display
+  symptoms** (#11 blank start, #14 GPU D3hot wedge) the new amdgpu driver + mesa can no longer be
+  separated from the EXPO-off change. The reset census should record which kernel each boot used.
 - 2026-11-14T21:12Z `[USER]` **EXPO-off run, first clean extended result.** Setting `Ai Overclock
   Tuner` to `Auto` took the memory from `DDR5-6000 / CAS 38-48-48-96` to **`DDR5-4800 / CAS
   40-39-39-77`** (JEDEC default) and dropped `DRAM VDD` / `DRAM VDDQ` from `1.35 V` to `auto`. One
