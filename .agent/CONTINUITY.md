@@ -339,6 +339,25 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-14T21:12Z `[USER]` **EXPO-off run, first clean extended result.** Setting `Ai Overclock
+  Tuner` to `Auto` took the memory from `DDR5-6000 / CAS 38-48-48-96` to **`DDR5-4800 / CAS
+  40-39-39-77`** (JEDEC default) and dropped `DRAM VDD` / `DRAM VDDQ` from `1.35 V` to `auto`. One
+  continuous MemTest86+ session (reports 03 and 04 both back-calculate to a 17:21 start): **4 full
+  passes in 3 h 39 m 58 s, zero errors, no reset**, then the user exited to the desktop, which is
+  stable. (Passes are slower at 4800: ~55 min each vs ~22 min at 6000.)
+- 2026-11-14T21:12Z `[ASSUMPTION]` **Promising but not yet conclusive.** The two EXPO-ON runs failed
+  at ~40 min (during pass 2) and at 4 h 23 m. A clean 3 h 40 m therefore beats the fast failure but
+  does not yet clear the slow one. Because the time-to-failure is variable, the decisive EXPO-off
+  test is a **6-8 h clean MemTest86 run** (F6 before bed) plus **real-world monitoring** of the
+  reset-reason register for 1-2 weeks. If both come back clean with EXPO off, EXPO / SoC-voltage /
+  power-delivery is confirmed as the trigger. The voltage drop is coherent with a marginal PSU/VRM:
+  EXPO was pushing DRAM to 1.35 V and SoC to ~1.27 V; removing that load could be what stops the
+  reset.
+- 2026-11-14T21:12Z `[TOOL]` **Do not toggle EXPO back on.** Keep `Ai Overclock Tuner = Auto` while
+  the test runs. Cost is ~5% memory bandwidth (6000 -> 4800) and a little real-world performance;
+  that is an acceptable, reversible trade while we confirm the cause. If the machine proves stable
+  EXPO-off, the final decision (keep 4800 permanently vs. find the voltage headroom that lets 6000
+  work) is a separate optimisation.
 - 2026-11-14T17:08Z `[TOOL]` Checked the Arch "random freeze" thread (id 279589) the user
   found. It was
   actually solved as a **NIC PCIe AER fault** (`r8169` Uncorrected (Fatal), `device recovery
