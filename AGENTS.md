@@ -169,6 +169,11 @@ sudo umount /boot && sudo fsck.fat -n /dev/nvme0n1p1; sudo mount /boot   # ESP c
 - uwsm users keep environment in `~/.config/uwsm/env` and `~/.config/uwsm/env-hyprland`.
 - Dotfiles are GNU Stow packages under `dotfiles/`; root-owned files (e.g. greetd config)
   are not stowable and are deployed by `install/bootstrap.sh`.
+- Config layering (shared base + per-user override, last-wins): stow-managed files are the
+  base every user shares; personalisation goes in a real, never-stowed file under
+  `$XDG_CONFIG_HOME/luicipher/` — `hypr/overrides.lua` (loaded last by `hyprland.lua` via
+  guarded `dofile`) and `quickshell/tokens.json` (merged over `tokens.json` by `shell.qml`,
+  hot-reloading). A user changing bar size or border width never forks or edits shared files.
 - Shell pipelines under `set -o pipefail`: avoid `grep -q` on the right of a pipe (SIGPIPE
   false failures). Fixed twice already in the PCI check and AMD gate.
 - Functions run inside `$(...)` must send prompts and chatter to stderr, never stdout.

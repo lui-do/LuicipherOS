@@ -131,6 +131,19 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-21T20:00Z [CODE] v0.3 candidates: `lui sync` as a binary, CI plus VM test matrix.
 
 ## [DECISIONS]
+- 2026-11-14T22:59Z `[USER]` **Shell config layering implemented** (the per-user half of #18, done
+  early): shared base stays stow-managed; per-user overrides live at
+  `$XDG_CONFIG_HOME/luicipher/<app>/` and are NEVER stow-managed. Hyprland: `hyprland.lua`
+  ends with a guarded `dofile` of `luicipher/hypr/overrides.lua` (last-wins). Quickshell:
+  `shell.qml` merges defaults <- shared `tokens.json` <- user
+  `luicipher/quickshell/tokens.json` via two `FileView`s with `watchChanges` (hot reload).
+  Chosen over env vars (option B) for the community story and the future palette pipeline
+  (#21/#22). Functionally verified on the live session: border_size 2 -> override 6 -> 2;
+  quickshell parsed a live barHeight/accent override and survived config reload; the demo
+  override reverted to base. API facts learned the hard way: `Quickshell.configPath()` is
+  deprecated and resolves inside the shell dir (build paths from `Qt.environment` instead);
+  Quickshell's `LazyLoader` is a QtObject (not Item, no `source`/`onLoaded`) so bar rows
+  stay `Loader` with `asynchronous: true` and LazyLoader is for on-demand windows.
 - 2026-11-14T22:34Z `[USER]` **Shell decided: stay on Hyprland + Quickshell** (issue #16 closed with
   the rationale). Quickshell wins on the two things that mattered - the customisability ceiling and
   the native Hyprland integration (screencopy window previews / live switcher) - and has zero
