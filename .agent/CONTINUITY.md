@@ -339,6 +339,28 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-14T22:01Z `[USER]` The "blank after reboot" is worse than the expected late-load state:
+  the **LUKS prompt itself is black** - no text console either - every time, even at disk unlock.
+  This is the #11 blank-start, and it now has a concrete mechanism.
+- 2026-11-14T22:01Z `[TOOL]` Verified the early-display path. The **only** display device is the
+  7900 XT (`03:00.0` Navi 31); there is **no iGPU**. The monitor is on **HDMI-A-1**. The early
+  console (LUKS prompt and the runlevel-3 text console) is drawn on the card's **UEFI firmware GOP
+  framebuffer** (`simpledrm`, low-res), which the kernel adopts before amdgpu is involved. amdgpu
+  (the Linux driver) is blacklisted and not loaded until the user manually `modprobe`s it minutes
+  later, at which point the card switches to a full-res mode and the monitor lights up. So the black
+  screen is **not** the amdgpu driver and **not** the late-load workaround: it is the monitor
+  failing to render the card's low-res UEFI GOP framebuffer over **HDMI** during early boot. The
+  keyboard works (Caps Lock) because input is independent of the display; the system is alive and
+  the user is typing into a screen the monitor is not showing.
+- 2026-11-14T22:01Z `[TOOL]` Fixes, in order: (1) move the monitor to a **DisplayPort** - the card
+  has DP-1/2/3 free, and AMD UEFI GOP frequently drives DP where HDMI shows nothing; (2) a
+  **blind-boot** procedure (type LUKS passphrase + login blind, then `sudo modprobe amdgpu` + `sudo
+  systemctl start greetd` - the display returns when amdgpu inits full-res); (3) check BIOS for a
+  **CSM / UEFI GOP boot-display** toggle; (4) **defer** the firmware angle - the user is pinned at
+  `20260916` with `20261019` in `[ignored]`, and the referenced Arch thread 314887 was specifically
+  a firmware version causing "no video on HDMI", so the held-back version is a live lead for #11.
+  Open questions: does the user have a DP cable / DP-capable monitor, and is the LUKS-time black new
+  since the 7.3.4 kernel upgrade or the long-standing #11.
 - 2026-11-14T21:30Z `[TOOL]` Full upgrade completed 2026-11-14 22:23 (`pacman -Syu`,
   snap-pac auto-snapshot). `linux` 7.2.11 -> **7.3.4**, `linux-lts` 6.18.59 -> **6.18.63**. The 2
   remaining
