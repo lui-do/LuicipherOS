@@ -339,6 +339,18 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-14T22:01Z `[TOOL]` Read the Arch AMDGPU wiki Troubleshooting. Two sections are relevant:
+  "System freezes or reboots when idle" (GFXOFF / PowerPlay driver crashes ->
+  `amdgpu.ppfeaturemask`, conservative value `0xffff7fff`, stronger `0xfffd7fff` / `0xfffd3fff` /
+  `0xfff73fff`) and "AMD dedicated GPU HDMI freezing issue on Wayland" (dGPU+HDMI; the
+  `amdgpu.runpm=0` it recommends is already in the user's cmdline; its `DRI_PRIME` part is an
+  iGPU/dGPU laptop case and does not apply to this iGPU-less desktop). Neither section addresses (a)
+  the bare-metal `0x00800800` reset, which reproduces in MemTest86 with no amdgpu driver loaded, so
+  no kernel param can touch it, or (b) the black-at-LUKS screen, which is on the card's UEFI
+  firmware GOP framebuffer, before amdgpu loads. `amdgpu.ppfeaturemask=0xffff7fff` is therefore
+  offered only for the *under-OS idle GPU freezes*, and is safe to add mid-EXPO-test because it
+  affects only the Linux driver, never the bare-metal reset experiment. The black-at-LUKS remains
+  best addressed by moving the monitor to a DisplayPort.
 - 2026-11-14T22:01Z `[USER]` The "blank after reboot" is worse than the expected late-load state:
   the **LUKS prompt itself is black** - no text console either - every time, even at disk unlock.
   This is the #11 blank-start, and it now has a concrete mechanism.
