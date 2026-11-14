@@ -339,6 +339,21 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-14T14:31Z `[USER]` **MemTest86 re-run produced a clean full pass AND a reproduction.**
+  Report `MT86P_02.TXT`: `Passes completed: 1`, `Errors: 0`, `ECC Errors: 0`, `Final Result: PASS
+  (running for 00:21:37)` - all twelve tests clean, including Test 03 (Bus stress, R/W turnaround)
+  and Test 11 (Rowhammer). The machine then reset during pass 2, going straight to the LUKS prompt.
+  Boot 0 (`22ce242a`, 2026-11-14 12:12:24) reports `0x00800800: internal CPU shutdown event
+  occurred`, so this is the **sixth** event. A single pass takes **21 m 37 s**.
+- 2026-11-14T14:31Z `[ASSUMPTION]` The fault is now **reproducible**: two MemTest86 runs, two
+  resets, both with `0x00800800`. That converts an intermittent mystery into a test harness - a
+  candidate fix can be evaluated in roughly an hour instead of waiting weeks. Time-to-failure varies
+  widely (4 h 23 m on 2026-11-13 versus roughly 40 min this time), so it is load-dependent with a
+  variable rate rather than a fixed soak, and any "clean" run must exceed ~4 h to be meaningful.
+  **Memory is cleared** (one full pass clean, and the 2026-11-13 session ran long enough for roughly
+  twelve passes at this pass time). Thermal is cleared. DIMM slots are cleared. What remains is
+  **CPU / VRM / PSU**. Note MemTest86's own clock is unreliable (it reads a drifting RTC); boot
+  times are authoritative.
 - 2026-11-13T22:49Z `[USER]` Thermal test result: `Tctl` held **77-81 C** under a sustained all-core
   load (`yes` loop, all cores, 20-30 min). That is a plateau with a comfortable margin to the ~95 C
   throttle point, and on a 65 W 9600X with an ARCTIC Freezer 36 it is exactly what a healthy cooler
