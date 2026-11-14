@@ -226,6 +226,17 @@ history, one holding the November detail); no entry was dropped.
   LFS learning only. Time of day UNCONFIRMED (date from ADR).
 
 ## [PROGRESS]
+- 2026-11-14T22:07Z `[TOOL]` Vicinae's "missing ~/.local/bin apps" problem solved. Root cause
+  confirmed: Vicinae is a desktop-entry launcher that reads .desktop files from the XDG
+  applications dirs, not $PATH; the user's ~/.local/share/applications/ had no .desktop files, so
+  none of the 21 tools in ~/.local/bin were visible. Of those 21, only 4 are launcher-worthy apps
+  (TUICommander.AppImage, tuios, slk, vi-sql); the rest are CLI utilities (pip*, odf*/xml2odf/
+  mailodf/csv2ods, pymupdf, slack-mcp, mise) deliberately excluded. Added `config/local-apps`
+  (declarative: `<basename> [Display Name]`) and `scripts/generate-local-apps.sh` (idempotent,
+  writes managed `luci-local-*.desktop` files with Terminal=true and `X-LuicipherOS=generated`,
+  and a `--remove` to clean up; never touches user-authored entries). Generated the 4 entries in
+  work's live ~/.local/share/applications/; all validate. The theming half of this task (adapt
+  Vicinae to the shell/Hyprland palette) is deliberately deferred, per the user.
 
 - 2026-11-11T21:36Z `[TOOL]` Delivered issue #5. Added `scripts/lui.sh` (subcommands `sync`,
   `status`, `root`, `version`, `help`; EUID guard; runtime tree resolution), `tests/test_lui.sh`

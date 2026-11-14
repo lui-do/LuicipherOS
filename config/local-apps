@@ -1,0 +1,28 @@
+# config/local-apps — local tools to expose in the desktop launcher (Vicinae).
+#
+# Vicinae is a desktop-entry launcher: it reads .desktop files, not $PATH. Tools
+# that live only in ~/.local/bin are therefore invisible to it unless we generate
+# .desktop entries for them. This file is that source of truth.
+#
+# One tool per line:
+#   <basename> [Display Name]
+#   - basename  : looked up in ~/.local/bin
+#   - Display Name : optional; defaults to the basename (any number of words)
+#
+# Regenerate (writes managed files to ~/.local/share/applications/):
+#   scripts/generate-local-apps.sh
+# Remove all managed entries:
+#   scripts/generate-local-apps.sh --remove
+#
+# All generated entries default to Terminal=true (these are CLI/TUI tools). If one
+# is actually a GUI, edit its generated .desktop and set Terminal=false.
+#
+# Deliberately NOT listed: pip/pip3/pip3.12, the odf*/xml2odf/mailodf/csv2ods
+# LibreOffice CLI tools, pymupdf, slack-mcp, mise. Those are utilities you call
+# with arguments, not apps you launch. Add any of them here if you want them
+# reachable from the launcher.
+
+TUICommander.AppImage   TUI Commander
+tuios
+slk
+vi-sql
