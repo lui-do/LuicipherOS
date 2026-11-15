@@ -454,6 +454,18 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-15T13:43Z `[USER]` Blank-start scope is wider than assumed: on the last reboot the monitor
+  was black **from POST** (no ASUS logo, no systemd-boot menu), not only at LUKS. Pattern across
+  incidents: sometimes all-visible, sometimes black at LUKS only, sometimes black from power-on yet
+  the machine boots fine (Caps Lock alive, F8 menu appeared on a later attempt unprompted).
+  Consistent with the 7900 XT UEFI GOP over HDMI being intermittently unsynced by the Philips
+  monitor (link training / mode the panel rejects) rather than a firmware crash. Implications for
+  the new automated boot: it is blind-safe (menu timeout 3 + default entry + timed amdgpu-late means
+  NO visible output is needed until the login screen) but the procedure must be documented for a
+  fully black boot: watch the keyboard LED to know POST finished, blind-type the LUKS passphrase
+  ~35-45 s in, optionally power-cycle the monitor to force re-sync, expect login at ~3-4 min; if
+  nothing by ~6 min, power-hold and retry (the symptom historically clears on a retry). Ordered DP
+  cable remains the real cure for GOP/HDMI flakiness.
 - 2026-11-15T10:07Z `[USER]` **New evidence, 2026-11-15: BIOS SETUP froze.** While checking
   settings after a clean reboot, the UEFI configuration utility itself locked up - no input
   did anything - and required a power-button hold. A freeze inside BIOS setup is bare
