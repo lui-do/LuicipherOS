@@ -159,3 +159,5 @@ udisks2
 # qemu-desktop libvirt virt-manager edk2-ovmf dnsmasq swtpm
 # wallpaper -> palette (lui theme set wallpaper)
 matugen
+# exFAT userspace tools (fsck/mkfs); kernel module ships with linux
+exfatprogs
