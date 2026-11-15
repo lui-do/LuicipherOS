@@ -141,6 +141,12 @@ if grep -qi '\[1002:' <<<"$AMD_PCI_LIST"; then
     sudo install -Dm644 "$ROOT/install/amdgpu-late.service" /etc/systemd/system/amdgpu-late.service
     sudo systemctl enable amdgpu-late 2>/dev/null || echo "  (amdgpu-late enable skipped)"
   fi
+  # Warm-reboot POST hang: unload the GPU on shutdown so the driver resets it
+  # before firmware ever sees a warm reset (paired with amdgpu-late.service).
+  if [[ -f "$ROOT/install/amdgpu-unload-on-shutdown.service" ]]; then
+    sudo install -Dm644 "$ROOT/install/amdgpu-unload-on-shutdown.service" /etc/systemd/system/amdgpu-unload-on-shutdown.service
+    sudo systemctl enable amdgpu-unload-on-shutdown 2>/dev/null || echo "  (amdgpu-unload-on-shutdown enable skipped)"
+  fi
   if [[ "$LATE_REBUILD" == true ]]; then
     echo "==> amdgpu soft-blacklist added, rebuilding initramfs"
     sudo mkinitcpio -P

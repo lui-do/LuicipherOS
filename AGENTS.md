@@ -12,7 +12,8 @@ Current status (from `TESTING.md`, git history and session reports through 2026-
 - VM smoke and ISO-loop PASS (2026-09-26, 2026-09-28; re-verified Oct 2026).
 - The target desktop runs LuicipherOS (user-reported); `lui sync` has never been run on it.
 - Open boot/GPU issue on the 7900 XT: amdgpu storms (DMUB/SMU errors) when loaded early in
-  boot on kernel 7.2.11; manual late loading is the interim workaround. On Nov 3 the first
+  boot on kernel 7.2.11; `amdgpu-late.service` (timed load) is the automated workaround
+  since 2026-11-15. On Nov 3 the first
   amdgpu PCI-device message was at 415.378081 s uptime and the user reached the desktop;
   the error-check result was not reported. Tracked in issue #11 and
   `docs/dmub-coldboot-casefile.md`.
@@ -77,7 +78,8 @@ LuicipherOS/
 - `dotfiles/` has `fuzzel`, `hypr`, `quickshell`, `swaync`, `tabby`, `termfilechooser`, `uwsm`,
   `vicinae`, `xdg`.
 - `install/` has `archinstall-desktop.json`, `archinstall-desktop.creds.example.json`,
-  `bootstrap.sh`, `preflight.sh`, `greetd-config.toml`, `vconsole.conf`, `amdgpu-late.service`.
+  `bootstrap.sh`, `preflight.sh`, `greetd-config.toml`, `vconsole.conf`, `amdgpu-late.service`,
+  `amdgpu-unload-on-shutdown.service`.
 - `iso/` has `profiledef.sh`, `packages.x86_64`, `airootfs/`, `README.md`.
 - `research/` currently has `office-suites.md`.
 - `scripts/` has `lui.sh` (the `lui` CLI), `sync.sh`, `ensure-packages.sh`,
@@ -237,19 +239,21 @@ Disk layout on the target: LUKS + btrfs with subvolumes `@`, `@home`, `@log`, `@
 and initramfs live there. Snapper config `root` snapshots `/` into `/.snapshots` (`@snapshots`);
 snap-pac adds pre/post snapshots around pacman. Snapshots are not backups (same disk).
 
-Boot entries on the desktop: the user reports selecting the default late-load entry on
-2026-11-03 (called `arch-lateload` in the session). Its supplied command line includes
-`amdgpu.runpm=0 modprobe.blacklist=amdgpu systemd.mask=amdgpu-late.service 3`.
-The exact entry filename and persistent default setting have not been independently read.
-Previously recorded entries are `linux` (options include `amdgpu.runpm=0`; no amd-ucode
-initrd listed) and `arch-lts` (loads amd-ucode; no `amdgpu.runpm=0`). Menu timeout is 10 s
-(`bootctl set-timeout 10`); the original timeout was 0 (hold Space to show the menu).
+Boot entries on the desktop (verified 2026-11-15): `loader.conf` sets
+`default arch-lateload.conf`, timeout 3 s. The `arch-lateload` entry options are
+`... rootfstype=btrfs amdgpu.runpm=0 amdgpu.ppfeaturemask=0xffff7fff modprobe.blacklist=amdgpu`
+(no mask, no runlevel 3 since 2026-11-15). The GPU dance is now automated by a unit pair:
+`amdgpu-late.service` waits 150 s then loads amdgpu before greetd (verified: driver at ~179 s,
+DMUB clean, login screen appears); `amdgpu-unload-on-shutdown.service` removes the module at
+shutdown so the driver resets the GPU before any warm reboot (warm reboots with the GPU loaded
+could hang POST entirely - no video, no keyboard; cold boots always fine). Revert for either:
+disable the unit and/or restore `/root/arch-lateload.conf.bak`. Other entries: `linux`
+(`amdgpu.runpm=0` only - early load, storm risk, do not boot it), `arch-lts` (loads amd-ucode).
 
-GPU bring-up workaround (interim, issue #11): boot with `modprobe.blacklist=amdgpu
-systemd.mask=amdgpu-late.service 3`, log in on a text console, wait about 190 s of uptime,
-`sudo modprobe amdgpu`, confirm no `Error queueing DMUB`/`Failed to power gate` lines in
-`dmesg`, then `sudo systemctl start greetd`. Hypothesis, not proven: the GPU needs time since
-power-on or a quieter boot before the driver initializes it.
+GPU bring-up background (issue #11): early-boot amdgpu probe hits an unready SMU (DMUB
+status=2 storm); loading the driver ~3 min after boot initializes cleanly every time - the units
+above automate that timing. Hypothesis, not proven: the GPU needs time since power-on or a
+quieter boot before initialization.
 
 Blank-start observations (issue #11): before considering a hard power-off, record whether
 Caps Lock responds, whether a monitor-only power cycle restores the picture, and whether
@@ -334,8 +338,9 @@ learning side-quest only.
   and portals. Reopen only with an explicit user decision and a new/updated ADR.
 - Do not run `archinstall`, `sync.sh --prune`, `mkarchiso`, or anything writing to disks, on
   the host without an explicit user instruction.
-- `amdgpu-late.service` is ENABLED on the desktop (earlier docs said disabled). Do not change
-  its enablement or content without an explicit instruction; see issue #11.
+- The `amdgpu-late.service` + `amdgpu-unload-on-shutdown.service` pair is ENABLED and is the
+  working boot path (automated late load; GPU unloaded before warm reboot). Do not change their
+  enablement or content without an explicit instruction; see issue #11 and the Boot entries note.
 - Do not edit the ESP (`/boot/loader/entries`, `loader.conf`) without an explicit instruction.
   Never use `module_blacklist=` for the late-load route (use `modprobe.blacklist=`).
 - Always run a full `pacman -Syu` before installing any single package; take or confirm a
@@ -367,7 +372,8 @@ learning side-quest only.
 - Opt-in features: termfilechooser + yazi portal picker (dormant), HyprCapture screenshot trial
   (`docs/hyprcapture-trial.md`), `amdgpu-late.service` (AMD hardware only).
 - Kernel parameters in use: `amdgpu.runpm=0` (default entry), `modprobe.blacklist=amdgpu`,
-  `systemd.mask=amdgpu-late.service`, `3` (text login). `/etc/modprobe.d/amdgpu-coldboot.conf`
+  `amdgpu.runpm=0` + `amdgpu.ppfeaturemask=0xffff7fff` + `modprobe.blacklist=amdgpu` on the
+  lateload entry. `/etc/modprobe.d/amdgpu-coldboot.conf`
   holds the soft blacklist on the desktop.
 - Late-load entry: user reports booting the default entry on 2026-11-03; supplied parameters
   match the workaround. Read `bootctl list` and loader configuration before claiming the

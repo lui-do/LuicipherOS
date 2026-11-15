@@ -1,0 +1,25 @@
+# Unload amdgpu before reboot/poweroff — warm-reboot POST hang workaround (Nov 2026).
+# Evidence: with amdgpu loaded, a warm reboot hung UEFI POST entirely (no video, no
+# keyboard power, Caps Lock dead; journal fdb07937 ends 14:54:13, recovered only via
+# power-hold cold boot). Cold boots never hang, because the PSU cycle resets the GPU.
+# A proper reset happens when the driver unloads, so ExecStop removes the module at
+# shutdown - before firmware ever sees a warm reset. Runs after greetd AND any
+# user@ session stops; retries ~24 s in case a fd is still closing; never fails the
+# shutdown itself (exit 0 regardless).
+# Paired with: amdgpu-late.service (loads), this unit (unloads). Deployed by
+# install/bootstrap.sh (root-owned). Revert: sudo systemctl disable --now
+# amdgpu-unload-on-shutdown.service && remove the unit file.
+[Unit]
+Description=Unload amdgpu before reboot or poweroff (warm-reboot POST hang workaround)
+DefaultDependencies=no
+After=greetd.service user@.service
+Before=shutdown.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/true
+ExecStop=/bin/sh -c 'for i in 1 2 3 4 5 6 7 8 9 10 11 12; do modprobe -r amdgpu 2>/dev/null && exit 0; sleep 2; done; exit 0'
+
+[Install]
+WantedBy=multi-user.target

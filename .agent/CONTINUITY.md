@@ -140,6 +140,18 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-21T20:00Z [CODE] v0.3 candidates: `lui sync` as a binary, CI plus VM test matrix.
 
 ## [DECISIONS]
+- 2026-11-15T14:10Z `[USER]` **Hypothesis from live evidence: warm reboots hang POST with amdgpu
+  loaded; the driver must be unloaded before reboot.** The 2026-11-15 automated-boot test reboot
+  produced a completely dead warm boot (no ASUS logo, no menu, Caps Lock dead = UEFI POST never
+  completed); journal `fdb07937` ends 14:54:13, recovery via power-hold cold boot, and **the new
+  automated late-load chain itself worked perfectly** (unit finished 15:04:01, ~179 s, DMUB clean,
+  greetd up, login screen visible). Mechanism: a cold boot power-cycles the GPU; a warm reboot does
+  not, so a GPU left mid-transaction breaks UEFI GOP init; `modprobe -r` performs a proper
+  driver-side device reset. Response: new `install/amdgpu-unload-on-shutdown.service` (oneshot; on
+  stop, retries `modprobe -r amdgpu` for ~24 s after greetd/user sessions are down, never blocks
+  shutdown), wired into bootstrap.sh next to amdgpu-late; AGENTS boot/guardrail/params sections
+  rewritten to the automated reality. NOT YET DEPLOYED - needs user to install+enable as luci, then
+  a warm-reboot test decides it: visible POST after reboot = hypothesis confirmed.
 - 2026-11-15T13:38Z `[USER]` **Boot path changed (user-directed): late-load fully automated.**
   `amdgpu-late.service` gains `ExecStartPre=/usr/bin/sleep 150` (the proven manual ~190 s wait,
   automated). Boot entry `arch-lateload.conf` loses `systemd.mask=amdgpu-late.service 3`; keeps
