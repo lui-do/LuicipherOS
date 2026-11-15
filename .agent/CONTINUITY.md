@@ -140,6 +140,17 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-21T20:00Z [CODE] v0.3 candidates: `lui sync` as a binary, CI plus VM test matrix.
 
 ## [DECISIONS]
+- 2026-11-15T13:38Z `[USER]` **Boot path changed (user-directed): late-load fully automated.**
+  `amdgpu-late.service` gains `ExecStartPre=/usr/bin/sleep 150` (the proven manual ~190 s wait,
+  automated). Boot entry `arch-lateload.conf` loses `systemd.mask=amdgpu-late.service 3`; keeps
+  `amdgpu.runpm=0 amdgpu.ppfeaturemask=0xffff7fff modprobe.blacklist=amdgpu`.
+  `loader.conf` gains `default arch-lateload.conf` (without it the alphabetical default is the
+  storm-prone plain `linux` entry - dangerous for unattended/blind boots). Verified preconditions:
+  default target graphical, greetd enabled as display-manager, soft blacklist present,
+  modprobe-explicit load bypasses blacklist (same as the manual procedure). Revert: restore
+  `/root/arch-lateload.conf.bak` + re-add mask+3. Motivation: reboot blindness - the monitor may
+  not show the LUKS prompt (GOP/HDMI), so the user must not depend on typing the manual dance
+  blind; one blind passphrase + a timed service brings the display up by itself.
 - 2026-11-15T12:48Z `[USER]` **Naming rule: LUI.cipherOS -> everything created is `lui`, never
   `luci`.** Applied repo-wide and live: `.desktop` prefix `luci-local-` -> `lui-local-`
   (regenerated), user-override root `~/.config/luicipher/` -> `~/.config/lui/` (moved, files
