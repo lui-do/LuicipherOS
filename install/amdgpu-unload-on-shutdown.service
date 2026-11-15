@@ -19,7 +19,9 @@ Before=shutdown.target
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=/bin/true
-ExecStop=/bin/sh -c 'for i in 1 2 3 4 5 6 7 8 9 10 11 12; do modprobe -r amdgpu 2>/dev/null && exit 0; sleep 2; done; exit 0'
+# Logger writes a receipt into the journal so the shutdown path is provable
+# (an earlier revision ran silently; inconclusive by construction).
+ExecStop=/bin/sh -c 'logger -t amdgpu-unload "unloading amdgpu (shutdown path)"; for i in 1 2 3 4 5 6 7 8 9 10 11 12; do modprobe -r amdgpu 2>/dev/null && { logger -t amdgpu-unload "amdgpu unloaded OK"; exit 0; }; sleep 2; done; logger -t amdgpu-unload "amdgpu STILL IN USE after retries - GPU NOT reset"; exit 0'
 
 [Install]
 WantedBy=multi-user.target
