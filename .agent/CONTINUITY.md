@@ -466,6 +466,19 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-15T22:51Z `[TOOL]` Warm-reboot test #2 (MCR=Disabled + unload unit enabled): **still hangs
+  POST** — no logo, no menu, no keyboard power. Two takeaways. (1) Instrumentation flaw: the
+  `logger` receipts never appeared because at that shutdown stage the journald socket is already
+  dead — absence of the receipt proves nothing either way; receipts must go to `/dev/kmsg` instead
+  (kmsg is relayed into the journal by PID1 through the whole shutdown). (2) The negative result is
+  still informative even with that uncertainty: MCR-off alone did not fix it, so memory-training
+  restore is NOT the trigger. Leading suspect now: the EC/PCIe warm-reset path itself. Next single
+  variable (user-runnable, one sed): `reboot=c` kernel param — asks the reset path to treat the next
+  boot as COLD via the keyboard-controller 0xFE interface; if it works, it doubles as the shipped
+  fix (bootstrap + docs). Then queue: unit v3 (kmsg receipts + unload + PCIe Secondary Bus Reset of
+  the GPU bridge at shutdown), then BIOS PCIEX16(G5) Link Mode -> Gen4. If reboot=c AND SBR both
+  fail, firmware-side warm reset is defective -> warranty signal: 'soft reset never completes POST,
+  power cycle required' is testable in any service center in 30 s.
 - 2026-11-15T22:39Z `[USER]` **MCR experiment in place; BIOS exported profiles captured as
   evidence** (`docs/bios-profiles/`). The BEFORE/AFTER `setting.txt` diff proves **exactly one real
   change**: `Memory Context Restore Auto -> Disabled` (plus the USB stick appearing in the boot
