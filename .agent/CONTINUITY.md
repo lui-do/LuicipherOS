@@ -255,6 +255,18 @@ history, one holding the November detail); no entry was dropped.
   LFS learning only. Time of day UNCONFIRMED (date from ADR).
 
 ## [PROGRESS]
+- 2026-11-15T12:33Z `[USER]` **Ricing phase started (mockup-first).** Requirements given: (1) a
+  theme **menu** with presets plus **generate-theme-from-wallpaper**; (2) asked whether the
+  pipeline can also **generate wallpapers** - answer is yes, two ways: procedural
+  (palette->gradient, instant/offline) and AI (demonstrated live: docs/mockups/assets/
+  wall-ai-1.png and wall-ai-2.png, generated during mockup build; ~5 MB each,
+  locally kept, gitignored via docs/mockups/.gitignore to avoid touching the user's
+  pending root .gitignore changes); (3) one **shared base for ALL users**, with
+  **work** additionally carrying a keyboard-first **Productivity profile** (named
+  workspaces, 24px bar, 1px borders, cheat sheet) purely in the override layer.
+  Process rule set by the user: iterate HTML mockups first; configs change only after
+  sign-off. First mockup: docs/mockups/themes-v1.html (menu, 3 desktop states, pipeline
+  diagram, procedural + AI wallpapers, 5 open questions Q1-Q5 in-page).
 - 2026-11-15T10:21Z `[TOOL]` **Warranty report created for Alza**:
   `docs/warranty-report-2026-11-15.html` (source, committed) + bilingual PDF (Czech first, English
   second) at `docs/warranty-report-2026-11-15.pdf` (gitignored artifact per `docs/*.pdf` rule).

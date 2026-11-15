@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LuicipherOS — ricing mockups v1</title>
+<style>
+  :root { --ink:#16181d; --paper:#f7f8fa; --line:#d7dbe0; --mut:#5b6472; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:14.5px/1.5 "DejaVu Sans", sans-serif; color:var(--ink); background:var(--paper); }
+  main { max-width: 1080px; margin: 0 auto; padding: 28px 20px 80px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 38px 0 6px; border-bottom: 2px solid var(--ink); padding-bottom: 3px; }
+  .sub { color: var(--mut); margin: 0 0 18px; }
+  .note { background:#fff; border:1px solid var(--line); border-left:4px solid #89b4fa;
+          padding:10px 14px; margin:10px 0 20px; border-radius:6px; }
+  .caption { color:var(--mut); font-size:12.5px; margin:6px 0 0; }
+
+  /* ---------- desktop mockups ---------- */
+  .desk { border-radius:10px; overflow:hidden; border:1px solid #0006;
+          box-shadow:0 8px 22px #0002; font-family:"DejaVu Sans Mono", monospace; }
+  .bar { display:flex; align-items:center; gap:10px; padding:0 12px; color:#fff; }
+  .ws { display:flex; gap:4px; }
+  .ws span { min-width:18px; text-align:center; border-radius:5px; padding:1px 5px; opacity:.55; }
+  .ws span.on { opacity:1; box-shadow:inset 0 0 0 1px currentColor; }
+  .win { border-radius:8px; color:#fff; }
+  .wtitle { font-size:11px; padding:4px 8px; border-radius:8px 8px 0 0; }
+  .wbody { font-size:10.5px; padding:8px; opacity:.85; line-height:1.5; }
+  .hint { position:absolute; bottom:10px; right:12px; font-size:11px; color:#fff9; }
+  .stage { position:relative; height: 300px; }
+
+  /* ---------- theme menu ---------- */
+  .menu { width:340px; background:#1e1e2e; border:1px solid #45475a; border-radius:12px;
+          padding:10px; color:#cdd6f4; font-family:"DejaVu Sans", sans-serif; box-shadow:0 12px 30px #0004; }
+  .menu h3 { margin:4px 6px 8px; font-size:13px; color:#a6adc8; font-weight:600; }
+  .row { display:flex; align-items:center; gap:10px; padding:7px 8px; border-radius:8px; }
+  .row:hover, .row.sel { background:#313244; }
+  .sw { display:flex; }
+  .sw i { width:14px; height:14px; display:inline-block; border-radius:3px; margin-right:2px; }
+  .act { border-top:1px solid #45475a; margin-top:6px; padding-top:8px; }
+  kbd { background:#313244; border-radius:4px; padding:1px 6px; font-size:11.5px;
+        font-family:"DejaVu Sans Mono", monospace; border:1px solid #45475a; }
+
+  /* ---------- flow + wallpapers ---------- */
+  .flow { display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:13px; }
+  .fbox { background:#fff; border:1.5px solid var(--ink); border-radius:8px; padding:8px 12px; text-align:center; }
+  .farrow { font-size:18px; color:var(--mut); }
+  .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:12px; }
+  .wall { aspect-ratio:16/9; border-radius:10px; border:1px solid #0004; position:relative; overflow:hidden; }
+  .wall b { position:absolute; left:8px; bottom:6px; font-size:11px; color:#fffc; font-weight:600; }
+  .chips { display:flex; gap:4px; margin-top:5px; }
+  .chips i { width:22px; height:10px; border-radius:3px; display:inline-block; }
+  .q { background:#fff; border:1px solid var(--line); border-radius:8px; padding:12px 16px; margin-top:10px; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>LuicipherOS — ricing mockups <small style="font-weight:400">v1</small></h1>
+<p class="sub">Design only — <b>no configs are wired yet</b>. Refine what you see here, then we
+implement it into Hyprland + Quickshell via the shared base / per-user override layer.</p>
+
+<div class="note">
+<b>The plan baked into these mockups:</b> one shared <b>base theme for all users</b> (repo-managed)
+→ each user can switch <b>presets</b> or <b>generate a palette from their wallpaper</b>
+(personal, stored in <span style="font-family:monospace">~/.config/luicipher/</span>)
+→ <b>work</b> additionally ships a keyboard-first <b>Productivity profile</b>.
+Wallpapers themselves can also be <b>generated</b> (procedural from a palette, or AI) — both shown below.
+</div>
+
+<!-- ================= 1. THEME MENU ================= -->
+<h2>1 · Theme menu (a Quickshell bar widget — opens in place, keyboard-navigable)</h2>
+<div style="background:#111318; padding:18px; border-radius:10px; display:flex; gap:18px; align-items:flex-start;">
+  <div>
+    <div class="bar" style="background:#1e1e2e; border:1px solid #45475a; border-radius:8px; width:420px; height:30px;">
+      <span style="color:#89b4fa">🗏 LuicipherOS</span>
+      <span style="background:#313244; border-radius:6px; padding:1px 8px; font-size:12px; color:#cdd6f4;">Themes ▾</span>
+      <span style="margin-left:auto; color:#cdd6f4; font-size:12px;">Sun 15 Nov 12:04</span>
+    </div>
+    <p class="caption" style="color:#9aa0ad">Bar mockup — “Themes ▾” pill is new; rest unchanged.</p>
+  </div>
+
+  <div class="menu">
+    <h3>Themes — <kbd>↑↓</kbd> pick · <kbd>Enter</kbd> apply · <kbd>Esc</kbd> close</h3>
+    <div class="row sel"><span class="sw"><i style="background:#1e1e2e;outline:1px solid #666"></i><i style="background:#89b4fa"></i><i style="background:#a6e3a1"></i><i style="background:#f9e2af"></i></span> Mocha <small style="color:#6c7086">(current base)</small></div>
+    <div class="row"><span class="sw"><i style="background:#2e3440"></i><i style="background:#88c0d0"></i><i style="background:#a3be8c"></i><i style="background:#ebcb8b"></i></span> Nord</div>
+    <div class="row"><span class="sw"><i style="background:#1a1b26"></i><i style="background:#7aa2f7"></i><i style="background:#bb9af7"></i><i style="background:#e0af68"></i></span> Tokyo Night</div>
+    <div class="row"><span class="sw"><i style="background:#282828"></i><i style="background:#fabd2f"></i><i style="background:#8ec07c"></i><i style="background:#fb4934"></i></span> Gruvbox</div>
+    <div class="row"><span class="sw"><i style="background:#2d353b"></i><i style="background:#83c167"></i><i style="background:#dbbc7f"></i><i style="background:#e69875"></i></span> Everforest</div>
+    <div class="row"><span class="sw"><i style="background:#191724"></i><i style="background:#c4a7e7"></i><i style="background:#ebbcba"></i><i style="background:#f6c177"></i></span> Rosé Pine</div>
+    <div class="row" style="opacity:.9"><span class="sw"><i style="background:conic-gradient(#f66,#fc3,#6f9,#39f,#c3f,#f66)"></i></span> Generate from wallpaper… <small style="color:#6c7086">→ matugen</small></div>
+    <div class="act">
+      <div class="row">🖼 Generate wallpaper… <small style="color:#6c7086">(procedural | AI)</small></div>
+      <div class="row">⌨ Profile: <b>Productivity (work)</b> — on/off</div>
+      <div class="row">↺ Reset this app to shared base</div>
+    </div>
+  </div>
+</div>
+<p class="caption">Implementation later: this menu is a small Quickshell plugin (lazy window) +
+one script that rewrites the user's <span style="font-family:monospace">tokens.json</span> /
+Hyprland override and pokes <span style="font-family:monospace">hyprctl reload</span>. Nothing
+writes into the shared base — exactly the layering already built.</p>
+
+<!-- ================= 2. DESKTOPS ================= -->
+<h2>2 · The three target looks</h2>
+
+<div class="grid" style="grid-template-columns:1fr 1fr; gap:18px;">
+
+  <div>
+    <div class="desk stage" style="background:
+        radial-gradient(60% 90% at 20% 10%, #313244 0%, transparent 60%),
+        radial-gradient(50% 80% at 90% 90%, #23253a 0%, transparent 60%), #1e1e2e;">
+      <div class="bar" style="background:#181825cc; height:30px;">
+        <span style="color:#89b4fa">🗏 LuicipherOS</span>
+        <div class="ws"><span class="on" style="color:#89b4fa">1</span><span style="color:#cdd6f4">2</span><span style="color:#cdd6f4">3</span></div>
+        <span style="margin-left:auto;color:#cdd6f4">12:04</span>
+      </div>
+      <div style="display:flex; gap:8px; padding:8px 10px;">
+        <div class="win" style="flex:1.2; outline:2px solid #89b4fa;">
+          <div class="wtitle" style="background:#313244; color:#cdd6f4">‣ code — editor</div>
+          <div class="wbody" style="background:#1e1e2e; height:150px;">def rice():<br>&nbsp;&nbsp;return "shared&nbsp;base"</div>
+        </div>
+        <div class="win" style="flex:1; outline:2px solid #45475a;">
+          <div class="wtitle" style="background:#313244; color:#a6adc8">tabby — ssh</div>
+          <div class="wbody" style="background:#24243e; height:150px; color:#cdd6f4;">$ lui sync<br>✓ in sync</div>
+        </div>
+      </div>
+      <span class="hint">A — Base “Mocha”: what every new user sees</span>
+    </div>
+    <p class="caption"><b>A · Shared base</b> — repo-managed, applies to <b>luci, work, and every future
+    user</b> untouched: 30 px bar, gaps 4/8, border 2, accent <span class="sw"><i style="background:#89b4fa;width:10px;height:10px;display:inline-block;border-radius:2px"></i></span> blue.</p>
+  </div>
+
+  <div>
+    <div class="desk stage" style="background:
+        radial-gradient(60% 90% at 20% 10%, #24283b 0%, transparent 60%),
+        radial-gradient(50% 80% at 90% 90%, #191b28 0%, transparent 60%), #1a1b26;">
+      <div class="bar" style="background:#16161ecc; height:30px;">
+        <span style="color:#7aa2f7">🗏 LuicipherOS</span>
+        <div class="ws"><span class="on" style="color:#7aa2f7">1</span><span style="color:#c0caf5">2</span><span style="color:#c0caf5">3</span></div>
+        <span style="margin-left:auto;color:#c0caf5">12:04</span>
+      </div>
+      <div style="display:flex; gap:8px; padding:8px 10px;">
+        <div class="win" style="flex:1.2; outline:2px solid #7aa2f7;">
+          <div class="wtitle" style="background:#292e42; color:#c0caf5">‣ code — editor</div>
+          <div class="wbody" style="background:#1a1b26; height:150px;">def rice():<br>&nbsp;&nbsp;return "tokyo&nbsp;night"</div>
+        </div>
+        <div class="win" style="flex:1; outline:2px solid #292e42;">
+          <div class="wtitle" style="background:#292e42; color:#787c99">helium</div>
+          <div class="wbody" style="background:#1f2335; height:150px; color:#c0caf5;">▓▓ reddit · HN · wiki<br>▓▓▓ (12 tabs)</div>
+        </div>
+      </div>
+      <span class="hint">B — After picking preset “Tokyo Night” (user-local)</span>
+    </div>
+    <p class="caption"><b>B · Preset switch</b> — same layout, different palette; the user only gains
+    a small <span style="font-family:monospace">~/.config/luicipher/quickshell/tokens.json</span>
+    + overrides.lua. Presets live in the repo → same list for everyone.</p>
+  </div>
+</div>
+
+<div style="margin-top:18px">
+  <div class="desk stage" style="background:#12141a; max-width:1044px;">
+    <div class="bar" style="background:#0d0f13; height:24px; font-size:12px;">
+      <div class="ws" style="gap:5px;">
+        <span class="on" style="color:#a6e3a1;background:#1e2330">1 · code</span>
+        <span style="color:#565f89">2 · term</span>
+        <span style="color:#565f89">3 · web</span>
+        <span style="color:#565f89">4</span><span style="color:#565f89">5</span>
+        <span style="color:#565f89">6</span><span style="color:#565f89">7</span>
+        <span style="color:#565f89">8</span><span style="color:#a6e3a1">9 · music</span>
+      </div>
+      <span style="color:#cdd6f4; margin-left:auto; font-size:11.5px;">▎~/dev/LuicipherOS — zsh</span>
+      <span style="color:#565f89">│</span><span style="color:#cdd6f4">12:04</span>
+    </div>
+    <div style="display:flex; gap:6px; padding:6px 8px;">
+      <div class="win" style="flex:1; outline:1.5px solid #a6e3a1;">
+        <div class="wtitle" style="background:#1e2330;color:#cdd6f4">‣ code</div>
+        <div class="wbody" style="height:150px">…</div>
+      </div>
+      <div class="win" style="flex:1; outline:1px solid #313244;">
+        <div class="wtitle" style="background:#1e2330;color:#a6adc8">tabby ×3 panes</div>
+        <div class="wbody" style="height:150px">│ ├ ssh prod<br>│ └ htop</div>
+      </div>
+      <div style="width:280px; background:#1e2330; border-radius:8px; padding:8px 10px; color:#cdd6f4; font-size:11.5px;">
+        <b style="color:#a6e3a1">⌨ cheat sheet</b> <span style="float:right;color:#565f89">/ · hover</span>
+        <div style="margin-top:4px; line-height:1.7">
+          <kbd>SUPER</kbd>+<kbd>T</kbd> terminal &nbsp;
+          <kbd>SUPER</kbd>+<kbd>␣</kbd> launcher<br>
+          <kbd>SUPER</kbd>+<kbd>1…9</kbd> workspace → &nbsp;
+          <kbd>⇧</kbd> send<br>
+          <kbd>SUPER</kbd>+<kbd>H/J/K/L</kbd> focus · <kbd>⇧</kbd> move<br>
+          <kbd>SUPER</kbd>+<kbd>/</kbd> this sheet &nbsp;
+          <kbd>SUPER</kbd>+<kbd>␠␠</kbd> themes
+        </div>
+      </div>
+    </div>
+    <span class="hint" style="color:#a6e3a1">C — work's Productivity profile (override layer only)</span>
+  </div>
+  <p class="caption"><b>C · work — Productivity profile</b>: 24 px bar, <b>named workspaces with app
+  labels</b>, focused window title in bar, tighter gaps (2/4), <b>1 px border, accent only on
+  focused</b>, monochrome except focus, always-attached keybind cheat sheet. All of it lives in
+  <span style="font-family:monospace">work</span>'s override files — base untouched, <b>luci</b>
+  and future users never see it.</p>
+</div>
+
+<!-- ================= 3. PIPELINE ================= -->
+<h2>3 · Theme pipeline (answers “generate from wallpaper?” and “generate a wallpaper?” — both yes)</h2>
+<div class="flow">
+  <div class="fbox">🖼 wallpaper.jpg<br><small>chosen or generated</small></div><span class="farrow">→</span>
+  <div class="fbox">matugen<br><small>image → palette.json</small></div><span class="farrow">→</span>
+  <div class="fbox">~/.config/luicipher/palette.json<br><small>per-user, regenerable</small></div><span class="farrow">→</span>
+  <div class="fbox">apply script<br><small>luci theme …</small></div><span class="farrow">→</span>
+  <div class="fbox">Hyprland borders · Quickshell tokens · Vicinae · swaync<br><small>one accent set everywhere</small></div>
+</div>
+<div class="flow" style="margin-top:8px">
+  <div class="fbox">palette.json</div><span class="farrow">→</span>
+  <div class="fbox">wallpaper generator<br><small>procedural (instant, offline) | AI (seed → 16:9)</small></div><span class="farrow">→</span>
+  <div class="fbox">new wallpaper → back into the pipeline<br><small>the loop closes: theme ⇄ wallpaper</small></div>
+</div>
+
+<!-- ================= 4. WALLPAPERS ================= -->
+<h2>4 · Wallpaper generation — procedural (CSS proof) + AI (generated live for this mockup)</h2>
+<div class="grid">
+  <div>
+    <div class="wall" style="background:
+      radial-gradient(120% 90% at 15% 20%, #89b4fa33 0%, transparent 45%),
+      radial-gradient(90% 70% at 85% 75%, #a6e3a12e 0%, transparent 50%),
+      radial-gradient(70% 60% at 60% 10%, #cba6f726 0%, transparent 55%),
+      linear-gradient(160deg,#1e1e2e,#11111b)">
+      <b>procedural · Mocha</b></div>
+    <div class="chips"><i style="background:#89b4fa"></i><i style="background:#a6e3a1"></i><i style="background:#cba6f7"></i><i style="background:#f9e2af"></i></div>
+  </div>
+  <div>
+    <div class="wall" style="background:
+      radial-gradient(120% 90% at 80% 15%, #7aa2f733 0%, transparent 45%),
+      radial-gradient(90% 70% at 15% 80%, #bb9af72e 0%, transparent 50%),
+      radial-gradient(60% 50% at 45% 40%, #e0af6822 0%, transparent 55%),
+      linear-gradient(160deg,#1a1b26,#16161e)">
+      <b>procedural · Tokyo Night</b></div>
+    <div class="chips"><i style="background:#7aa2f7"></i><i style="background:#bb9af7"></i><i style="background:#e0af68"></i><i style="background:#9ece6a"></i></div>
+  </div>
+  <div>
+    <div class="wall" style="background:
+      radial-gradient(120% 90% at 20% 80%, #fabd2f2c 0%, transparent 45%),
+      radial-gradient(90% 70% at 85% 20%, #8ec07c28 0%, transparent 50%),
+      radial-gradient(70% 60% at 55% 55%, #fe801922 0%, transparent 55%),
+      linear-gradient(160deg,#282828,#1d2021)">
+      <b>procedural · Gruvbox</b></div>
+    <div class="chips"><i style="background:#fabd2f"></i><i style="background:#8ec07c"></i><i style="background:#fe8019"></i><i style="background:#fb4934"></i></div>
+  </div>
+  <div class="aiwall" data-src="assets/wall-ai-1"></div>
+  <div class="aiwall" data-src="assets/wall-ai-2"></div>
+  <div style="display:flex;align-items:center;justify-content:center;border:1.5px dashed #b8bec7;border-radius:10px;color:#5b6472;font-size:13px;text-align:center;padding:10px">
+    …or feed <b>&nbsp;any image&nbsp;</b> into matugen<br>and the desktop adopts <i>its</i> colors<br><small>(theme ⇄ wallpaper, both directions)</small>
+  </div>
+</div>
+<p class="caption">Procedural = a tiny script renders gradients from palette.json (no deps,
+instant, deterministic). AI = the two tiles here were generated on demand <i>while this page was
+being built</i> — proof the menu's “Generate wallpaper” can shell out to a generator. (If a tile
+is still empty, the image finished after export — open the page again.)</p>
+
+<!-- ================= 5. QUESTIONS ================= -->
+<h2>5 · Decide before we implement</h2>
+<div class="q"><b>Q1 — Preset list:</b> are the 6 presets (Mocha, Nord, Tokyo Night, Gruvbox,
+Everforest, Rosé Pine) the right starting set? Keep/add/remove?</div>
+<div class="q"><b>Q2 — Menu placement:</b> the “Themes ▾” pill in the bar (shown) vs a keybind
+(<kbd>SUPER</kbd>+<kbd>/</kbd> together with the cheat sheet, no bar clutter)? Or both.</div>
+<div class="q"><b>Q3 — work's Productivity profile:</b> is panel C the right idea — named
+workspaces, 24 px bar, minimal borders, cheat sheet? What would you add for keyboard flow
+(e. g. scratchpad workspace 9, per-monitor rules)?</div>
+<div class="q"><b>Q4 — Wallpaper default for the shared base:</b> procedural “Mocha mesh” so a new
+user never needs a wallpaper file — yes?</div>
+<div class="q"><b>Q5 — Terminal in mockups:</b> still drawn as “tabby”; if we replace it (issue #20)
+the mockups will show the new one. Decide together?</div>
+
+<div class="note" style="border-left-color:#a6e3a1; margin-top:22px">
+<b>Next step after your feedback:</b> only then do configs change — palette.json format →
+<kbd>luci theme</kbd> script → Quickshell “Themes” plugin → per-user example for <b>work</b> →
+Vicinae/swaync adoption (#22). Nothing here touches the shared base without a commit.
+</div>
+
+</main>
+<script>
+// AI wallpaper slots: try common extensions since the generator picks its own.
+document.querySelectorAll('.aiwall').forEach(el => {
+  const src = el.dataset.src, box = document.createElement('div');
+  box.className = 'wall';
+  box.style.background = 'repeating-linear-gradient(45deg,#eceef1 0 12px,#e3e6ea 12px 24px)';
+  const cap = document.createElement('div');
+  cap.className = 'chips';
+  el.replaceWith(box, cap);
+  const label = src.endsWith('1') ? 'AI · aurora mesh' : 'AI · night mountains';
+  for (const ext of ['.png', '.jpg', '.webp', '.gif']) {
+    const img = new Image();
+    img.onload = () => {
+      box.style.background = `url('${src}${ext}') center/cover no-repeat`;
+      box.innerHTML = `<b>${label}</b>`;
+      cap.innerHTML = `<i style="background:#556">#667</i><i style="background:#7a8">#798</i>` +
+                      `<span style="font-size:11px;color:#5b6472;align-self:center">generated on demand via the menu's “AI” action</span>`;
+    };
+    img.src = `${src}${ext}`;
+  }
+});
+</script>
+</body>
+</html>
