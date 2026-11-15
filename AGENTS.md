@@ -81,7 +81,9 @@ LuicipherOS/
 - `iso/` has `profiledef.sh`, `packages.x86_64`, `airootfs/`, `README.md`.
 - `research/` currently has `office-suites.md`.
 - `scripts/` has `lui.sh` (the `lui` CLI), `sync.sh`, `ensure-packages.sh`,
-  `ensure-flatpaks.sh`, `generate-local-apps.sh`, `screenshot-window.sh`.
+  `ensure-flatpaks.sh`, `generate-local-apps.sh`, `theme.sh`, `screenshot-window.sh`.
+- `themes/` holds the preset palettes (`<name>.json`) applied by `lui theme`; keys mirror the
+  Quickshell tokens, so a preset is just a values file. Add a preset = drop a file.
 
 ## Build & Development Commands
 

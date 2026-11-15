@@ -6,7 +6,8 @@
 #
 # v0.1 subcommands:
 #   lui sync [--prune] [--dry-run] [--yes]  reconcile packages + flatpaks + local apps
-#   lui local-apps [--remove]              (re)generate ~/.local/bin launcher entries
+#   lui theme list|show|set|reset           palette presets / from-wallpaper generation
+#   lui local-apps [--remove]               ~/.local/bin launcher entries
 #   lui status                              read-only: what is out of sync
 #   lui root                                print the resolved tree path
 #   lui version | help
@@ -43,6 +44,7 @@ USAGE
   lui sync [--prune] [--dry-run] [--yes]   install missing packages + flatpaks + local apps
   lui status                               read-only preview of what would change
   lui local-apps [--remove]               (re)generate ~/.local/bin launcher entries
+  lui theme list|show|set <preset>|...     palettes: presets or from-wallpaper (matugen)
   lui root                                 print the resolved LuicipherOS tree
   lui version                              print the CLI version
   lui help                                 this text
@@ -151,6 +153,12 @@ case "$cmd" in
     # operation and gets the banner without the destructive-path warning.
     tree_banner "$ROOT" "$(classify_root "$ROOT")" safe
     exec "$ROOT/scripts/sync.sh" --prune --dry-run "$@"
+    ;;
+  theme)
+    # Preset/wallpaper palettes into the per-user override (scripts/theme.sh).
+    ROOT="$(resolve_root)"
+    tree_banner "$ROOT" "$(classify_root "$ROOT")" safe
+    exec "$ROOT/scripts/theme.sh" "$@"
     ;;
   local-apps)
     # (Re)generate the ~/.local/bin launcher .desktop entries from

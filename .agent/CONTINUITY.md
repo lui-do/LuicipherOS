@@ -266,6 +266,17 @@ history, one holding the November detail); no entry was dropped.
   LFS learning only. Time of day UNCONFIRMED (date from ADR).
 
 ## [PROGRESS]
+- 2026-11-15T13:04Z `[TOOL]` **Ricing stage 1 built: theme pipeline core.** New `themes/` dir with
+  the six signed-off presets (mocha, nord, tokyo-night, gruvbox, everforest, rose-pine - keys mirror
+  the Quickshell tokens); `scripts/theme.sh` + `lui theme` subcommand (list/show/set/reset/set
+  wallpaper <img> via matugen with defensive tone mapping; matugen path UNTESTED until installed);
+  set merges ONLY palette keys into the per-user tokens.json (barHeight and other user keys
+  preserved - proven), reset drops just the palette. Tests: `tests/test_theme.sh` 7/7 (fixtures in
+  temp tree/XDG_CONFIG_HOME), test_lui 18/18, test_sync 17/17. `matugen` declared in config/packages
+  (installs on next lui sync as luci with LUI_ROOT set, or plain `sudo pacman -S matugen`). Kernel
+  upgrade to 7.3.4.arch1-2 confirmed installed (running arch1-1 until reboot); -Syu showed only 3
+  kernel packages were actually pending - the earlier 169 count was stale; system is now consistent,
+  pending = the 2 [ignored] firmware pins.
 - 2026-11-15T12:33Z `[USER]` **Ricing phase started (mockup-first).** Requirements given: (1) a
   theme **menu** with presets plus **generate-theme-from-wallpaper**; (2) asked whether the
   pipeline can also **generate wallpapers** - answer is yes, two ways: procedural

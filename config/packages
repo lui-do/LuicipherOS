@@ -157,3 +157,5 @@ udiskie
 udisks2
 # planned dev-station packages, NOT installed yet (uncomment only after installing them):
 # qemu-desktop libvirt virt-manager edk2-ovmf dnsmasq swtpm
+# wallpaper -> palette (lui theme set wallpaper)
+matugen

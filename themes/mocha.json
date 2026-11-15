@@ -1,0 +1,3 @@
+{ "name": "Mocha", "bg": "#1e1e2e", "surface": "#313244", "fg": "#cdd6f4",
+  "muted": "#6c7086", "accent": "#89b4fa", "alt": "#a6e3a1", "warn": "#f9e2af",
+  "fontFamily": "JetBrainsMono Nerd Font" }

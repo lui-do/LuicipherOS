@@ -1,0 +1,3 @@
+{ "name": "Gruvbox", "bg": "#282828", "surface": "#3c3836", "fg": "#ebdbb2",
+  "muted": "#928374", "accent": "#fabd2f", "alt": "#8ec07c", "warn": "#fe8019",
+  "fontFamily": "JetBrainsMono Nerd Font" }
