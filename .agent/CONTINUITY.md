@@ -399,6 +399,29 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-15T10:07Z `[USER]` **New evidence, 2026-11-15: BIOS SETUP froze.** While checking
+  settings after a clean reboot, the UEFI configuration utility itself locked up - no input
+  did anything - and required a power-button hold. A freeze inside BIOS setup is bare
+  metal/firmware with NO operating system, driver, MemTest86 or any software we control:
+  it is the third independent bare-metal hang (MemTest86 resets 2026-11-13 and 11-14 plus
+  this UEFI freeze) and further excludes software causes. The forced power-off explains
+  this boot's `0x00200800` (ACPI transition), not a new CPU event.
+  Voltages read in BIOS at the time (all within spec at idle): 12V=11.980 (-0.2%),
+  5V=5.020, 3.3V=3.312, CPU core=1.296V, VDDIO/MC=1.12V, **SoC=1.040V** (down from
+  1.272V with EXPO enabled - consistent with EXPO still off). Idle readings do not
+  characterize sag under load. UNVERIFIED after the BIOS freeze+forced power cycle:
+  whether Ai Overclock Tuner is still Auto (UEFI may restore defaults after a hard
+  loss - defaults are EXPO-off anyway, but a glance next BIOS visit settles it).
+- 2026-11-15T10:07Z `[TOOL]` ppfeaturemask VERIFIED ACTIVE: `/proc/cmdline` contains
+  `amgpu.ppfeaturemask=0xffff7fff` (full value confirmed via `tr`), `/sys/module/amdgpu/parameters/
+  ppfeaturemask` = 0xffff7fff (GFXOFF bit 0x8000 masked), zero gfxoff/DMUB lines this boot.
+  Note: the checklist command given earlier (`grep -o 'amdgpu.ppfeaturemask=[0-9a-f]*'`)
+  TRUNCATES at 'x' and falsely shows `=0` - use the `tr ' ' '\n' | grep -E 'amdgpu'` form.
+- 2026-11-15T10:07Z `[USER]` Minor new symptom: while typing in the terminal (light load) the
+  monitor briefly flashed to black and recovered by itself. Single occurrence so far; a transient
+  link retrain/modeset event, most plausibly HDMI + the same flaky display path as the GOP black
+  screen. To catch a repeat: `journalctl -k --since '-2 min' | grep -iE 'amdgpu|hdmi|display'` right
+  after it happens.
 - 2026-11-14T23:05Z `[TOOL]` **Operational trap: `git reset --hard` on a live stow tree trips
   Hyprland's config watcher.** While updating the deployed clone via `reset --hard` at
   2026-11-14 23:58, git briefly *removed and recreated* `hyprland.lua`; Hyprland's file
