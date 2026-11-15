@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Zpráva o hardwarových závadách — Hardware Fault Report</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  body { font: 10.5pt/1.45 "DejaVu Sans", sans-serif; color: #111; margin: 0; }
+  h1 { font-size: 17pt; margin: 0 0 2mm; }
+  h2 { font-size: 12.5pt; margin: 6mm 0 2mm; border-bottom: 1.5px solid #333; padding-bottom: 1mm; }
+  .meta { color: #444; font-size: 9.5pt; margin-bottom: 4mm; }
+  table { border-collapse: collapse; width: 100%; margin: 2mm 0; font-size: 9.5pt; }
+  th, td { border: 1px solid #999; padding: 1.2mm 2mm; text-align: left; vertical-align: top; }
+  th { background: #eee; }
+  ul { margin: 1mm 0 2mm 5mm; padding: 0; }
+  li { margin-bottom: 1.2mm; }
+  .en { page-break-before: always; }
+  .fill { color: #a00; }
+  .small { font-size: 9pt; color: #555; }
+  b.ok { color: #060; }
+</style>
+</head>
+<body>
+
+<h1>Zpráva o hardwarových závadách</h1>
+<div class="meta">
+Reklamace / žádost o záruční diagnostiku &nbsp;·&nbsp; Vypracováno: 15. 11. 2026 &nbsp;·&nbsp;
+Účtenka / číslo objednávky: <span class="fill">[doplňte]</span> &nbsp;·&nbsp;
+Datum převzetí stroje: <span class="fill">[doplňte]</span> &nbsp;·&nbsp;
+Kontakt: <span class="fill">[jméno, telefon/e‑mail]</span>
+</div>
+
+<h2>1. Stroj (sestaven Alzou, komponenty nové)</h2>
+<table>
+<tr><th>Součástka</th><th>Typ</th></tr>
+<tr><td>Procesor</td><td>AMD Ryzen 5 9600X (6C/12T, Zen 5, 65 W TDP)</td></tr>
+<tr><td> chladič CPU</td><td>ARCTIC Freezer 36 Black (vzduchový, dimenzován s rezervou)</td></tr>
+<tr><td>Základová deska</td><td>ASUS TUF GAMING B650E‑PLUS WIFI — serial <b>250963037803840</b>, BIOS 4004 (21. 9. 2026, aktuální)</td></tr>
+<tr><td>Grafická karta</td><td>SAPPHIRE Radeon RX 7900 XT GAMING 20 GB</td></tr>
+<tr><td>Paměť</td><td>Apacer PANTHER 2× 16 GB DDR5‑6000 CL38 (EXPO), osazeno v A2+B2 dle návodu</td></tr>
+<tr><td>Úložiště</td><td>Kingston NV3 1 TB NVMe</td></tr>
+<tr><td>Zdroj</td><td>Cooler Master ELITE Gold 850 W</td></tr>
+<tr><td>Skryně</td><td>darkFlash Aquarius Mesh</td></tr>
+<tr><td>OS</td><td>Arch Linux (rollující), jádro 7.3.4 — k závadám dochází i <b>bez běžícího OS</b> (viz bod 2)</td></tr>
+</table>
+
+<h2>2. Popis závady</h2>
+<p>Stroj se od <b>19. 10. 2026</b> opakovaně <b>sám od sebe resetuje</b> a <b>tvrdě zamrzá</b>
+(kompletní nereagování, nutné vypnutí držení tlačítka). Závažné: stejné jevy nastaly
+<b>přímo v nastavení BIOS (UEFI Setup)</b> a <b>při testu pamětí MemTest86+ spouštěném z USB</b> —
+v obou případech tedy <b>bez operačního systému, bez ovladačů a bez jakéhokoli softwaru</b>,
+který by mohl být na vině. Frekvence se zhoršuje.</p>
+
+<h2>3. Časová osa záznamů</h2>
+<p class="small">Deska AMD zapisuje příčinu posledního resetu do registru čipové sady; OS ji jen
+přečte. Kódové hodnoty jsou tedy objektivní hardwarový důkaz, ne interpretace softwaru.</p>
+<table>
+<tr><th>Datum / čas</th><th>Co běželo</th><th>Ukončení</th><th>Kód v registru</th></tr>
+<tr><td>19. 10. 19:36</td><td>běžná práce</td><td>samočinný reset</td><td><b>0x00800800 — interní událost vypnutí CPU</b></td></tr>
+<tr><td>27. 10. 14:25</td><td>běžná práce</td><td>samočinný reset</td><td><b>0x00800800 — interní událost vypnutí CPU</b></td></tr>
+<tr><td>5. 11. 13:23</td><td>po chvilkovém startu</td><td>samočinný reset</td><td><b>0x00800800 — interní událost vypnutí CPU</b></td></tr>
+<tr><td>10. 11. 22:36</td><td>běžná práce</td><td>samočinný reset</td><td><b>0x00800800 — interní událost vypnutí CPU</b></td></tr>
+<tr><td>12. 11. ~13:53</td><td>prohlížeč + terminál</td><td><b>tvrdé zamrznutí</b> — obraz zmrazen, ventilátory běží, Caps Lock mrtvý; vypnut držením tlačítka</td><td>(řízené vypnutí)</td></tr>
+<tr><td>12.–13. 11. 04:10</td><td><b>MemTest86+ z USB</b> (4 h 23 min, bez OS)</td><td>samočinný reset</td><td><b>0x00800800</b></td></tr>
+<tr><td>14. 11. ~17:01</td><td>prohlížeč — postupné zpomalení grafiky → freeze</td><td>tvrdé zamrznutí, vypnut tlačítkem</td><td>0x00080800 (CF9 — vynucený reset)</td></tr>
+<tr><td>14. 11. večer</td><td><b>MemTest86+ z USB</b> — po 1 čistém plném průběhu (bez chyb), během 2. průběhu</td><td>samočinný reset</td><td><b>0x00800800</b></td></tr>
+<tr><td><b>15. 11.</b></td><td><b>nastavení BIOS (UEFI Setup)</b> — při procházení položek</td><td><b>zamrznutí BIOS</b>, vypnut držením tlačítka</td><td>0x00200800 (vynucené vypnutí)</td></tr>
+</table>
+<p class="small">Během 12.–15. 11. (4 dny): <b>6 závažných událostí</b> oproti předchozímu
+týdennímu průměru. K tomu opakovaně: po restartu se stroj zapne, OS běží (Caps Lock reaguje),
+ale <b>monitor přes HDMI neukáže ani textovou konzoli / výzvu k zadání šifrovacího hesla</b>
+— černá obrazovka ještě před zásahem jakéhokoli ovladače.</p>
+
+<h2>4. Provedená diagnostika (vše zdokumentováno, podklady k nahlédnutí)</h2>
+<ul>
+<li><b>Paměti:</b> MemTest86+ v9.00 — <b class="ok">čisté výsledky</b> (1 plný průběh a dříve i
+~12odpovídající doba bez jediné chyby; testy zahrnují zátěž DDR5 sběrnice i Rowhammer).
+moduly správně v A2+B2. Profil <b>EXPO vypnut</b> (běží na JEDEC DDR5‑4800) od 14. 11. —
+<b>závady pokračovaly i poté</b> (14. 11. reset, 14. 11. freeze, 15. 11. zamrzlý BIOS).
+Paměť tedy jako příčina vyloučena.</li>
+<li><b>Teploty:</b> 20–30min zátěž všech jader: CPU <b class="ok">77–81 °C</b> (plato, limit 95 °C);
+GPU rovněž v normě. Chlazení vyloučeno.</li>
+<li><b>Napěťové větve (naprázdno, čtení v BIOS):</b> 12 V = 11,98 V; 5 V = 5,02 V; 3,3 V = 3,31 V;
+SoC 1,04 V. V toleranci — ale jde o klidový stav; chování pod zátěží/zapětí nelze měřit bez
+výměny zdroje.</li>
+<li><b>Softwarově vyloučeno:</b> k závadám dochází v UEFI Setupu i v MemTest86 (žádný OS);
+v Linuxu je grafický ovladač <i>amdgpu</i> kvůli známému stresu při studeném startu blokován a
+načítán ručně až ~3 min po startu — resety přesto probíhají; úsporné stavy GPU byly vypnuty
+boot parametrem — bez změny. Žádné MCE/AER/termální záznamy v logu: reset je okamžitý
+(„interní událost vypnutí CPU“), což odpovídá spíše napájecím nestabilitám či ochranným
+obvodům — nikoli softwaru.</li>
+<li><b>BIOS:</b> verze 4004 (21. 9. 2026) = nejnovější pro tento model; mikrokódy záměrně
+na konzervativní verzi. Žádnou aktualizací závady nezmizely.</li>
+<li><b>Periferie:</b> PC od 11. 11. napájeno přímo ze zásuvky (předtím lišta) — závady pokračovaly;
+odstráněno i podezření na rozvodnou lištu.</li>
+</ul>
+
+<h2>5. Zhodnocení</h2>
+<p>Vzorec chování — <b>okamžité samočinné resety s kódem „interní událost vypnutí CPU“ a tvrdá
+zamrznutí, vyvolaná zátěží, s rostoucí četností, a to i zcela bez softwaru (UEFI, MemTest86)</b> —
+po vyloučení pamětí, jejich nastavení, teplot, napájecích lišt v klidu a veškerého softwaru
+ukazuje na <b>závadný hardware v okruhu napájení: zdroj (PSU), napájecí obvody základové desky
+(VRM), případně procesor</b>. Stroj je nový — přichází v úvahu vadný kus, nikoli opotřebení.</p>
+
+<h2>6. Žádost</h2>
+<ol>
+<li>Záruční diagnostika <b>pod zátěží</b> (kombinovaný stres CPU+RAM+GPU ≥ 60 min, MemTest86 ≥ 4 h,
+stabilita UEFI Setupu — závadu lze reprodukovat do jednotek hodin).</li>
+<li>Výměnný test <b>známým dobrým zdrojem</b> a případně <b>základovou deskou</b> — mimo servis
+nelze tato podezření rozlišit.</li>
+<li>Při potvrzení: výměna vadné součástky / celého stroje v rámci zákonné záruky (24 měsíců,
+stroj osazen a testován Alzou, říjen 2026).</li>
+</ol>
+<p class="small">Přílohy k dispozici na vyžádání: strojové záznamy (výpisy registru příčiny resetu
+z boot logů, reporty MemTest86 — MT86P_01/02/04, fotodokumentace zamrznutí, logy jádra
+včetně cold‑boot problému GPU). Veškeré záznamy jsou průběžně vedeny a k nahlédnutí.</p>
+
+<!-- ============================= ENGLISH ============================= -->
+<div class="en"></div>
+<h1>Hardware Fault Report (English)</h1>
+<div class="meta">Warranty claim — diagnostic request · Prepared: 15 Nov 2026 ·
+Order/invoice no.: <span class="fill">[fill in]</span> · Contact: <span class="fill">[name, e‑mail]</span></div>
+
+<h2>1. Machine (assembled and tested by Alza, all components new, Oct 2026)</h2>
+<p>Ryzen 5 9600X · ARCTIC Freezer 36 · <b>ASUS TUF GAMING B650E‑PLUS WIFI</b> (board serial
+<b>250963037803840</b>, BIOS 4004 = latest) · Sapphire RX 7900 XT 20 GB · Apacer PANTHER
+2× 16 GB DDR5‑6000 CL38 EXPO (in A2+B2 per manual) · Kingston NV3 1 TB · <b>Cooler Master
+ELITE Gold 850 W</b> · darkFlash Aquarius Mesh. OS: Arch Linux rolling, kernel 7.3.4.</p>
+
+<h2>2. Defect</h2>
+<p>Since <b>19 Oct 2026</b> the machine repeatedly <b>resets itself</b> and suffers <b>complete
+hard freezes</b> requiring a power‑button hold. Critically, identical events occurred
+<b>inside the UEFI/BIOS setup utility</b> (15 Nov 2026) and <b>twice during MemTest86+ running
+from USB</b> — i.e. <b>with no operating system, drivers or software running at all</b>.
+Frequency is escalating: from ~weekly (19 Oct–10 Nov) to <b>6 events in 4 days</b> (12–15 Nov).</p>
+
+<h2>3. Event log</h2>
+<p class="small">AMD boards record the cause of the previous reset in a chipset register; the OS
+merely reads it. These codes are objective hardware evidence, not software interpretation.</p>
+<table>
+<tr><th>Date/time</th><th>What ran</th><th>Ending</th><th>Register code</th></tr>
+<tr><td>19 Oct 19:36</td><td>normal use</td><td>spontaneous reset</td><td><b>0x00800800 — internal CPU shutdown event</b></td></tr>
+<tr><td>27 Oct 14:25</td><td>normal use</td><td>spontaneous reset</td><td><b>0x00800800 — internal CPU shutdown event</b></td></tr>
+<tr><td>5 Nov 13:23</td><td>short time after boot</td><td>spontaneous reset</td><td><b>0x00800800 — internal CPU shutdown event</b></td></tr>
+<tr><td>10 Nov 22:36</td><td>normal use</td><td>spontaneous reset</td><td><b>0x00800800 — internal CPU shutdown event</b></td></tr>
+<tr><td>12 Nov ~13:53</td><td>browser + terminal</td><td><b>hard freeze</b> — frozen image, fans running, Caps Lock dead; forced power‑off</td><td>(forced off)</td></tr>
+<tr><td>12–13 Nov 04:10</td><td><b>MemTest86+ (no OS), after 4 h 23 min</b></td><td>spontaneous reset</td><td><b>0x00800800</b></td></tr>
+<tr><td>14 Nov ~17:01</td><td>browser — graphics progressively slowed, then froze</td><td>hard freeze; forced power‑off</td><td>0x00080800 (CF9, forced)</td></tr>
+<tr><td>14 Nov evening</td><td><b>MemTest86+</b> — 1 full pass clean (zero errors), reset during pass 2</td><td>spontaneous reset</td><td><b>0x00800800</b></td></tr>
+<tr><td><b>15 Nov</b></td><td><b>UEFI/BIOS setup utility</b></td><td><b>BIOS itself froze</b>; forced power‑off</td><td>0x00200800 (forced off)</td></tr>
+</table>
+<p class="small">Additionally, on several mornings the machine powers up and runs (Caps Lock
+responds) but shows <b>no video over HDMI even at the firmware/encryption prompt</b> — before any
+driver is involved.</p>
+
+<h2>4. Diagnostics already performed</h2>
+<ul>
+<li><b>Memory:</b> MemTest86+ v9.00 <b class="ok">clean</b> (a full pass with zero errors, incl. the
+DDR5 bus‑stress and Rowhammer tests; an earlier session ran 4 h 23 min before its reset). Slots
+correct (A2/B2). <b>EXPO disabled</b> since 14 Nov (JEDEC 4800) — <b>faults continued anyway</b>
+(14 Nov reset + freeze, 15 Nov BIOS freeze). Memory is ruled out as the cause.</li>
+<li><b>Thermal:</b> sustained all‑core load: CPU plateaus at <b class="ok">77–81 °C</b> (throttle
+point 95 °C). Cooling ruled out.</li>
+<li><b>Rails (BIOS readout, idle):</b> 11.98 V / 5.02 V / 3.31 V — in spec; no load‑transient
+capability data available without swap testing.</li>
+<li><b>Software ruled out by construction:</b> freezes occur in UEFI setup and in MemTest86 with no
+OS; under Linux the GPU driver is blacklisted and hand‑loaded minutes after boot (a documented
+cold‑boot workaround) and GPU idle power states are disabled via boot parameter — faults
+persist; no MCE/thermal/PCIe errors in any log (the reset is instantaneous: “internal CPU
+shutdown event”).</li>
+<li><b>Firmware:</b> latest BIOS (4004); microcode intentionally held at a conservative version.</li>
+<li><b>Power chain:</b> machine on a wall socket (not the strip) since 11 Nov — faults continued.</li>
+</ul>
+
+<h2>5. Assessment</h2>
+<p>Load‑induced instantaneous CPU‑level resets and hard freezes with rising frequency — occurring
+even in complete absence of software — after ruling out memory, memory settings, thermals,
+peripherals and all software, point to <b>faulty power delivery or silicon: PSU, motherboard
+VRM, or CPU</b>. The unit is new, so a defective component is the working theory, not wear.</p>
+
+<h2>6. Request</h2>
+<ol>
+<li>Warranty diagnostics <b>under sustained load</b> (combined CPU+RAM+GPU stress ≥ 60 min,
+MemTest86 ≥ 4 h, UEFI stability check) — the fault reproduces within hours.</li>
+<li>Swap testing with a <b>known‑good PSU</b> and, if needed, <b>motherboard</b>; these suspects
+cannot be separated in the field.</li>
+<li>On confirmation: repair/replacement under the 24‑month statutory warranty (machine assembled
+and “stability tested” by Alza, October 2026 — note the original shop test was evidently too
+brief to load‑test this fault).</li>
+</ol>
+<p class="small">Raw evidence available: reset‑cause register entries from boot logs, MemTest86
+reports (MT86P_01/02/04), kernel logs, photos. Full technical records kept continuously.</p>
+
+</body>
+</html>

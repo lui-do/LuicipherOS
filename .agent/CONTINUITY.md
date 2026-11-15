@@ -255,6 +255,16 @@ history, one holding the November detail); no entry was dropped.
   LFS learning only. Time of day UNCONFIRMED (date from ADR).
 
 ## [PROGRESS]
+- 2026-11-15T10:21Z `[TOOL]` **Warranty report created for Alza**:
+  `docs/warranty-report-2026-11-15.html` (source, committed) + bilingual PDF (Czech first, English
+  second) at `docs/warranty-report-2026-11-15.pdf` (gitignored artifact per `docs/*.pdf` rule).
+  Regenerate: `helium-browser --headless=new --no-sandbox --disable-gpu
+  --user-data-dir=/tmp/helium-pdf --print-to-pdf=docs/warranty-report-2026-11-15.pdf
+  --no-pdf-header-footer docs/warranty-report-2026-11-15.html`. Contains: components + board serial,
+  event timeline with reset-register codes (incl. the 15-Nov UEFI-setup freeze), completed
+  diagnostics (memory/ thermal/EXPO-off/software excluded), assessment (PSU/VRM/CPU), and the
+  three-point request. **Placeholders left for the user to fill: invoice number, handover date,
+  contact.**
 - 2026-11-14T22:26Z `[TOOL]` The five untracked project items from the original 7-item list are now
   GitHub issues, so the whole backlog is visible: **#18** shared multi-user settings tree
   (correctness item, supersedes the per-user-clone model), **#19** `luci update` one-word system
