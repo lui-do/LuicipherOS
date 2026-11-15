@@ -11,17 +11,17 @@ key by key:
 1. **Inline defaults** in `shell.qml` (`tokenDefaults`) — fail-safe floor.
 2. **`tokens.json`** (this directory) — the **base for all users**; stow-managed,
    so it updates with the repo. Edit here to change the distro default.
-3. **`$XDG_CONFIG_HOME/luicipher/quickshell/tokens.json`** — **per-user
+3. **`$XDG_CONFIG_HOME/lui/quickshell/tokens.json`** — **per-user
    override**: a real file, never stow-managed, survives updates. Contains only
    the keys the user changes:
 
    ```bash
-   mkdir -p ~/.config/luicipher/quickshell
-   echo '{ "barHeight": 40 }' > ~/.config/luicipher/quickshell/tokens.json
+   mkdir -p ~/.config/lui/quickshell
+   echo '{ "barHeight": 40 }' > ~/.config/lui/quickshell/tokens.json
    ```
 
 Both JSON files **hot-reload on save** (FileView watchers); no restart needed.
-The Hyprland side mirrors this: `$XDG_CONFIG_HOME/luicipher/hypr/overrides.lua`
+The Hyprland side mirrors this: `$XDG_CONFIG_HOME/lui/hypr/overrides.lua`
 (last-wins, see `dotfiles/hypr`). A new user gets the whole base config just by
 logging in; personalisation never forks the shared files.
 
@@ -51,7 +51,7 @@ Measured baseline: ~190 MB (single process). The rules that keep growth bounded:
 
 1. Copy the widget QML into `plugins/<name>.qml` (single file; inline any
    small helpers, or put them beside it and `import "./helpers"`).
-2. Give it an optional `property var luci` — the shell injects palette +
+2. Give it an optional `property var lui` — the shell injects palette +
    metrics (`barHeight`, `accent`, `bg`, `fg`, `muted`, `fontFamily`) as a
    **binding**, so the plugin follows token hot-reloads.
    Fall back to literals so the file also previews standalone.
@@ -61,7 +61,7 @@ Measured baseline: ~190 MB (single process). The rules that keep growth bounded:
 Conventions that keep ports cheap:
 
 - One plugin = one bar widget, no global singletons.
-- Read theme only from `luci`, never hardcode the palette twice.
+- Read theme only from `lui`, never hardcode the palette twice.
 - Async data via `Process` (see `swayncIndicator.qml`), never blocking loops.
 - Hyprland state via Quickshell's Hyprland integration (`import Quickshell.Hyprland`);
   keep a fallback text when the compositor isn't Hyprland (VM smoke).

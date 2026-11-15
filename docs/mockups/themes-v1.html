@@ -62,7 +62,7 @@ implement it into Hyprland + Quickshell via the shared base / per-user override 
 <div class="note">
 <b>The plan baked into these mockups:</b> one shared <b>base theme for all users</b> (repo-managed)
 → each user can switch <b>presets</b> or <b>generate a palette from their wallpaper</b>
-(personal, stored in <span style="font-family:monospace">~/.config/luicipher/</span>)
+(personal, stored in <span style="font-family:monospace">~/.config/lui/</span>)
 → <b>work</b> additionally ships a keyboard-first <b>Productivity profile</b>.
 Wallpapers themselves can also be <b>generated</b> (procedural from a palette, or AI) — both shown below.
 </div>
@@ -152,7 +152,7 @@ writes into the shared base — exactly the layering already built.</p>
       <span class="hint">B — After picking preset “Tokyo Night” (user-local)</span>
     </div>
     <p class="caption"><b>B · Preset switch</b> — same layout, different palette; the user only gains
-    a small <span style="font-family:monospace">~/.config/luicipher/quickshell/tokens.json</span>
+    a small <span style="font-family:monospace">~/.config/lui/quickshell/tokens.json</span>
     + overrides.lua. Presets live in the repo → same list for everyone.</p>
   </div>
 </div>
@@ -207,8 +207,8 @@ writes into the shared base — exactly the layering already built.</p>
 <div class="flow">
   <div class="fbox">🖼 wallpaper.jpg<br><small>chosen or generated</small></div><span class="farrow">→</span>
   <div class="fbox">matugen<br><small>image → palette.json</small></div><span class="farrow">→</span>
-  <div class="fbox">~/.config/luicipher/palette.json<br><small>per-user, regenerable</small></div><span class="farrow">→</span>
-  <div class="fbox">apply script<br><small>luci theme …</small></div><span class="farrow">→</span>
+  <div class="fbox">~/.config/lui/palette.json<br><small>per-user, regenerable</small></div><span class="farrow">→</span>
+  <div class="fbox">apply script<br><small>lui theme …</small></div><span class="farrow">→</span>
   <div class="fbox">Hyprland borders · Quickshell tokens · Vicinae · swaync<br><small>one accent set everywhere</small></div>
 </div>
 <div class="flow" style="margin-top:8px">
@@ -274,7 +274,7 @@ the mockups will show the new one. Decide together?</div>
 
 <div class="note" style="border-left-color:#a6e3a1; margin-top:22px">
 <b>Next step after your feedback:</b> only then do configs change — palette.json format →
-<kbd>luci theme</kbd> script → Quickshell “Themes” plugin → per-user example for <b>work</b> →
+<kbd>lui theme</kbd> script → Quickshell “Themes” plugin → per-user example for <b>work</b> →
 Vicinae/swaync adoption (#22). Nothing here touches the shared base without a commit.
 </div>
 

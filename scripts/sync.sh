@@ -28,7 +28,7 @@ if [[ "$DRY_RUN" == false ]]; then
   "$ROOT/scripts/ensure-flatpaks.sh"
   # Realize the declarative local-app list as launcher .desktop entries
   # (Vicinae reads .desktop files, not $PATH). Idempotent, manages only its own
-  # luci-local-* files.
+  # lui-local-* files.
   "$ROOT/scripts/generate-local-apps.sh"
   echo "==> flatpak update + cleanup unused runtimes (system + user)"
   flatpak update -y --system || true

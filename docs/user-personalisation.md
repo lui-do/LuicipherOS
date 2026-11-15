@@ -7,15 +7,15 @@ Who this is for: any user of a LuicipherOS system (`work`, `luci`, or a new acco
 LuicipherOS ships **one shared base config** for every user — it is managed by the
 repo (GNU Stow symlinks) and is updated centrally. Your personalisation never edits
 those files. Instead, each app also loads an **override file from your own home**,
-under `$XDG_CONFIG_HOME/luicipher/` (normally `~/.config/luicipher/`). Override files
+under `$XDG_CONFIG_HOME/lui/` (normally `~/.config/lui/`). Override files
 are real files that belong to you: they are never stow-managed and are never touched
 by system or dotfile updates. Everything in the base stays default unless you list a
 different value; **last value wins**.
 
 | App | Base (shared, read-only for you) | Your override |
 | --- | --- | --- |
-| Hyprland | `~/.config/hypr/hyprland.lua` (+ `lua/`) | `~/.config/luicipher/hypr/overrides.lua` |
-| Quickshell | `~/.config/quickshell/tokens.json` | `~/.config/luicipher/quickshell/tokens.json` |
+| Hyprland | `~/.config/hypr/hyprland.lua` (+ `lua/`) | `~/.config/lui/hypr/overrides.lua` |
+| Quickshell | `~/.config/quickshell/tokens.json` | `~/.config/lui/quickshell/tokens.json` |
 
 A brand-new user gets the full desktop with zero setup — overrides are optional.
 
@@ -25,7 +25,7 @@ A brand-new user gets the full desktop with zero setup — overrides are optiona
 over the base. The file is plain Lua.
 
 ```bash
-$EDITOR ~/.config/luicipher/hypr/overrides.lua
+$EDITOR ~/.config/lui/hypr/overrides.lua
 hyprctl reload        # apply (or just save: Hyprland watches its config)
 ```
 
@@ -63,8 +63,8 @@ change. Available keys (with the shipped defaults):
 ```
 
 ```bash
-mkdir -p ~/.config/luicipher/quickshell
-$EDITOR ~/.config/luicipher/quickshell/tokens.json
+mkdir -p ~/.config/lui/quickshell
+$EDITOR ~/.config/lui/quickshell/tokens.json
 ```
 
 **No reload needed** — the bar watches both files and updates the moment you save
@@ -92,10 +92,10 @@ previous value stays.
    live value; the log line `luicipher: user overrides applied` means the file
    loaded, `overrides.lua FAILED` means Lua errored (base config is still intact).
 3. **Override seems ignored (Quickshell)** — validate the JSON: `python3 -m
-   json.tool ~/.config/luicipher/quickshell/tokens.json` must not error.
+   json.tool ~/.config/lui/quickshell/tokens.json` must not error.
 
 ## The one rule
 
-Edit files under `~/.config/luicipher/` — **never** edit anything inside the
+Edit files under `~/.config/lui/` — **never** edit anything inside the
 stowed `~/.config/hypr/` or `~/.config/quickshell/` targets; those belong to the
 repo and your changes would be overwritten on the next update.

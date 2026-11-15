@@ -5,12 +5,12 @@
 // Configuration layering (shared base + per-user override):
 //   1. inline defaults below            (fail-safe: shell works with no files)
 //   2. tokens.json                      (base for ALL users — stow-managed, shared)
-//   3. $XDG_CONFIG_HOME/luicipher/quickshell/tokens.json   (per-user, real file,
+//   3. $XDG_CONFIG_HOME/lui/quickshell/tokens.json   (per-user, real file,
 //      NEVER stow-managed, survives updates; e.g. a bigger bar: {"barHeight": 40})
 // Later layers win key-by-key. Both files hot-reload on save (FileView watch).
 //
 // Written so widgets ported from Noctalia, DankMaterialShell, or Omarchy
-// can slot in: each plugin gets bar height + palette via the `luci` object.
+// can slot in: each plugin gets bar height + palette via the `lui` object.
 // v0.1 scope: clock + swaync indicator + plugin row. Workspaces widget,
 // system tray, and notification center arrive in v0.2 (swaync covers
 // notifications until then — see dotfiles/swaync).
@@ -37,9 +37,9 @@ ShellRoot {
     property var baseTokens: ({})
     property var userTokens: ({})
 
-    // Shared tokens plugins read: luci.barHeight, luci.accent, ...
+    // Shared tokens plugins read: lui.barHeight, lui.accent, ...
     // Recomputed automatically when either file changes.
-    property var luci: Object.assign({}, root.tokenDefaults,
+    property var lui: Object.assign({}, root.tokenDefaults,
                                      root.baseTokens, root.userTokens)
 
     // Resolve $XDG_CONFIG_HOME without QtQuick.Config-style helpers; configPath
@@ -47,7 +47,7 @@ ShellRoot {
     // from the environment explicitly.
     readonly property string userTokensPath:
         (Qt.environment("XDG_CONFIG_HOME") ||
-         Qt.environment("HOME") + "/.config") + "/luicipher/quickshell/tokens.json"
+         Qt.environment("HOME") + "/.config") + "/lui/quickshell/tokens.json"
 
     function parseTokens(text) {
         if (!text || !text.trim()) return ({})        // missing/empty file: silent
@@ -85,8 +85,8 @@ ShellRoot {
 
     PanelWindow {
         anchors { top: true; left: true; right: true }
-        implicitHeight: root.luci.barHeight
-        color: root.luci.bg
+        implicitHeight: root.lui.barHeight
+        color: root.lui.bg
 
         RowLayout {
             anchors.fill: parent
@@ -96,13 +96,13 @@ ShellRoot {
 
             Text {
                 text: "LuicipherOS"
-                color: root.luci.accent
-                font.family: root.luci.fontFamily
+                color: root.lui.accent
+                font.family: root.lui.fontFamily
                 font.pointSize: 11
             }
 
             // Plugin row. `asynchronous: true` keeps instantiation off the
-            // startup frame; `luci` is bound (not copied) so plugins follow
+            // startup frame; `lui` is bound (not copied) so plugins follow
             // token hot-reloads. RAM rule (see README): plugins that live in
             // on-demand windows must gate on window visibility instead.
             Repeater {
@@ -112,8 +112,8 @@ ShellRoot {
                     source: Qt.resolvedUrl("plugins/" + modelData + ".qml")
                     asynchronous: true
                     onLoaded: {
-                        if (item && item.hasOwnProperty("luci"))
-                            item.luci = Qt.binding(function () { return root.luci })
+                        if (item && item.hasOwnProperty("lui"))
+                            item.lui = Qt.binding(function () { return root.lui })
                     }
                 }
             }
@@ -122,8 +122,8 @@ ShellRoot {
 
             Text {
                 id: clock
-                color: root.luci.fg
-                font.family: root.luci.fontFamily
+                color: root.lui.fg
+                font.family: root.lui.fontFamily
                 font.pointSize: 11
                 text: Qt.formatDateTime(clockSource.date, "ddd dd MMM hh:mm")
 

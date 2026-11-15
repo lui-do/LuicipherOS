@@ -61,7 +61,7 @@ LOCAL-APPS
   Vicinae (and any XDG launcher) reads .desktop files, not $PATH, so tools that
   live only in ~/.local/bin are invisible to it. `lui local-apps` turns the
   declarative config/local-apps list into managed .desktop entries
-  (luci-local-*.desktop) in ~/.local/share/applications/. It also runs
+  (lui-local-*.desktop) in ~/.local/share/applications/. It also runs
   automatically as part of `lui sync`. To add a tool: put its basename in
   config/local-apps, then run `lui local-apps` (or `lui sync`). Remove all
   managed entries: `lui local-apps --remove`.
@@ -155,7 +155,7 @@ case "$cmd" in
   local-apps)
     # (Re)generate the ~/.local/bin launcher .desktop entries from
     # config/local-apps. Passes through args like --remove. It only ever
-    # manages its own luci-local-* files, so it is a "safe" operation.
+    # manages its own lui-local-* files, so it is a "safe" operation.
     ROOT="$(resolve_root)"
     tree_banner "$ROOT" "$(classify_root "$ROOT")" safe
     exec "$ROOT/scripts/generate-local-apps.sh" "$@"

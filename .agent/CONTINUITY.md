@@ -140,6 +140,17 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-21T20:00Z [CODE] v0.3 candidates: `lui sync` as a binary, CI plus VM test matrix.
 
 ## [DECISIONS]
+- 2026-11-15T12:48Z `[USER]` **Naming rule: LUI.cipherOS -> everything created is `lui`, never
+  `luci`.** Applied repo-wide and live: `.desktop` prefix `luci-local-` -> `lui-local-`
+  (regenerated), user-override root `~/.config/luicipher/` -> `~/.config/lui/` (moved, files
+  intact), the Quickshell palette token `property var luci` -> `lui` (shell.qml + swayncIndicator +
+  README + wiki draft - the pending token question, now answered), mockup `luci theme` -> `lui
+  theme`. Legit exceptions kept: the actual admin account `luci` (creds example, inventory docs, the
+  AGENTS guardrail, `docs/rename-admin-account.md` remains the deferred path to fix that too), the
+  `LuicipherOS` brand string and its headers, and historical log entries. During the migration a
+  batch `cp a b c $ROOT/` dumped files into the deployed repo root and overwrote its README.md -
+  caught by residual-grep, README restored via `git checkout`, strays removed; lesson logged: sync
+  the deployed tree only via commit + fetch/reset with explicit paths.
 - 2026-11-14T22:59Z `[USER]` **Shell config layering implemented** (the per-user half of #18, done
   early): shared base stays stow-managed; per-user overrides live at
   `$XDG_CONFIG_HOME/luicipher/<app>/` and are NEVER stow-managed. Hyprland: `hyprland.lua`

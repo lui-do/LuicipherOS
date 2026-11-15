@@ -125,7 +125,7 @@ calls `sudo` itself for the privileged steps.
 **Local apps:** Vicinae (and any XDG launcher) reads `.desktop` files, not `$PATH`, so tools that
 live only in `~/.local/bin` are invisible to it. `config/local-apps` is the declarative list of
 which tools to expose (format: `<basename> [Display Name]`, one per line); `lui local-apps` — or
-just `lui sync`, which runs it automatically — turns that into managed `luci-local-*.desktop` files
+just `lui sync`, which runs it automatically — turns that into managed `lui-local-*.desktop` files
 in `~/.local/share/applications/`. To expose a new tool: add its basename to `config/local-apps`,
 then run `lui local-apps`. CLI utilities you don't want in the launcher are simply left out of the
 list. Removing all managed entries: `lui local-apps --remove`.
@@ -171,7 +171,7 @@ sudo umount /boot && sudo fsck.fat -n /dev/nvme0n1p1; sudo mount /boot   # ESP c
   are not stowable and are deployed by `install/bootstrap.sh`.
 - Config layering (shared base + per-user override, last-wins): stow-managed files are the
   base every user shares; personalisation goes in a real, never-stowed file under
-  `$XDG_CONFIG_HOME/luicipher/` — `hypr/overrides.lua` (loaded last by `hyprland.lua` via
+  `$XDG_CONFIG_HOME/lui/` — `hypr/overrides.lua` (loaded last by `hyprland.lua` via
   guarded `dofile`) and `quickshell/tokens.json` (merged over `tokens.json` by `shell.qml`,
   hot-reloading). A user changing bar size or border width never forks or edits shared files.
 - Shell pipelines under `set -o pipefail`: avoid `grep -q` on the right of a pipe (SIGPIPE

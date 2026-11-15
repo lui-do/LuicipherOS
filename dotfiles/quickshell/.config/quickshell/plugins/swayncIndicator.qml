@@ -1,18 +1,18 @@
 // plugins/swayncIndicator.qml — unread-dot for swaync (kept for v0.1).
 // Polls `swaync-client -swb` (same source the old waybar module used).
 // Click toggles the control center. Drop-in example for ported widgets:
-// any plugins/<name>.qml with an optional `luci` property works.
+// any plugins/<name>.qml with an optional `lui` property works.
 import QtQuick
 import Quickshell
 import Quickshell.Io
 
 Text {
-    property var luci: ({ fg: "#cdd6f4", accent: "#89b4fa", fontFamily: "monospace" })
+    property var lui: ({ fg: "#cdd6f4", accent: "#89b4fa", fontFamily: "monospace" })
 
     property bool hasUnread: false
     text: hasUnread ? " ●" : ""
-    color: hasUnread ? luci.accent : luci.fg
-    font.family: luci.fontFamily
+    color: hasUnread ? lui.accent : lui.fg
+    font.family: lui.fontFamily
     font.pointSize: 11
 
     Process {

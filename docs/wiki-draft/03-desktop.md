@@ -112,7 +112,7 @@ fuzzel `terminal = tabby -e`; swaync buttons-grid network button runs
 
 `shell.qml` is a minimal top bar (wordmark, plugin row, clock) — it does
 not try to be Noctalia or DankMaterialShell; it **hosts ported widgets
-from them**. Shared tokens via the `luci` object (`barHeight 30`,
+from them**. Shared tokens via the `lui` object (`barHeight 30`,
 `accent #89b4fa`, `bg #1e1e2e`, `fg #cdd6f4`, `muted #6c7086`,
 `fontFamily JetBrainsMono Nerd Font`). Enabled plugins in
 `plugins.json` load order (v0.1: `["swayncIndicator"]`).
@@ -120,12 +120,12 @@ from them**. Shared tokens via the `luci` object (`barHeight 30`,
 Porting a widget (`dotfiles/quickshell/.config/quickshell/README.md`):
 
 1. Copy widget QML to `plugins/<name>.qml` (single file; optional
-   `property var luci`, fall back to literals so it previews standalone).
+   `property var lui`, fall back to literals so it previews standalone).
 2. Add `"<name>"` to `plugins.json`.
 3. Reload: `quickshell reload` (or restart the session).
 
 Conventions: one plugin = one bar widget, no global singletons; theme
-only from `luci`; async data via `Process`, never blocking loops;
+only from `lui`; async data via `Process`, never blocking loops;
 Hyprland state via `import Quickshell.Hyprland` with a fallback text
 when the compositor isn't Hyprland (VM smoke). Example plugin
 `swayncIndicator.qml`: polls `swaync-client -swb`, shows an unread dot,

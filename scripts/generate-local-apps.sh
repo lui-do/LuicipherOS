@@ -8,7 +8,7 @@
 #
 # Properties:
 #   - Idempotent: re-running overwrites only the files it generated.
-#   - Safe: generated files are named `luci-local-<name>.desktop` and carry
+#   - Safe: generated files are named `lui-local-<name>.desktop` and carry
 #     `X-LuicipherOS=generated`, so it never touches user-authored entries.
 #   - `--remove` deletes exactly the managed files and nothing else.
 #
@@ -21,7 +21,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LIST="$ROOT/config/local-apps"
 BIN_DIR="$HOME/.local/bin"
 DEST="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
-PREFIX="luci-local-"
+PREFIX="lui-local-"
 
 [[ -f "$LIST" ]] || { echo "generate-local-apps: no $LIST" >&2; exit 1; }
 mkdir -p "$DEST"
