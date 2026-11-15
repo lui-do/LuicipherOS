@@ -466,6 +466,17 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-15T22:39Z `[USER]` **MCR experiment in place; BIOS exported profiles captured as
+  evidence** (`docs/bios-profiles/`). The BEFORE/AFTER `setting.txt` diff proves **exactly one real
+  change**: `Memory Context Restore Auto -> Disabled` (plus the USB stick appearing in the boot
+  list). Baseline read from the export - whole board is factory-Auto: Launch CSM **Disabled**, Fast
+  Boot Disabled, Ai Overclock Tuner Auto (EXPO off), Curve Optimizer Auto, Power Supply Idle Control
+  Auto, Global C-states Auto, Above 4G Decoding Enabled (MMIO 40bit), ErP Disabled, cTDP105 off,
+  TSME Auto, Power Down Enable Auto. **New suspect identified from the export: `PCIEX16(G5) Link
+  Mode [Auto]` on a Gen5-capable slot** - if MCR-off doesn't fix warm reboot, next single variable
+  is forcing that link to **Gen4** (the 7900 XT is a Gen4 device anyway), then CSM as lever #3.
+  NOTE: the instrumented unload unit is NOT yet installed in /etc (still silent v1) - must reinstall
+  before the next warm-reboot test or it is inconclusive again.
 - 2026-11-15T14:25Z `[TOOL]` Unload-on-shutdown test was **inconclusive, not failed**: the unit
   logged nothing, so there is no proof `modprobe -r` executed before the hung warm reboot. Unit
   instrumented with journal receipts (`logger -t amdgpu-unload` on start/OK/still-in-use). Community
