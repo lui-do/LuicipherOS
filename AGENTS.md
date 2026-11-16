@@ -239,16 +239,23 @@ Disk layout on the target: LUKS + btrfs with subvolumes `@`, `@home`, `@log`, `@
 and initramfs live there. Snapper config `root` snapshots `/` into `/.snapshots` (`@snapshots`);
 snap-pac adds pre/post snapshots around pacman. Snapshots are not backups (same disk).
 
-Boot entries on the desktop (verified 2026-11-15): `loader.conf` sets
-`default arch-lateload.conf`, timeout 3 s. The `arch-lateload` entry options are
-`... rootfstype=btrfs amdgpu.runpm=0 amdgpu.ppfeaturemask=0xffff7fff modprobe.blacklist=amdgpu`
-(no mask, no runlevel 3 since 2026-11-15). The GPU dance is now automated by a unit pair:
-`amdgpu-late.service` waits 150 s then loads amdgpu before greetd (verified: driver at ~179 s,
-DMUB clean, login screen appears); `amdgpu-unload-on-shutdown.service` removes the module at
-shutdown so the driver resets the GPU before any warm reboot (warm reboots with the GPU loaded
-could hang POST entirely - no video, no keyboard; cold boots always fine). Revert for either:
-disable the unit and/or restore `/root/arch-lateload.conf.bak`. Other entries: `linux`
-(`amdgpu.runpm=0` only - early load, storm risk, do not boot it), `arch-lts` (loads amd-ucode).
+Boot entries on the desktop (state 2026-11-17, warm-reboot investigation open - see
+`docs/warm-reboot-post-hang.md`): the ESP holds three entries. `2026-10-04_17-11-07_linux.conf`
+(archinstall-generated, `amdgpu.runpm=0` only, token `linux`) is the **default** since
+2026-11-17; `arch-lts.conf` (loads amd-ucode); and `arch-lateload.conf` (hand-written, currently
+**unused** - it carried the Phase-2 experiment params and produced three LUKS panics on
+2026-11-16, cause not fully identified, prime suspect `iommu=soft`). Late GPU load does not
+depend on the entry: `/etc/modprobe.d/amdgpu-coldboot.conf` holds `blacklist amdgpu`, so no
+entry autoloads the driver, and `amdgpu-late.service` loads it ~150 s after boot (verified: driver
+at ~179-195 s, DMUB clean, login screen appears). `amdgpu-unload-on-shutdown.service` is
+currently **disabled** (test 2026-11-17): unloading at shutdown was suspected of breaking warm
+reboots, and disabling it did not help either - both states hang. Warm reboot still hangs POST
+(no logo, no menu, Caps Lock dead) from every entry; cold boot always works.
+
+Do not boot `arch-lateload.conf` until it is rebuilt and verified: it panics on LUKS unlock in
+its current history. `reboot=c` (KBC cold reset) and MCR-off are both tested and ineffective;
+`reboot=t` (triple fault) is the next single test. Revert of the default:
+`sudo bootctl set-default arch-lateload.conf` plus `/root/arch-lateload.conf.bak`.
 
 GPU bring-up background (issue #11): early-boot amdgpu probe hits an unready SMU (DMUB
 status=2 storm); loading the driver ~3 min after boot initializes cleanly every time - the units

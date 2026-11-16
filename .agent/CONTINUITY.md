@@ -466,6 +466,25 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-16T23:22Z `[TOOL]` **Warm-reboot POST hang isolated on the host; software side
+  exhausted.** Verified from ESP dumps: all non-LTS entries share the *same* `initramfs-linux.img`
+  (built 2026-11-15 13:55:20, contains `hooks/encrypt` + `usr/bin/cryptsetup`) and byte-identical
+  root params (`cryptdevice=PARTUUID=3eea...:root root=/dev/mapper/root ...`); `HOOKS` uses the
+  busybox `encrypt` hook, so `cryptdevice=` is correct. Therefore the 2026-11-16 LUKS panics (`VFS:
+  Cannot open root device /dev/mapper/root`, error -19) were NOT a hook mismatch and NOT a broken
+  initramfs - the only differing params were the Phase-2 experiment set, and `iommu=soft` (the sole
+  early-userspace-affecting one) is the remaining suspect; it is dropped. Warm-reboot tests
+  2026-11-17: hangs from the **archinstall entry** as well (not just the custom one), and hangs
+  **with `amdgpu-unload-on-shutdown` disabled** too -> both the boot entry and the unload unit are
+  exonerated; reboot=c and MCR-off were already negative. Everything on the software shutdown path
+  is now cleared. Next single variable: `reboot=t` (triple fault) - a reset *kind* change, not a
+  tweak: boot it, verify `/proc/cmdline`, then reboot. If it boots, reset signalling is the fault
+  (shippable param); if it hangs, POST cannot complete after any non-power-cycle (GPU/EC/PSU state)
+  -> BIOS levers (PCIEX16(G5) -> Gen4, IOMMU -> Disabled, ASUS EC reset) and a warranty position.
+  State now: default entry = archinstall `2026-10-04_17-11-07_linux.conf`, `arch-lateload.conf`
+  unused/do-not-boot (panics), unload unit disabled pending decision. Findings in
+  `docs/warm-reboot-post-hang.md`. **User deferred the reboot=t test to 2026-11-18 and asked for no
+  config edits on 2026-11-17.**
 - 2026-11-15T22:51Z `[TOOL]` Warm-reboot test #2 (MCR=Disabled + unload unit enabled): **still hangs
   POST** — no logo, no menu, no keyboard power. Two takeaways. (1) Instrumentation flaw: the
   `logger` receipts never appeared because at that shutdown stage the journald socket is already
