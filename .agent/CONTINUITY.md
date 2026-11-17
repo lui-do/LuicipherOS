@@ -466,6 +466,21 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-18T14:00Z `[TOOL]` **First warm reset that ever POSTed: firmware-driven reset works -> the
+  OS's reset never reaches the EC. Also a self-correction.** Procedure: power off -> Del into setup
+  -> 'Discard Changes and Exit' -> boot menu appeared normally, no OS running at reset time. Single
+  observation, two caveats: repeat with the explicit *Reset* item and time it (an instant menu means
+  no reset happened). This invalidates the earlier 'reset mechanism does not matter' conclusion:
+  `reboot=c` only sets a cold/warm *mode* hint that x86 largely ignores (the type stayed default),
+  and `reboot=t` (triple fault) resets the CPU only and never signals the EC - which explains the
+  dark Q-LEDs. So no OS reset *mechanism* was ever actually varied. Live hypothesis: ACPI/default
+  reset is not delivered to the EC as a real platform reset on this board (beta AGESA 1.3.0.1d),
+  while firmware's own reset is. Untried x86 types: `reboot=e` (EFI ResetSystem - closest analogue,
+  shippable one-liner if it works), `reboot=p` (PCI), `reboot=a` (forced ACPI), `reboot=b`,
+  `reboot=k`. Method: edit options in place (never append again - that trap caused two false
+  negatives), cold boot, verify /proc/cmdline, reboot, then validate via `journalctl -k -b -1 | grep
+  'Kernel command line'`. Hardware plan demoted but kept (EC drain, GPU-out, PSU identification).
+  Doc: docs/warm-reboot-post-hang.md.
 - 2026-11-18T13:10Z `[TOOL]` **Decisive: no Q-LED at all during the warm-reboot hang -> board never
   enters POST, GPU demoted.** User reports that on every warm reboot no Q-LED lights or blinks; on a
   healthy boot the sequence is red (CPU) -> white (VGA) -> green (BOOT, lingers while scanning boot

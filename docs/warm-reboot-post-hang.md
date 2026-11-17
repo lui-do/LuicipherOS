@@ -95,7 +95,17 @@ Residual caveat: logs cannot prove the CPU physically triple-faulted (the kernel
 through to another reset path). It does not change the reading: a triple fault resets the CPU but
 leaves the platform exactly as a power cycle would have changed it — and that is the point.
 
-**Conclusion (2026-11-18):** the reset *mechanism* does not matter. ACPI/KBC cold reset
+**Conclusion (2026-11-18):** the reset *mechanism* does not matter.
+
+**CORRECTION (same day, after the firmware-reset test below): that conclusion was wrong.** The
+reset mechanism was never actually varied:
+
+- `reboot=c` sets a cold/warm *mode* hint. On x86 that is largely advisory; the reset *type*
+  stayed at whatever the default is. So the "reboot=c" test was effectively a no-op.
+- `reboot=t` (triple fault) resets the **CPU only**. It never signals the chipset or EC that a
+  platform reset happened — which fits the dark Q-LEDs exactly.
+
+So the only mechanism ever exercised was the default one, three times. ACPI/KBC cold reset
 (`reboot=c`) and a CPU triple fault (`reboot=t`) both leave the machine unable to POST, while a
 power cycle always succeeds. The software ladder is exhausted:
 
@@ -179,8 +189,51 @@ Open sub-question that splits EC from PSU: during the hang, are **fans spinning*
 standby LED / powered USB port alive? Rails present + no POST = EC/firmware. Rails gone = PSU or
 5VSB path.
 
+### Counter-evidence 2026-11-18: a reset driven by firmware itself POSTs fine
+
+Procedure: power off → power on → Del into BIOS setup → "Discard Changes and Exit" → the boot menu
+appeared normally. No OS was running when the reset was requested; the platform was warm (POSTed,
+in setup), and it POSTed again afterwards.
+
+This is the first time a warm reset has ever completed POST on this machine. What it proves and
+what it does not:
+
+- Proves the platform **can** POST warm. A cold power cycle is not the only way out.
+- The remaining variable is therefore either **who drives the reset** (firmware/EC vs the OS), or
+  **the state the OS leaves behind** (device/driver/power state at reset time).
+- It is a single observation with one ambiguity: "Discard Changes and Exit" and "Discard Changes
+  and Reset" are different menu items, and if the former merely continued the boot instead of
+  resetting, the test proves nothing. Must be repeated with the explicit *Reset* item, several
+  times, and timed — a genuine reset + POST takes several seconds, an instant menu means no reset
+  happened.
+
+**Live hypothesis (2026-11-18):** the reset requested by the OS never reaches the EC as a real
+platform reset, while firmware's own reset does. Consistent with every data point: default/ACPI
+reset hangs, triple fault (CPU-only) hangs, `reboot=c` (a mode hint, not a mechanism) changed
+nothing, and the board sits dark with no POST sequence when the OS asks for a reset.
+
+**Untested OS-side mechanisms** (x86 `reboot=` type letters, `Documentation/admin-guide/kernel-
+parameters.txt`): `e` = EFI runtime `ResetSystem()` (delegate to firmware — closest analogue to
+what just worked), `p` = PCI/chipset reset, `a` = force ACPI/FADT reset, `b` = BIOS real-mode
+reset, `k` = keyboard controller. None of these has been tried.
+
 Also note whether the GPU/CPU fans spin up, whether the board's power LED stays on, and whether a
 monitor-only power cycle changes anything. Photograph the LED panel if it is easy.
+
+## Reopened: OS-side reset mechanism ladder (2026-11-18)
+
+Each attempt: cold boot (so the running kernel carries the param) → verify `/proc/cmdline` →
+`sudo reboot` → record logo/menu, Q-LED state, fan state. Self-validating: after a hang,
+`sudo journalctl -k -b -1 | grep -m1 'Kernel command line'` must show the param in the boot that
+performed the reset. **Edit the options line in place, never append again** — accumulated params
+are what produced two false negatives earlier.
+
+| Order | Param | What a success would mean |
+|---|---|---|
+| 1 | `reboot=e` | handing the reset to UEFI's `ResetSystem()` works → closest analogue to the firmware-reset success; one-line shippable fix |
+| 2 | `reboot=p` | PCI/chipset-level reset works → the EC accepts a bus reset but not the default path |
+| 3 | `reboot=a` | explicit ACPI/FADT reset — if this is the default and it still hangs, it confirms the default path is the broken one |
+| 4 | `reboot=b` / `reboot=k` | legacy real-mode / keyboard-controller resets, lower odds |
 
 ## Hardware test plan (software ladder closed, GPU demoted)
 
