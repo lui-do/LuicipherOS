@@ -245,6 +245,13 @@ Writing `cf9_force` to the sysfs knob returned `EINVAL` on kernel 7.3.4, so CF9 
 on the command line as `reboot=p` (letter `p` = `BOOT_CF9_FORCE`); the sysfs names accepted by this
 build still need probing (`acpi`, `kbd`, `pci`, `cf9`, …).
 
+**Probe result 2026-11-18:** accepted = `acpi`, `kbd`, `bios`, `triple`, `pci`, `efi`; rejected =
+`cf9`, `cf9_safe`. So this build exposes the command-line names in sysfs, not the `cf9_force`
+spelling the ABI document describes. **`pci` therefore selects `BOOT_CF9_FORCE`** — the CF9 hard
+reset (`outb(cf9|2,0xcf9)`, then `outb(cf9|6,0xcf9)`) — and can be tested with no boot-entry edit:
+`echo pci > /sys/kernel/reboot/type` then reboot. Note the kernel falls back to KBD (then triple)
+if the selected mechanism does not actually reset the machine.
+
 **Faster iteration — no entry edits needed.** Linux ≥ 5.11 exposes the same setting at runtime:
 
 ```bash

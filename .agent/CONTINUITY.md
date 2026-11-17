@@ -466,6 +466,14 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-18T16:00Z `[TOOL]` **sysfs probe: `pci` is accepted and `pci` == BOOT_CF9_FORCE - the CF9
+  test needs no entry edit.** Accepted names on kernel 7.3.4: acpi kbd bios triple pci efi;
+  rejected: cf9, cf9_safe (so this build uses the command-line spellings, not the `cf9_force` name
+  in the ABI doc). Writing `pci` therefore selects the CF9 hard reset - exactly the mechanism
+  firmware most plausibly uses when leaving setup - and can be exercised with `echo pci >
+  /sys/kernel/reboot/type; reboot`. Remember the kernel falls back to KBD then triple if the
+  selected port does not reset. Test order from here: pci (CF9), then acpi, then stop - the
+  mechanism branch is then complete. Doc: docs/warm-reboot-post-hang.md.
 - 2026-11-18T15:40Z `[TOOL]` **Default reboot type is `efi` - every failure has used UEFI
   ResetSystem() - and the sysfs knob rejects cf9_force.** `/sys/kernel/reboot/type` prints `efi`, so
   `reboot=e` repeated the default instead of varying it, and the warm-reboot hang has never once
