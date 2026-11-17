@@ -228,12 +228,25 @@ Each attempt: cold boot (so the running kernel carries the param) → verify `/p
 performed the reset. **Edit the options line in place, never append again** — accumulated params
 are what produced two false negatives earlier.
 
-| Order | Param | What a success would mean |
+| Order | Param | Result / what a success would mean |
 |---|---|---|
-| 1 | `reboot=e` | handing the reset to UEFI's `ResetSystem()` works → closest analogue to the firmware-reset success; one-line shippable fix |
-| 2 | `reboot=p` | PCI/chipset-level reset works → the EC accepts a bus reset but not the default path |
-| 3 | `reboot=a` | explicit ACPI/FADT reset — if this is the default and it still hangs, it confirms the default path is the broken one |
-| 4 | `reboot=b` / `reboot=k` | legacy real-mode / keyboard-controller resets, lower odds |
+| 0 | (default) | 6× hang |
+| 1 | `reboot=t` | hung (CPU-only reset; never signals the EC) |
+| 2 | `reboot=e` (EFI `ResetSystem`) | **hung 2026-11-18** — a valid x86 letter (`BOOT_EFI = 'e'`), so the test stands, but EFI reset may already be the default on a UEFI machine, in which case it repeats what we knew |
+| 3 | `reboot=p` → CF9 | **next** — `p` selects `BOOT_CF9_FORCE`: writes the chipset's CF9 hard-reset port (`outb(cf9\|2,0xcf9)` then `outb(cf9\|6,0xcf9)`). AMI firmware exiting setup almost certainly uses this same hard-reset path, which makes it the top candidate |
+| 4 | `reboot=a` | FADT RESET_REG — likely the ACPI default; a failure confirms the default path |
+| 5 | `reboot=k` | keyboard controller `0x64/0xFE` |
+
+**Faster iteration — no entry edits needed.** Linux ≥ 5.11 exposes the same setting at runtime:
+
+```bash
+cat /sys/kernel/reboot/type                  # what the machine currently uses
+sudo sh -c 'echo cf9_force > /sys/kernel/reboot/type'
+cat /sys/kernel/reboot/type
+sudo reboot
+```
+
+Valid sysfs values: `bios acpi kbd triple efi cf9_force cf9_safe`. This also *answers* what the default is, and removes the boot-entry edit → cold boot → verify cycle that caused two earlier false negatives. Note the value does not survive a reboot; set it again per test.
 
 ## Hardware test plan (software ladder closed, GPU demoted)
 

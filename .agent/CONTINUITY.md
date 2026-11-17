@@ -466,6 +466,17 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-18T15:00Z `[TOOL]` **reboot=e (EFI ResetSystem) also hangs; switched the mechanism tests
+  to /sys/kernel/reboot/type.** Verified from arch/x86/kernel/reboot.c that `e` is a real letter
+  (BOOT_EFI = 'e', `efi.reset_system`) and that `p` = BOOT_CF9_FORCE, i.e. a write to the chipset
+  CF9 hard-reset port - which is very likely what AMI firmware uses when exiting setup, making
+  `reboot=p` the top remaining candidate. Linux >= 5.11 exposes the same knob at runtime as
+  `/sys/kernel/reboot/type` (valid: bios acpi kbd triple efi cf9_force cf9_safe), which removes the
+  entry-edit + cold-boot + verify cycle that produced two false negatives, and also reports what the
+  machine currently uses. Also noted: the host BIOS setup offers only 'Save/Discard Changes and
+  Exit' (no explicit Reset item); on AMI firmware exiting setup does issue a platform reset, but the
+  2026-11-18 firmware-reset success is only confirmed retrospectively if the ASUS splash/POST was
+  seen again. Doc: docs/warm-reboot-post-hang.md.
 - 2026-11-18T14:00Z `[TOOL]` **First warm reset that ever POSTed: firmware-driven reset works -> the
   OS's reset never reaches the EC. Also a self-correction.** Procedure: power off -> Del into setup
   -> 'Discard Changes and Exit' -> boot menu appeared normally, no OS running at reset time. Single
