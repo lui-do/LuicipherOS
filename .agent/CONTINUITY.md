@@ -466,6 +466,16 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-18T17:30Z `[TOOL]` **Ordered runbook written for the next hands-on session:**
+  `docs/warm-reboot-action-plan.md` (recovery card, Step 0 entry cleanup, Step 1 recovery practice +
+  `rtcwake` one-command restart, Step 2 BIOS 'Load Optimized Defaults' as a stale-NVRAM test with
+  one reboot check, Step 3 BIOS re-flash 4004 or downgrade 3881 requiring explicit approval, Step 4
+  warranty wording, plus the already-ruled-out table). Step 1 exists because on 2026-11-18 a forced
+  button-off was followed by one dead power-on before the next worked - the recovery has to be
+  practised twice so a failed first power-on is recognised as normal, and so every later result
+  stays attributable. 'Load Optimized Defaults' (F5/F10 in setup) replaces the physical CMOS clear
+  for Step 2: no case opening, and since saving in setup also resets the platform it doubles as a
+  firmware-driven reset test. Findings doc now points at the runbook.
 - 2026-11-18T16:40Z `[TOOL]` **Fans spinning during the dead state -> board is powered but never
   starts POST: EC sequencing latch, not a supply fault.** With `pci` (CF9) selected: no observable
   reset, no Q-LED, no splash, no boot; then the first power-on after the forced off also showed

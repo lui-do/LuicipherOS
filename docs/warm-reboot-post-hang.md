@@ -6,6 +6,9 @@ Symptom: `sudo reboot` results in no ASUS logo, no boot menu, no keyboard (Caps 
 This is a **separate issue** from the DMUB cold-boot storm
 (see `docs/dmub-coldboot-casefile.md`) and from the spontaneous `0x00800800` resets.
 
+> **Doing the work:** `docs/warm-reboot-action-plan.md` is the ordered runbook (recovery card, the
+> EC/CMOS and firmware steps, what to record). This file is the evidence log.
+
 ## Verified facts (2026-11-16)
 
 ### Boot entries on the ESP
