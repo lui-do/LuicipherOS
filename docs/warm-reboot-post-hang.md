@@ -71,6 +71,46 @@ handling for all DMA, before LUKS unlock). Unverified. It stays out of the boot 
 | 2026-11-16 | `Arch Linux (linux)` (archinstall entry) | **POST fine, logo + menu appeared** |
 | 2026-11-17 | archinstall entry, unload unit **enabled** | hung (no logo, no menu) |
 | 2026-11-17 | archinstall entry, unload unit **disabled** | hung (no logo, no menu) — **unit exonerated** |
+| 2026-11-18 | `reboot=t` (triple fault) on the archinstall entry | hung (no logo, no menu) — **validated, see below** |
+
+### Validation of the 2026-11-18 test
+
+The trap that produced two earlier false negatives was a kernel that never carried the test
+parameter. `journalctl -k -b -1` for the boot that performed the reboot (11:05:05 → 11:09:55):
+
+```
+Kernel command line: initrd=\initramfs-linux.img cryptdevice=PARTUUID=3eea…:root
+  root=/dev/mapper/root zswap.enabled=0 rootflags=subvol=@ rw rootfstype=btrfs
+  amdgpu.runpm=0 reboot=t
+```
+
+The only entry under `Unknown kernel command line parameters` is `cryptdevice=…`, which is benign
+and expected: the kernel proper does not consume `cryptdevice=`; the initramfs `encrypt` hook reads
+it back from `/proc/cmdline`. `reboot=t` is *not* in that list → the kernel accepted the parameter
+and requested the triple-fault reset. Boot sequence corroborates: boot −2 ended 11:03:11, boot −1
+(test) ran 11:05:05–11:09:55, current boot began 11:14:09 after the power button — a ~4 min gap
+consistent with a POST hang.
+
+Residual caveat: logs cannot prove the CPU physically triple-faulted (the kernel could still fall
+through to another reset path). It does not change the reading: a triple fault resets the CPU but
+leaves the platform exactly as a power cycle would have changed it — and that is the point.
+
+**Conclusion (2026-11-18):** the reset *mechanism* does not matter. ACPI/KBC cold reset
+(`reboot=c`) and a CPU triple fault (`reboot=t`) both leave the machine unable to POST, while a
+power cycle always succeeds. The software ladder is exhausted:
+
+| Lever | Result |
+|---|---|
+| MCR off (BIOS) | no effect |
+| `reboot=c` (KBC cold reset) | no effect |
+| `reboot=t` (triple fault, bypasses firmware handshake) | no effect |
+| RDNA3 params (`tmz`/`sg_display`/`dcdebugmask`/`iommu=soft`) | never validly tested; entry panicked; dropped |
+| Unload unit enabled / disabled | no effect either way |
+| archinstall entry vs hand-written entry | no effect |
+
+The strongest remaining reading: after any reset short of a power cycle, POST cannot complete — so the
+fault is in platform initialisation (GPU / EC / PSU state left behind by a reset), not in how the
+reset is requested.
 
 Note: from 2026-11-17 the hang has been observed from **both** entries, so the boot entry is
 not the variable — the failure is at POST/firmware level, before any loader entry is read.
@@ -102,14 +142,37 @@ autoloads on **any** entry; `amdgpu-late.service` is what loads it ~150 s after 
 duplicates what the archinstall entry + modprobe.d + unit already do. Planned simplification
 (after the tests): move `ppfeaturemask`/`runpm` into modprobe.d options and let one entry exist.
 
-## Test plan (one variable at a time)
+## Observation that must accompany the next hang attempt
 
-1. Default the boot entry to the known-good archinstall entry.
-2. Boot it, then warm reboot with the unload unit **enabled** → record result.
-3. `systemctl disable amdgpu-unload-on-shutdown`, warm reboot again → record result.
-4. If step 3 fixes it: retire the unit (or keep it disabled) and document.
-   If not: next levers are BIOS `PCIEX16(G5) Link Mode → Gen4`, then `IOMMU → Disabled`.
+During a hung POST the board's Q-LEDs (CPU / DRAM / VGA / BOOT, next to the 24-pin) report which
+stage firmware is stuck in. This is free data and it discriminates between the remaining suspects:
 
-Record for every attempt: logo yes/no, Caps Lock alive yes/no, and afterwards
-`journalctl -b -1 | grep amdgpu-unload` and
-`journalctl -k -b | grep 'Previous system reset'`.
+| LED stuck on | Reading |
+|---|---|
+| **VGA** | GPU init fails after reset → supports the GPU/`amdgpu`-left-state theory, and is the strongest single fact for a GPU-side warranty claim |
+| DRAM | memory training fails after reset → EXPO/memory-training territory (already EXPO-off, so suspicious) |
+| CPU | platform/microcode init fails → board or CPU |
+| BOOT | firmware passed POST and stalled on the device → different, loader-side story |
+
+Also note whether the GPU/CPU fans spin up, whether the board's power LED stays on, and whether a
+monitor-only power cycle changes anything. Photograph the LED panel if it is easy.
+
+## Hardware test plan (software ladder closed)
+
+Ordered by cost; one variable per session.
+
+1. **EC power-drain** (no settings lost): shut down, unplug the PSU cable, hold the power button
+   20–30 s, replug, boot. First boot after may retrain memory and take longer — normal.
+2. **BIOS `Ai Tweaker → PCIEX16(G5) Link Mode` → Gen4** (the 7900 XT is a Gen4 card; Auto retrains
+   the link at Gen5 during a warm reset). Rollback: `docs/bios-profiles/BEFOREMCR_CMO.CMO`.
+3. **BIOS `Advanced → AMD CBS → NBIO Common Options → IOMMU` → Disabled.**
+4. **BIOS update** from 4004 (2026-09-16, AGESA 1.3.0.1d) — requires explicit approval; check ASUS
+   support for a newer AGESA first.
+
+Workaround that does not depend on any of the above: `sudo rtcwake -m off -s 60` (real S5 poweroff
+plus RTC wake = the cold boot that always works, scriptable in one command). If the board does not
+wake, the gate is `Advanced → APM Configuration → Power On By RTC`; baseline has ErP Disabled,
+which normally keeps RTC wake alive.
+
+Record for every attempt: logo yes/no, Caps Lock alive yes/no, Q-LED state, and afterwards
+`journalctl -k -b -o short-monotonic | grep -m1 'Previous system reset'`.

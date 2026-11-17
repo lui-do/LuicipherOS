@@ -466,6 +466,22 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-18T12:00Z `[TOOL]` **reboot=t (triple fault) reproduced the hang - software ladder closed
+  and validated.** The 2026-11-18 test was checked against the trap that produced two earlier false
+  negatives: `journalctl -k -b -1` for the boot that performed the reboot (11:05:05-11:09:55) shows
+  `... amdgpu.runpm=0 reboot=t` in its Kernel command line, and the only `Unknown kernel command
+  line parameters` entry is `cryptdevice=...` (benign - the initramfs `encrypt` hook reads it from
+  /proc/cmdline; the kernel proper does not consume it). So the parameter was applied, and POST
+  still failed: reset *mechanism* is irrelevant (ACPI/KBC cold reset, default reset, triple fault
+  all hang; power cycle always works). Software side is now fully exhausted across reset type, boot
+  entry, unload unit, and reset params. Next evidence is the board's Q-LED during a hung POST (VGA
+  vs DRAM vs CPU vs BOOT) - free, and the single fact that separates a GPU-state theory from memory
+  training or board/CPU. Hardware ladder, cheapest first: EC power-drain (safe now - BIOS profiles
+  exported in docs/bios-profiles/), PCIEX16(G5) Link Mode -> Gen4, IOMMU -> Disabled, then a BIOS
+  update (needs explicit approval). Workaround offered: `sudo rtcwake -m off -s 60` = real S5
+  poweroff + RTC wake, i.e. a scriptable cold boot; gate is APM -> Power On By RTC (baseline ErP
+  Disabled keeps it usable). Doc updated: docs/warm-reboot-post-hang.md (validation section + Q-LED
+  observation table + hardware plan).
 - 2026-11-16T23:22Z `[TOOL]` **Warm-reboot POST hang isolated on the host; software side
   exhausted.** Verified from ESP dumps: all non-LTS entries share the *same* `initramfs-linux.img`
   (built 2026-11-15 13:55:20, contains `hooks/encrypt` + `usr/bin/cryptsetup`) and byte-identical
