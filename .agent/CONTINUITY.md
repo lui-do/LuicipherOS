@@ -466,6 +466,18 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-18T15:40Z `[TOOL]` **Default reboot type is `efi` - every failure has used UEFI
+  ResetSystem() - and the sysfs knob rejects cf9_force.** `/sys/kernel/reboot/type` prints `efi`, so
+  `reboot=e` repeated the default instead of varying it, and the warm-reboot hang has never once
+  been tested with a non-EFI mechanism. The firmware's own setup-exit reset (the only warm reset
+  that POSTed) is therefore *not* the EFI runtime path. Writing `cf9_force` returned EINVAL on
+  kernel 7.3.4, so CF9 must go through the command line (`reboot=p` = BOOT_CF9_FORCE) - the sysfs
+  accepted-name set for this build still needs probing (acpi/kbd/pci/cf9). Plan: probe the knob with
+  `acpi` (zero setup; if accepted, it is a genuinely untested mechanism and on AMD the FADT reset
+  register is often a chipset/PCI-based hard reset, i.e. close to the firmware path), then fall back
+  to `reboot=p` in the entry. Watch the failure signature on CF9: if the machine does not reset at
+  all, the port is unimplemented there - a different signature from a dead POST. Doc:
+  docs/warm-reboot-post-hang.md.
 - 2026-11-18T15:00Z `[TOOL]` **reboot=e (EFI ResetSystem) also hangs; switched the mechanism tests
   to /sys/kernel/reboot/type.** Verified from arch/x86/kernel/reboot.c that `e` is a real letter
   (BOOT_EFI = 'e', `efi.reset_system`) and that `p` = BOOT_CF9_FORCE, i.e. a write to the chipset

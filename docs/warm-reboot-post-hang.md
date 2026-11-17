@@ -237,6 +237,14 @@ are what produced two false negatives earlier.
 | 4 | `reboot=a` | FADT RESET_REG — likely the ACPI default; a failure confirms the default path |
 | 5 | `reboot=k` | keyboard controller `0x64/0xFE` |
 
+**Default confirmed 2026-11-18:** `/sys/kernel/reboot/type` = **`efi`**. Every failure so far —
+including the `reboot=e` test — used UEFI `ResetSystem()`, so `reboot=e` repeated the default rather
+than varying it. The firmware's own setup-exit reset, which worked, is *not* that path.
+
+Writing `cf9_force` to the sysfs knob returned `EINVAL` on kernel 7.3.4, so CF9 has to be selected
+on the command line as `reboot=p` (letter `p` = `BOOT_CF9_FORCE`); the sysfs names accepted by this
+build still need probing (`acpi`, `kbd`, `pci`, `cf9`, …).
+
 **Faster iteration — no entry edits needed.** Linux ≥ 5.11 exposes the same setting at runtime:
 
 ```bash
