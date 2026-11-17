@@ -466,6 +466,20 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-18T16:40Z `[TOOL]` **Fans spinning during the dead state -> board is powered but never
+  starts POST: EC sequencing latch, not a supply fault.** With `pci` (CF9) selected: no observable
+  reset, no Q-LED, no splash, no boot; then the first power-on after the forced off also showed
+  nothing and only the second reached the boot menu. Fans ran the whole time, so the PSU is
+  delivering (12 V present) - the platform simply never begins POST. Reading: the EC's
+  power-sequencing state machine sticks after a reset and only clears when the rails fully collapse
+  (clean ACPI S5 has never failed; AC removal clears it; a forced button-off is not equivalent
+  because +5VSB stays alive). Demotes PSU-as-supply-fault, GPU, memory and boot device for this
+  symptom; elevates EC firmware and therefore the beta BIOS 4004 / AGESA 1.3.0.1d. Also weaker
+  bedrock: 'cold boot always works' is really 'cold boot works after enough rail discharge'. Order
+  from here: strict recovery protocol (poweroff, else unplug + hold power 20-30 s), EC drain + CMOS
+  clear as tests (settings restorable from docs/bios-profiles/), GPU-removal warm-reboot test, BIOS
+  downgrade to 3881 or re-flash of 4004 (needs explicit approval), then motherboard RMA. Doc:
+  docs/warm-reboot-post-hang.md.
 - 2026-11-18T16:00Z `[TOOL]` **sysfs probe: `pci` is accepted and `pci` == BOOT_CF9_FORCE - the CF9
   test needs no entry edit.** Accepted names on kernel 7.3.4: acpi kbd bios triple pci efi;
   rejected: cf9, cf9_safe (so this build uses the command-line spellings, not the `cf9_force` name

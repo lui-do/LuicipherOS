@@ -237,6 +237,51 @@ are what produced two false negatives earlier.
 | 4 | `reboot=a` | FADT RESET_REG — likely the ACPI default; a failure confirms the default path |
 | 5 | `reboot=k` | keyboard controller `0x64/0xFE` |
 
+**Result 2026-11-18 — `pci` (CF9 hard reset): no visible reset, and the *next cold boot also
+failed*.** No reset observable, no Q-LED, no splash, no boot. Then: first power-on after the forced
+power-off showed nothing; the **second** power-on reached the boot menu.
+
+Interpretation and why it matters more than the mechanism result:
+
+- If CF9 had been delivered, the machine would have reset and died in the usual way. "No reset" is
+  the signature the plan predicted for an unimplemented port, but it needs one clarification: was
+  the *screen* black (reset happened, platform dead) or was the last frame frozen (no reset at all)?
+- The **cold-boot failure is the important half**. Until now "cold boot always works" was the
+  bedrock assumption of this whole investigation. It is now "cold boot works *if* the power has
+  collapsed far enough" — a forced power-button off does not discharge the rails (the PSU stays in
+  standby, +5VSB alive), so the first power-on afterwards can behave like a warm start.
+- The real boundary is therefore **not warm-vs-cold reset but insufficient rail discharge / EC
+  state**. A clean ACPI S5 poweroff (PS_ON# deasserted, rails collapse) has never failed; a forced
+  button-off is not equivalent, and cutting AC for 20–30 s definitely is.
+
+Recovery protocol adopted from here: prefer `sudo poweroff`; if the machine is already stuck, unplug
+the PSU cable, hold the power button 20–30 s, replug, then boot. Treat a first failed power-on after
+a forced-off as *expected*, not as a new fault.
+
+This also reframes the warranty sentence — "POST fails after any reset, and even on power-on, until
+the rails are fully drained" is a stronger and more specific hardware claim than "warm reboot
+hangs".
+
+### Rails were up during the failure (2026-11-18)
+
+Fans were spinning throughout the failed state. That is decisive for one question: the board **is**
+powered — the PSU is delivering 12 V, the platform has main rails — and yet no Q-LED ever lights,
+so the EC never begins the POST sequence.
+
+Consequences:
+
+- **Not a power-delivery failure and not a PSU latch.** The supply keeps supplying.
+- The failure is the **EC/power-sequencing state machine getting stuck after a reset** and only
+  clearing when the rails fully collapse (clean ACPI S5 has never failed; AC removal definitely
+  clears it; a forced button-off may not, because +5VSB stays alive).
+- Firmware-with-initiated reset works, firmware-without-OS reset (`ResetSystem()`) and every other
+  kernel mechanism does not — consistent with the EC accepting one reset source and not the others.
+- Every previous "no Q-LED" observation is now explained without invoking any device: the board is
+  powered, idle, and never asked to POST.
+
+Ruled out or demoted by this: GPU-as-cause for *this* symptom, memory training, boot device, PSU
+as a supply fault. Elevated: EC firmware, and therefore the beta BIOS/AGESA the machine is running.
+
 **Default confirmed 2026-11-18:** `/sys/kernel/reboot/type` = **`efi`**. Every failure so far —
 including the `reboot=e` test — used UEFI `ResetSystem()`, so `reboot=e` repeated the default rather
 than varying it. The firmware's own setup-exit reset, which worked, is *not* that path.
