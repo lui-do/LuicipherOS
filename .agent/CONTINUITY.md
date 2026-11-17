@@ -466,6 +466,22 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-18T13:10Z `[TOOL]` **Decisive: no Q-LED at all during the warm-reboot hang -> board never
+  enters POST, GPU demoted.** User reports that on every warm reboot no Q-LED lights or blinks; on a
+  healthy boot the sequence is red (CPU) -> white (VGA) -> green (BOOT, lingers while scanning boot
+  devices, then logo+menu appear instantly) - manual confirms colours CPU/DRAM/VGA/BOOT =
+  red/yellow/white/yellow-green. Dark LEDs mean the board dies before the CPU stage, so the GPU,
+  memory training, boot-device enumeration and every loader/OS-side cause are out of this chain (the
+  DMUB cold-boot storm remains a separate OS-side issue). Failure is power-on sequencing: EC state
+  after reset, PWR_OK, +5VSB, or PSU protection/latch. Also trivialises the black screen and dead
+  Caps Lock. Open splitter: are fans spinning / is standby power alive during the hang -> rails
+  present = EC/firmware; rails gone = PSU/5VSB. **BIOS update lever is closed:** ASUS lists 4004
+  (2026-09-21, AGESA 1.3.0.1d) as newest AND it is beta - the machine already runs the latest
+  firmware; 3xxx builds carry anti-rollback restrictions. Next tests, in order: firmware-initiated
+  reset (Esc/F10 in BIOS setup - does the EC reset path hang with no OS at all?), rail/standby
+  observation, EC power-drain, boot with the discrete GPU removed (iGPU only - decisive for RMA
+  targeting), PSU identification (label photo; still UNKNOWN since October) and swap. Warranty
+  target pivots from GPU to motherboard/PSU. Doc updated: docs/warm-reboot-post-hang.md.
 - 2026-11-18T12:00Z `[TOOL]` **reboot=t (triple fault) reproduced the hang - software ladder closed
   and validated.** The 2026-11-18 test was checked against the trap that produced two earlier false
   negatives: `journalctl -k -b -1` for the boot that performed the reboot (11:05:05-11:09:55) shows

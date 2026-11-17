@@ -144,30 +144,69 @@ duplicates what the archinstall entry + modprobe.d + unit already do. Planned si
 
 ## Observation that must accompany the next hang attempt
 
+**Baseline on a healthy boot** (user-reported 2026-11-18): red → white → green. Mapping to ASUS
+Q-LED order that is **CPU (red) → DRAM (yellow/amber, usually a blink) → VGA (white) → BOOT
+(yellow-green)**. Green lingers for a while and the logo + boot menu appear the instant it goes
+out — that lingering green is the firmware scanning for boot devices, i.e. normal for this board,
+not a symptom.
+
 During a hung POST the board's Q-LEDs (CPU / DRAM / VGA / BOOT, next to the 24-pin) report which
 stage firmware is stuck in. This is free data and it discriminates between the remaining suspects:
 
 | LED stuck on | Reading |
 |---|---|
-| **VGA** | GPU init fails after reset → supports the GPU/`amdgpu`-left-state theory, and is the strongest single fact for a GPU-side warranty claim |
-| DRAM | memory training fails after reset → EXPO/memory-training territory (already EXPO-off, so suspicious) |
-| CPU | platform/microcode init fails → board or CPU |
-| BOOT | firmware passed POST and stalled on the device → different, loader-side story |
+| **VGA (white)** | GPU init fails after reset → supports the GPU/`amdgpu`-left-state theory, and is the strongest single fact for a GPU-side warranty claim |
+| DRAM (yellow) | memory training fails after reset → EXPO/memory-training territory (already EXPO-off, so suspicious) |
+| CPU (red) | platform/microcode init fails → board or CPU |
+| BOOT (green) | POST passed and stalled scanning the boot device → NVMe/firmware story, and the logo should have been visible |
+| **no LED lit at all** | the board never started its POST sequence → EC / PWR_OK / PSU standby side, not a device |
+
+### Result 2026-11-18: NO Q-LED lit at all — on every warm reboot attempted
+
+User report: during the hang no Q-LED is lit and none blink, and this has been the case for **all**
+warm reboots performed. Reading: the board never enters its POST sequence, so it dies *before* the
+CPU stage. Consequences:
+
+- The GPU is **not** in this chain: VGA init happens after CPU/DRAM, which never even light.
+  (The DMUB cold-boot storm is a separate, OS-side issue and is unaffected by this finding.)
+- Memory training, boot-device enumeration and everything loader/OS-side are likewise out.
+- The failure is power-on sequencing: EC state after reset, PWR_OK, +5VSB, or the PSU's own
+  protection/latch behaviour.
+- It also explains the black screen trivially: firmware never runs, so no logo and no menu can
+  appear, and no keyboard controller is initialised (Caps Lock dead).
+
+Open sub-question that splits EC from PSU: during the hang, are **fans spinning** and is any
+standby LED / powered USB port alive? Rails present + no POST = EC/firmware. Rails gone = PSU or
+5VSB path.
 
 Also note whether the GPU/CPU fans spin up, whether the board's power LED stays on, and whether a
 monitor-only power cycle changes anything. Photograph the LED panel if it is easy.
 
-## Hardware test plan (software ladder closed)
+## Hardware test plan (software ladder closed, GPU demoted)
 
-Ordered by cost; one variable per session.
+Ordered by cost; one variable per session. **BIOS update is not available:** ASUS lists 4004
+(2026-09-21, AGESA ComboAM5 PI 1.3.0.1d) as the newest build for this board and it is already
+**beta** — the machine is on the latest firmware that exists. Earlier 3xxx releases carry
+anti-rollback restrictions, so a downgrade to the last stable (3881) is not guaranteed to be
+possible and needs approval either way.
 
-1. **EC power-drain** (no settings lost): shut down, unplug the PSU cable, hold the power button
+1. **Does firmware's own reset hang?** Enter BIOS setup, press Esc → discard & exit (or F10 without
+   changes). No OS involved, no risk. If the machine fails to POST after a *firmware-initiated*
+   reset, the reset path is broken at EC/firmware level and no OS-side change can ever fix it —
+   that is also the cleanest possible warranty statement.
+2. **Rail/standby observation on the next hang** (free): fans spinning or stopped? standby LED or a
+   USB port with a light still powered? Rails present + dark POST = EC; rails gone = PSU/5VSB.
+3. **EC power-drain** (no settings lost): shut down, unplug the PSU cable, hold the power button
    20–30 s, replug, boot. First boot after may retrain memory and take longer — normal.
-2. **BIOS `Ai Tweaker → PCIEX16(G5) Link Mode` → Gen4** (the 7900 XT is a Gen4 card; Auto retrains
-   the link at Gen5 during a warm reset). Rollback: `docs/bios-profiles/BEFOREMCR_CMO.CMO`.
-3. **BIOS `Advanced → AMD CBS → NBIO Common Options → IOMMU` → Disabled.**
-4. **BIOS update** from 4004 (2026-09-16, AGESA 1.3.0.1d) — requires explicit approval; check ASUS
-   support for a newer AGESA first.
+4. **Boot with the discrete GPU removed** (9600X has an iGPU; use the board's video output). If a
+   warm reboot still hangs with no 7900 XT installed, the GPU is fully exonerated and the claim is
+   board/PSU. Cheap, and decisive for where the RMA goes.
+5. **Identify the PSU** — the case file has carried "PSU: UNKNOWN" since October. A label photo
+   (brand, model, wattage, 12 V rail, age) is now a first-order diagnostic, and a swap test with any
+   known-good unit is the definitive PSU check.
+6. **BIOS `Ai Tweaker → PCIEX16(G5) Link Mode` → Gen4**, then **`IOMMU` → Disabled** — now lower
+   priority, since neither can matter before the first Q-LED lights, but still cheap and reversible
+   via `docs/bios-profiles/BEFOREMCR_CMO.CMO`.
 
 Workaround that does not depend on any of the above: `sudo rtcwake -m off -s 60` (real S5 poweroff
 plus RTC wake = the cold boot that always works, scriptable in one command). If the board does not
