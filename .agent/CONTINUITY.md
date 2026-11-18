@@ -466,6 +466,23 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-18T19:10Z `[TOOL]` **Mode B found: blank screen with Caps Lock ALIVE - a second, different
+  fault. Plus optimised defaults loaded (only Fast Boot and iGPU changed).** Sequence: `rtcwake -s
+  20` did not visibly return; the next power-on gave no display **but Caps Lock responded**; the
+  following power-on showed BIOS normally. Caps Lock responding proves the machine was running, so
+  this is NOT the warm-reset POST hang (Mode A: no Q-LED, Caps Lock dead) - it is the issue #11
+  blank-start family, an intermittent display bring-up. Open reading: rtcwake may have actually
+  woken the machine into a displayless boot, making the two observations one event. Rule adopted:
+  judge a wake by fans/power LED, never the screen, and wait 3 min before touching anything. rtcwake
+  timing: -s 60 works, -s 20 unproven - use 60 until settled. Also corrected: `Power On By RTC` is
+  Disabled in BOTH the baseline and the defaults export, yet the RTC wake worked, so it is not the
+  gate (an earlier note here said it was). Optimised defaults
+  (`docs/bios-profiles/OPTIMISEDDEFAULTS_*`) differ from BEFOREMCR only in `Fast Boot` Disabled ->
+  Enabled (restore to Disabled: it skips POST stages and shortens the Del window) and `Integrated
+  Graphics` Disabled -> Auto (can stay Auto as a free second display output for diagnosis); MCR
+  reverted to Auto, harmless. **The Step 2 warm-reboot test has still not been run.** Docs:
+  docs/warm-reboot-post-hang.md (two-failure-mode table), docs/warm-reboot-action-plan.md (Step 2
+  result + rtcwake re-test), docs/bios-profiles/README.md.
 - 2026-11-18T18:20Z `[TOOL]` **Step 1 done: recovery practised and `rtcwake` RTC wake verified
   working.** The machine shut down and powered itself back on to the boot menu, so a one-command
   restart now exists that uses the only condition this board handles reliably (clean ACPI S5, rails

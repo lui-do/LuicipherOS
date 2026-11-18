@@ -121,6 +121,38 @@ because saving in setup also resets the platform, it doubles as a firmware-drive
 If the reboot POSTs — real finding, a stale setting was involved, and we diff against
 `docs/bios-profiles/` to find which one. If it hangs — expected, continue to Step 3.
 
+### Result 2026-11-18: defaults loaded; two settings changed
+
+Export kept at `docs/bios-profiles/OPTIMISEDDEFAULTS_*`. Diff against the baseline is small:
+
+| Setting | Baseline | After defaults | Action |
+|---|---|---|---|
+| `Fast Boot` | Disabled | **Enabled** | **set back to Disabled** — it skips POST stages, which is exactly what you need to watch on a board whose POST is fragile, and it shortens the window to press Del |
+| `Integrated Graphics` | Disabled | **Auto** | decide: keep Disabled (match baseline) or keep Auto as a free diagnostic output |
+| everything else | — | unchanged | `Power On By RTC` Disabled, `ErP` Disabled, Above 4G + ReBAR Enabled, IOMMU Auto, MCR Auto |
+
+**The warm-reboot test after defaults has not been run yet** — that is the point of Step 2, so run
+one `sudo reboot` and record it.
+
+Note the iGPU is now available as a diagnostic: with `Integrated Graphics` Auto, the monitor can be
+plugged into the motherboard's own video output. If a blank screen shows a picture there but not on
+the 7900 XT, the fault is the discrete GPU's output; if both are blank, it is the platform. That is
+a useful test for Mode B (see `docs/warm-reboot-post-hang.md`).
+
+### Also outstanding from Step 1: settle the rtcwake timing
+
+`-s 60` woke the machine; `-s 20` looked like a failure, but a wake with no display would look
+identical. Re-test with the screen ignored:
+
+```bash
+sudo rtcwake -m off -s 60      # known good
+# then, after a confirmed good cycle:
+sudo rtcwake -m off -s 30
+```
+
+Judge each wake by **fans and the power LED, never the screen**, and wait a full 3 minutes before
+touching anything. Record: did fans start? did the display ever come up? For now, use `-s 60`.
+
 Optional variant if Step 2 changes nothing and you want to go further: the hardware CMOS clear
 (CLRTC pins with the PSU unplugged). Restore settings afterwards from `docs/bios-profiles/`.
 

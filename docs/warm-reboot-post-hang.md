@@ -192,6 +192,35 @@ Open sub-question that splits EC from PSU: during the hang, are **fans spinning*
 standby LED / powered USB port alive? Rails present + no POST = EC/firmware. Rails gone = PSU or
 5VSB path.
 
+### Two distinct failure modes — and Caps Lock tells them apart (2026-11-18)
+
+The two look identical on screen (black, no logo) but are different faults:
+
+| | Mode A — warm reset | Mode B — blank start |
+|---|---|---|
+| Trigger so far | any OS-requested reset | observed after an RTC wake, then a power-on |
+| Q-LEDs | none lit | not yet recorded |
+| **Caps Lock** | **dead** | **responds** |
+| Fans | spinning | spinning |
+| Meaning | board powered but POST never starts (EC/sequencing) | machine is **alive**, display output never came up |
+| Family | this document | issue #11 blank-start, plus the DMUB cold-boot storm |
+
+Observation 2026-11-18 (Mode B): after `rtcwake -m off -s 20` did not visibly return, the first
+power-on produced no display **while Caps Lock responded**; the next power-on showed the BIOS
+normally. Per the AGENTS.md guidance, Caps Lock responding is the proof that a black screen is not
+an unresponsive computer — here the machine was running, only the picture was missing.
+
+Two readings, both open:
+
+1. `rtcwake` **did** wake the machine, but that boot had no display output, so the wake looked like
+   a failure. The two observations would then be one event: an intermittent display bring-up.
+2. The alarm genuinely fired too early and the machine stayed off; the black screen came from the
+   manual power-on instead. Timing test needed (see the action plan).
+
+Decisive follow-ups: judge a wake by **fans and power LED, never by the screen**; wait a full 3
+minutes before touching anything; and record the monitor's own message ("no signal" vs a live black
+picture). If the monitor reports no signal, the GPU never brought its output up.
+
 ### Counter-evidence 2026-11-18: a reset driven by firmware itself POSTs fine
 
 Procedure: power off → power on → Del into BIOS setup → "Discard Changes and Exit" → the boot menu
@@ -339,10 +368,11 @@ possible and needs approval either way.
 
 Workaround that does not depend on any of the above: `sudo rtcwake -m off -s 20` (real S5 poweroff
 plus RTC wake = the cold boot that always works, scriptable in one command). **Verified working
-2026-11-18** — the machine powered itself back on to the boot menu. Use 15–20 s; the alarm must not
-fire mid-shutdown or it can be missed and the machine stays off. If the board ever stops waking, the
-gate is `Advanced → APM Configuration → Power On By RTC`; baseline has ErP Disabled, which normally
-keeps RTC wake alive.
+2026-11-18 with `-s 60`; `-s 20` then appeared to fail** (see Mode B above — the wake may have
+happened with no display). Use 45–60 s until the timing is settled: the alarm must not fire
+mid-shutdown or it can be missed and the machine stays off. `Power On By RTC` is **Disabled in the
+BIOS baseline and in the optimised-defaults export, yet the wake worked**, so that setting is not
+the gate on this firmware — an earlier note here claiming it was is wrong. `ErP Ready` is Disabled.
 
 Record for every attempt: logo yes/no, Caps Lock alive yes/no, Q-LED state, and afterwards
 `journalctl -k -b -o short-monotonic | grep -m1 'Previous system reset'`.
