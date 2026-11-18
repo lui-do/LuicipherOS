@@ -466,6 +466,15 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-18T18:20Z `[TOOL]` **Step 1 done: recovery practised and `rtcwake` RTC wake verified
+  working.** The machine shut down and powered itself back on to the boot menu, so a one-command
+  restart now exists that uses the only condition this board handles reliably (clean ACPI S5, rails
+  collapsed). Recommended delay is `-s 20` (15-20 s floor; the RTC alarm must not fire mid-shutdown
+  or it can be missed and the machine stays off - 60 s was needlessly generous). This removes the
+  daily pain regardless of the underlying fault, and is the candidate for a future `lui cold-reboot`
+  subcommand. Docs updated: docs/warm-reboot-action-plan.md (Step 1 result + tighter delay),
+  docs/warm-reboot-post-hang.md (workaround marked verified). Next: Step 0 entry cleanup then Step 2
+  (Load Optimized Defaults + one reboot check).
 - 2026-11-18T17:30Z `[TOOL]` **Ordered runbook written for the next hands-on session:**
   `docs/warm-reboot-action-plan.md` (recovery card, Step 0 entry cleanup, Step 1 recovery practice +
   `rtcwake` one-command restart, Step 2 BIOS 'Load Optimized Defaults' as a stale-NVRAM test with

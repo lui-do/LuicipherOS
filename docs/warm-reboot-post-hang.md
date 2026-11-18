@@ -337,10 +337,12 @@ possible and needs approval either way.
    priority, since neither can matter before the first Q-LED lights, but still cheap and reversible
    via `docs/bios-profiles/BEFOREMCR_CMO.CMO`.
 
-Workaround that does not depend on any of the above: `sudo rtcwake -m off -s 60` (real S5 poweroff
-plus RTC wake = the cold boot that always works, scriptable in one command). If the board does not
-wake, the gate is `Advanced → APM Configuration → Power On By RTC`; baseline has ErP Disabled,
-which normally keeps RTC wake alive.
+Workaround that does not depend on any of the above: `sudo rtcwake -m off -s 20` (real S5 poweroff
+plus RTC wake = the cold boot that always works, scriptable in one command). **Verified working
+2026-11-18** — the machine powered itself back on to the boot menu. Use 15–20 s; the alarm must not
+fire mid-shutdown or it can be missed and the machine stays off. If the board ever stops waking, the
+gate is `Advanced → APM Configuration → Power On By RTC`; baseline has ErP Disabled, which normally
+keeps RTC wake alive.
 
 Record for every attempt: logo yes/no, Caps Lock alive yes/no, Q-LED state, and afterwards
 `journalctl -k -b -o short-monotonic | grep -m1 'Previous system reset'`.

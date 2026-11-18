@@ -70,21 +70,30 @@ Do this exactly, and count the seconds out loud the first time:
 
 If both cycles boot first try, the recovery is solid and everything else can proceed.
 
+**Result 2026-11-18: recovery practised, RTC wake confirmed working.** The machine shut down and
+powered itself back on to the boot menu. So the workaround is real: `rtcwake` gives a one-command
+restart that uses the only condition this board handles reliably (a clean S5, rails collapsed).
+
 ### 1B — Test a one-command restart (optional but recommended)
 
 Goal: turn "shutdown + press the button" into a single command, so the machine is comfortable to
 use while this is unfixed.
 
 ```bash
-sudo rtcwake -m off -s 60
+sudo rtcwake -m off -s 20
 ```
 
-What this does: it sets an alarm 60 seconds ahead, then switches the machine off **completely**
+What this does: it sets an alarm 20 seconds ahead, then switches the machine off **completely**
 (same as a normal shutdown — the rails collapse, which is the part the board needs), and the board's
 clock switches it back on by itself. Nothing else to run; the terminal dies with the machine.
 
-- **Comes back by itself after ~60 s** → you now have a safe restart command. From now on:
-  `sudo rtcwake -m off -s 60` instead of `sudo reboot`. (A `lui` subcommand can wrap this later.)
+**On the delay:** `-s` is the wait in seconds, and it has to be long enough for the system to
+actually finish reaching S5 — if the alarm fires mid-shutdown it can be missed and the machine
+stays off. 15–20 s is the practical floor on this machine; 60 s is unnecessarily generous. Test
+`20` first and step it down if you want it tighter.
+
+- **Comes back by itself** → you now have a safe restart command. From now on:
+  `sudo rtcwake -m off -s 20` instead of `sudo reboot`. (A `lui` subcommand can wrap this later.)
 - **Stays off** → press the power button, note "RTC wake does not work here", and we drop the idea.
   The BIOS setting behind it is `Advanced → APM Configuration → Power On By RTC`.
 
