@@ -1,33 +1,53 @@
-# Warm-reboot action plan — next hands-on session
+# Warm-reboot action plan — session runbook
 
-Runbook for the warm-reboot POST hang. Findings and evidence live in
-`docs/warm-reboot-post-hang.md`; this file is just *what to do, in order*.
-
-**Current state:** the board stays powered after any reset (fans spinning, 12 V present) but never
-starts POST — no Q-LED lights at all. Only a full collapse of the power rails brings it back.
-Everything OS-side has been ruled out. Remaining suspects: EC / power sequencing, EC firmware, and
-to a lesser degree stale CMOS/NVRAM state.
+Runbook for the warm-reboot POST hang. Evidence and reasoning live in
+`docs/warm-reboot-post-hang.md`; this file is *what to do, in order*.
 
 **Ground rules**
 
-- One variable per step. Record the result of each step before starting the next.
-- Recovery first: if anything goes wrong, the recovery below is the answer, and it has never failed.
-- A failed first power-on after a forced button-off is **expected**, not a new fault. Retry once.
-- Do not re-run `reboot=` mechanism tests; that branch is closed.
+- One variable per step. Write down the result of each step before starting the next.
+- Recovery first. A failed first power-on after a forced button-off is **expected**, not a new fault.
+- Do not re-run `reboot=` mechanism tests; that branch is closed (`efi`, `triple`, `cf9` all failed).
+- Record with the **board**, not the screen: blue power LED (on/off) → Q-LEDs (red/yellow/white/green)
+  → Caps Lock (dead/alive) → then the picture. A black screen is not proof the machine is dead.
 
 ---
 
-## Recovery card (use whenever the machine is stuck)
+## Recovery card
 
 ```text
-1. If the desktop still responds:  sudo poweroff     → press power
-2. If it is stuck:      unplug the PSU cable → hold the power button 20–30 s
-                        → plug the cable back in → press power once
-3. If the first power-on shows nothing: unplug again, repeat step 2 once
+1. Desktop still responds:   sudo poweroff        → press power once
+2. Machine is stuck:         unplug the PSU cable → hold the power button 20–30 s
+                             → plug back in → press power once
+3. First power-on dead:      repeat step 2 once (expected, not a fault)
 ```
 
-Why the long hold: with the cable out there is no mains power, so holding the button does not start
-anything — it drains the capacitors. That is what the EC needs to forget the bad state.
+Why the long hold: with the cable out there is no mains power, so holding the button starts nothing —
+it drains the capacitors. That is what the EC needs to forget the bad state.
+
+---
+
+## What we know (one screen)
+
+| Reset requested by the OS | Result |
+|---|---|
+| default (EFI `ResetSystem`) | hang |
+| `reboot=t` (triple fault) | hang |
+| `reboot=c` (KBC "cold" hint) | no effect (mode hint, not a mechanism) |
+| `reboot=p` / `cf9_force` (CF9 hard reset) | no reset observed |
+| **reset requested by firmware (exit setup)** | **POSTs fine** ← the only warm reset that ever worked |
+
+| Other lever | Result |
+|---|---|
+| boot entry (archinstall vs hand-written) | both hang |
+| `amdgpu-unload-on-shutdown` enabled / disabled | both hang |
+| MCR off (BIOS) | no effect |
+| EXPO / memory | off, tested, clean |
+| Q-LEDs during a hang | **none lit** → POST never starts |
+| Fans during a hang | spinning → board is powered |
+
+Current read: the board is powered but never begins POST after an OS-requested reset. Firmware's own
+reset works. Suspects: EC / power sequencing, EC firmware (BIOS 4004, a beta).
 
 ---
 
@@ -41,165 +61,139 @@ sudo cp /boot/loader/entries/2026-10-04_17-11-07_linux.conf.bak \
 sudo grep '^options' /boot/loader/entries/2026-10-04_17-11-07_linux.conf
 ```
 
-Expected: one `options` line, ending in `amdgpu.runpm=0`, with no `reboot=` anywhere.
-Nothing to test — the next boot picks it up.
+Expected: one `options` line ending in `amdgpu.runpm=0`, with no `reboot=` anywhere.
 
 ---
 
-## Step 1 — Learn the recovery, and get a one-command restart (15 min)
+## Step 1 — Restore the one BIOS setting that matters (5 min)
 
-**Why this step exists.** Everything after this depends on being able to bring the machine back
-without drama. Until now the recovery has been improvised, and on 2026-11-18 a forced button-off
-was followed by one dead power-on before the next one worked. We need to know that this is normal
-behaviour of a stuck board and not a new fault — otherwise every later result gets muddied.
-
-### 1A — Practise the recovery, twice
-
-Do this exactly, and count the seconds out loud the first time:
-
-1. In the desktop, run `sudo poweroff`. Wait until everything is silent — fans stopped, no lights.
-2. **Unplug the power cable from the wall socket** (or flip the PSU switch to O).
-3. Press and hold the case power button for **20–30 seconds**. Nothing happens on screen; that is
-   correct. Keep holding.
-4. Plug the cable back in (PSU switch to I).
-5. Press the power button **once**, briefly.
-6. Expect: ASUS/TUF splash, then the boot menu, then the system boots.
-7. Write down whether it worked first try. Then repeat 1–6 once more and write that down too.
-
-**Record:** `cycle 1: first try / needed a second attempt` — `cycle 2: first try / needed a second attempt`.
-
-If both cycles boot first try, the recovery is solid and everything else can proceed.
-
-**Result 2026-11-18: recovery practised, RTC wake confirmed working.** The machine shut down and
-powered itself back on to the boot menu. So the workaround is real: `rtcwake` gives a one-command
-restart that uses the only condition this board handles reliably (a clean S5, rails collapsed).
-
-### 1B — Test a one-command restart (optional but recommended)
-
-Goal: turn "shutdown + press the button" into a single command, so the machine is comfortable to
-use while this is unfixed.
-
-```bash
-sudo rtcwake -m off -s 20
-```
-
-What this does: it sets an alarm 20 seconds ahead, then switches the machine off **completely**
-(same as a normal shutdown — the rails collapse, which is the part the board needs), and the board's
-clock switches it back on by itself. Nothing else to run; the terminal dies with the machine.
-
-**On the delay:** `-s` is the wait in seconds, and it has to be long enough for the system to
-actually finish reaching S5 — if the alarm fires mid-shutdown it can be missed and the machine
-stays off. 15–20 s is the practical floor on this machine; 60 s is unnecessarily generous. Test
-`20` first and step it down if you want it tighter.
-
-- **Comes back by itself** → you now have a safe restart command. From now on:
-  `sudo rtcwake -m off -s 20` instead of `sudo reboot`. (A `lui` subcommand can wrap this later.)
-- **Stays off** → press the power button, note "RTC wake does not work here", and we drop the idea.
-  The BIOS setting behind it is `Advanced → APM Configuration → Power On By RTC`.
-
-**Record:** `rtcwake: came back / stayed off`.
-
----
-
-## Step 2 — Reset BIOS settings from inside setup, then one reboot test (25 min)
-
-**Why:** the failure is the board never starting POST, which is EC/NVRAM territory. Loading
-optimised defaults from inside setup wipes stale NVRAM settings without opening the case, and
-because saving in setup also resets the platform, it doubles as a firmware-driven reset test.
+Optimised defaults changed only two things; only one of them needs fixing.
 
 1. Boot, press **Del** to enter BIOS setup.
-2. Press **F5** → *Load Optimized Defaults* → accept.
-3. Press **F10** → *Save Changes & Reset* (or *Save Changes and Exit*) → confirm.
-   *Expected:* the machine resets and POSTs normally (this path has worked before).
-4. Boot into LuicipherOS with defaults. Note: EXPO is already off in the baseline, so this costs
-   you nothing you were using.
-5. Once at the desktop, one test: `sudo reboot`.
-6. Record what happens: Q-LED lit? ASUS splash? boot menu? nothing?
+2. **`Fast Boot` → Disabled.** (Defaults set it Enabled; it skips POST stages and shortens the
+   window to press Del — bad on a board whose POST you are trying to watch.)
+3. **Leave `Integrated Graphics` on `Auto`.** It gives you a second display output for Step 3.
+4. Press **F10** → *Save Changes & Reset* → confirm.
 
-**Record:** `defaults boot: ok / not ok` — `warm reboot after defaults: splash / menu / nothing`.
+This save-and-reset is itself a data point: if the machine POSTs here, firmware's own reset works
+again (expected). Record it.
 
-If the reboot POSTs — real finding, a stale setting was involved, and we diff against
-`docs/bios-profiles/` to find which one. If it hangs — expected, continue to Step 3.
+**Record:** `save&reset POST: ok / not ok`.
 
-### Result 2026-11-18: defaults loaded; two settings changed
+---
 
-Export kept at `docs/bios-profiles/OPTIMISEDDEFAULTS_*`. Diff against the baseline is small:
+## Step 2 — The warm-reboot test (5 min) — **the main event**
 
-| Setting | Baseline | After defaults | Action |
-|---|---|---|---|
-| `Fast Boot` | Disabled | **Enabled** | **set back to Disabled** — it skips POST stages, which is exactly what you need to watch on a board whose POST is fragile, and it shortens the window to press Del |
-| `Integrated Graphics` | Disabled | **Auto** | decide: keep Disabled (match baseline) or keep Auto as a free diagnostic output |
-| everything else | — | unchanged | `Power On By RTC` Disabled, `ErP` Disabled, Above 4G + ReBAR Enabled, IOMMU Auto, MCR Auto |
+This is the test Step 2 of the old plan existed for and it has not been run yet. With stale NVRAM
+now wiped, it is a clean experiment.
 
-**The warm-reboot test after defaults has not been run yet** — that is the point of Step 2, so run
-one `sudo reboot` and record it.
+```bash
+sudo reboot
+```
 
-Note the iGPU is now available as a diagnostic: with `Integrated Graphics` Auto, the monitor can be
-plugged into the motherboard's own video output. If a blank screen shows a picture there but not on
-the 7900 XT, the fault is the discrete GPU's output; if both are blank, it is the platform. That is
-a useful test for Mode B (see `docs/warm-reboot-post-hang.md`).
+Watch and record **before touching anything**:
 
-### Also outstanding from Step 1: settle the rtcwake timing
+| Watch | Value |
+|---|---|
+| Blue power LED | on / off |
+| Q-LEDs | which one lit, or none |
+| Caps Lock | dead / alive |
+| ASUS splash | yes / no |
+| Boot menu | yes / no |
 
-`-s 60` woke the machine; `-s 20` did not (the green BOOT Q-LED never lit, and no Linux boot appears
-near the alarm time). `-s 20` is likely simply too short — the alarm can fire while the kernel is
-still shutting down and be cleared or ignored.
+If it hangs: recover with the card, then get the receipt:
+
+```bash
+sudo journalctl -k -b -1 --no-pager | grep -m1 'Previous system reset'
+```
+
+**Record:** `warm reboot after defaults: splash / menu / nothing — Q-LED: … — Caps Lock: …`.
+
+- **POSTs** → a stale NVRAM setting was involved. Big finding; stop and report.
+- **Hangs** → stale NVRAM ruled out. Go to Step 4 (Step 3 only if you saw a blank display).
+
+---
+
+## Step 3 — Display-output test (10 min) — for the blank-display fault
+
+Only needed if you get a **black screen while the machine is alive** (Caps Lock responds). That
+fault is firmware-side: on 2026-11-18 it happened with **no Linux running at all**.
+
+When it happens — or proactively, once — try in this order and note which produces a picture:
+
+1. **DisplayPort instead of HDMI** on the 7900 XT.
+2. **The motherboard's own video output** (iGPU is now `Auto`).
+3. **Monitor-only power cycle** (switch the monitor off and on).
+
+Also record what the monitor itself says: **"no signal"** vs a live black picture. "No signal" means
+the GPU never brought its output up.
+
+**Record:** `blank screen: HDMI / DP / iGPU — monitor says: no signal / black`.
+
+---
+
+## Step 4 — Confirm the restart command (5 min)
+
+`rtcwake -m off -s 60` is confirmed working; `-s 20` failed (the board stayed off — the blue power
+LED was dark). Use 60 s.
 
 ```bash
 sudo rtcwake -m off -s 60
 ```
 
-Then **watch the board for 3 minutes without touching anything**, and record:
+Then **watch for 3 minutes without touching anything**, judged by the board:
 
-| Question | Why it matters |
+| What you see | Meaning |
 |---|---|
-| Do the Q-LEDs cycle (red → white → green)? | proves POST actually ran |
-| Do the fans spin up? | proves the board was powered |
-| Does the power LED come on? | proves the PSU got PS_ON# |
-| Does the display ever come up? | separates Mode A (dead POST) from Mode B (alive, no picture) |
+| Blue power LED on, Q-LEDs cycle | wake works — keep `-s 60`, move on |
+| Blue power LED on, no Q-LED | board powered without POSTing — report immediately |
+| Nothing at all | alarm not waking from S5 — use `poweroff` + button |
 
-- Q-LEDs cycle → the wake works; keep `-s 60` and move on.
-- Fans spin but no Q-LED → **the wake powered the board without POSTing** — the same fault as the
-  warm reboot, and a much bigger finding. Report it.
-- Nothing at all → the alarm is not waking this board from S5; use `sudo poweroff` + the button.
-
-Do not judge a wake by the screen: on 2026-11-18 a black screen was briefly assumed to mean failure,
-and the machine may in fact have been running.
-
-Optional variant if Step 2 changes nothing and you want to go further: the hardware CMOS clear
-(CLRTC pins with the PSU unplugged). Restore settings afterwards from `docs/bios-profiles/`.
+**Record:** `rtcwake 60: powered on yes/no — Q-LEDs cycled yes/no`.
 
 ---
 
-## Step 3 — Re-flash the BIOS (30 min) — **requires explicit approval**
+## Step 5 — Re-flash the BIOS (30 min) — **requires explicit approval**
 
 **Why:** the EC firmware ships inside the BIOS image, and a corrupted EC image survives every power
-cycle — so this is the one intervention that has not been indirectly tested yet. There is no newer
-BIOS than 4004 (it is already a beta, AGESA ComboAM5 PI 1.3.0.1d).
-
-Options, in order of preference:
+cycle. There is no newer BIOS than 4004 (already a beta, AGESA ComboAM5 PI 1.3.0.1d).
 
 | Option | How | Notes |
 |---|---|---|
-| Re-flash **4004** (same version) | Download from ASUS support, rename to `A5690.CAP` if needed, copy to a FAT32 USB stick, BIOS → Tool → ASUS EZ Flash 3 | Rewrites EC/AGESA without changing version |
-| Downgrade to **3881** (last non-beta) | same procedure | AMD anti-rollback may refuse it — that is a valid outcome, record it |
+| Re-flash **4004** (same version) | ASUS support → download → rename to `A5690.CAP` if needed → FAT32 USB → BIOS → Tool → ASUS EZ Flash 3 | Rewrites EC/AGESA, version unchanged |
+| Downgrade to **3881** (last non-beta) | same procedure | AMD anti-rollback may refuse — record the outcome either way |
 
-After flashing, run one `sudo reboot` test and record it.
+Then run one `sudo reboot` test and record it.
 
 ---
 
-## Step 4 — Warranty case
+## Step 6 — Warranty case
 
-Once Steps 2 and 3 have failed, nothing else is reachable by a user. The claim sentence:
+Once Step 5 fails, nothing else is reachable by a user. The claim sentence:
 
 > *After any reset — OS ACPI, EFI `ResetSystem()`, CF9, or CPU triple fault — the board remains
 > powered (fans spinning, 12 V present) but produces no Q-LED activity and never starts POST. Only
-> full removal of AC power restores it. Reproducible on demand; independent of the OS, the boot
-> entry and the installed devices. The board is on the newest firmware available (4004, a beta,
-> AGESA ComboAM5 PI 1.3.0.1d).*
+> full removal of AC power restores it. A reset requested by the firmware itself (exiting BIOS setup)
+> works normally. Reproducible on demand; independent of the OS, the boot entry and the installed
+> devices. The board runs the newest firmware available (4004, a beta, AGESA ComboAM5 PI 1.3.0.1d).*
 
-Target is the **motherboard**. The GPU is not implicated in this symptom, and the PSU delivers power
-correctly.
+Target: **motherboard**. The GPU is not implicated in the POST hang; the PSU delivers power.
+
+---
+
+## Record sheet for tomorrow
+
+```text
+Step 0 entry cleaned:            yes/no
+Step 1 Fast Boot -> Disabled:    yes/no    save&reset POST: ok/not ok
+Step 2 sudo reboot:              splash/menu/nothing
+       Q-LED:                    none/red/yellow/white/green
+       Caps Lock:                dead/alive
+       power LED:                on/off
+Step 3 blank screen (if any):    HDMI/DP/iGPU    monitor: no signal/black
+Step 4 rtcwake -s 60:            powered on yes/no    Q-LEDs cycled yes/no
+Step 5 BIOS re-flash:            done/skipped    result:
+```
 
 ---
 
@@ -212,7 +206,8 @@ correctly.
 | `reboot=c` (KBC "cold") | a mode hint, not a mechanism — no-op |
 | `reboot=t` (triple fault) | hang (CPU-only reset, EC never notified) |
 | `reboot=e` / default (EFI `ResetSystem`) | hang — this is what every earlier attempt used |
-| `pci` (CF9 hard reset) | no visible reset, then a failed first power-on |
-| GPU / memory / boot device as cause | POST never starts, so no device is initialised |
+| `pci` (CF9 hard reset) | no reset observed |
+| GPU / memory / boot device as cause of the hang | POST never starts, so no device is initialised |
 | PSU as a supply fault | rails present (fans spinning) during the dead state |
-| Linux-side diagnostics worth repeating | — |
+| Stale NVRAM / CMOS | optimised defaults loaded 2026-11-18; retest in Step 2 |
+| `rtcwake -s 20` | too short — the alarm is missed; use `-s 60` |

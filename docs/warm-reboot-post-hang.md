@@ -196,30 +196,25 @@ standby LED / powered USB port alive? Rails present + no POST = EC/firmware. Rai
 
 The two look identical on screen (black, no logo) but are different faults:
 
-| | Mode A — warm reset | Mode B — blank start |
+| | Mode A — warm reset | Mode B — blank display |
 |---|---|---|
-| Trigger so far | any OS-requested reset | observed after an RTC wake, then a power-on |
-| Q-LEDs | none lit | not yet recorded |
+| Trigger so far | any OS-requested reset | a power-on |
+| Q-LEDs | none lit | not recorded for this event |
 | **Caps Lock** | **dead** | **responds** |
 | Fans | spinning | spinning |
-| Meaning | board powered but POST never starts (EC/sequencing) | machine is **alive**, display output never came up |
-| Family | this document | issue #11 blank-start, plus the DMUB cold-boot storm |
+| Was Linux running? | no (POST never started) | **no — no Linux boot exists in the journal for that window** |
+| Meaning | board powered but POST never starts (EC/sequencing) | **firmware runs, its display output never comes up** |
+| Family | this document | issue #11 blank-start; firmware-side, not `amdgpu` |
 
-Observation 2026-11-18 (Mode B): after `rtcwake -m off -s 20` did not visibly return, the first
-power-on produced no display **while Caps Lock responded**; the next power-on showed the BIOS
-normally. Per the AGENTS.md guidance, Caps Lock responding is the proof that a black screen is not
-an unresponsive computer — here the machine was running, only the picture was missing.
+Observation 2026-11-18 (Mode B): the power-on after the failed `rtcwake` produced no display while
+Caps Lock responded. `journalctl --list-boots` has **no Linux boot in that window at all** (see the
+timeline below), so the machine was sitting in firmware — most likely in BIOS setup, since Del had
+been pressed. Caps Lock responding is therefore the firmware's keyboard handling, not an OS.
 
-Two readings, both open:
-
-1. `rtcwake` **did** wake the machine, but that boot had no display output, so the wake looked like
-   a failure. The two observations would then be one event: an intermittent display bring-up.
-2. The alarm genuinely fired too early and the machine stayed off; the black screen came from the
-   manual power-on instead. Timing test needed (see the action plan).
-
-Decisive follow-ups: judge a wake by **fans and power LED, never by the screen**; wait a full 3
-minutes before touching anything; and record the monitor's own message ("no signal" vs a live black
-picture). If the monitor reports no signal, the GPU never brought its output up.
+That sharpens Mode B considerably: it is **not** the `amdgpu` driver and **not** the OS. It is the
+firmware's own display initialisation (GOP / GPU VBIOS output path) failing on that power-on, and it
+is reproducible with no Linux involved. Testable: on the next blank screen, try the other GPU output
+(DisplayPort vs HDMI) and the motherboard's own video output (the iGPU is now `Auto`).
 
 ### Timeline of the 2026-11-18 rtcwake episode (from `journalctl --list-boots`, CET)
 
@@ -237,21 +232,18 @@ Boot entries only exist for boots that reached Linux, so the gaps carry the info
   later**, and that gap is the BIOS/defaults session (export header 22:33 UTC = 23:33 CET, saved
   just before boot 0). **No Linux boot exists near 23:25:38**, where the alarm would have fired.
 
-User observation for that attempt: the **green BOOT Q-LED never lit** — the LED seen on every
-normal start before the desktop. Green is the *fourth* Q-LED, after CPU → DRAM → VGA, so its absence
-means firmware never reached boot-device scan.
+User observation for that attempt: the **blue power LED was off** — the case light that shows whether
+the desktop is powered, independent of Linux. It was not the green Q-LED; the blue power LED means
+the machine was **not powered at all**.
 
-Reading: the wake either never happened, or it powered the board **without running POST** — i.e. the
-same Mode A as the warm-reboot hang. `-s 20` is the prime suspect for the first: the alarm can fire
-while the kernel is still shutting down, and be cleared or ignored.
+**Conclusion: `rtcwake -m off -s 20` genuinely failed — the board stayed off.** The alarm either
+never fired or was cleared/ignored, which fits the timing: 20 s can elapse while the kernel is still
+shutting down. The earlier "the wake may have powered the board without POSTing" reading is
+**withdrawn** — it was based on misreading the blue power LED as the green BOOT Q-LED. There is
+therefore no evidence that a power-on can fail to POST; the widened hypothesis does not stand.
 
-**If the second reading is right, the conclusion widens:** a power-on can fail to POST too, not only
-a reset — which would make "cold boot always works" a tendency rather than a rule, and strengthen
-the EC/board case further. One observation; not yet established.
-
-Decisive test: `sudo rtcwake -m off -s 60`, then **watch the board for 3 minutes without touching
-anything** and record whether the Q-LEDs cycle, whether fans spin, and whether the power LED comes
-on. That separates "never powered on" from "powered on, never POSTed".
+Practical outcome: **use `sudo rtcwake -m off -s 60`**, which is confirmed working. Verify any future
+wake by the **blue power LED** (machine on) and then by the Q-LEDs (POST ran).
 
 ### Counter-evidence 2026-11-18: a reset driven by firmware itself POSTs fine
 

@@ -466,6 +466,22 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-18T20:40Z `[TOOL]` **Corrected: the blue LED is the case POWER LED, so rtcwake -s 20
+  genuinely failed and the widened hypothesis is withdrawn.** User clarification: the LED they
+  watched is the blue power light that shows whether the desktop is powered, independent of Linux -
+  not the green BOOT Q-LED. Power LED off means the board was never powered, so the alarm was missed
+  (20 s can elapse while the kernel is still shutting down). Withdrawn: 'a power-on can fail to
+  POST' - that reading came from misidentifying the LED, and there is no evidence for it. Use
+  `rtcwake -m off -s 60` (confirmed working); verify a wake by the blue power LED first, then the
+  Q-LEDs. Separately sharpened Mode B (blank display): `journalctl --list-boots` shows **no Linux
+  boot at all** in that window, so the machine was sitting in firmware (most likely BIOS setup, Del
+  had been pressed) - Mode B is a **firmware display-initialisation failure (GOP/VBIOS), not amdgpu
+  and not the OS**, reproducible with no Linux running. Test: other GPU output (DP vs HDMI),
+  motherboard video output (iGPU now Auto), monitor-only power cycle; and record whether the monitor
+  says 'no signal'. Rewrote docs/warm-reboot-action-plan.md as a clean ordered runbook: Step 0 entry
+  cleanup, Step 1 Fast Boot -> Disabled (keep iGPU Auto), Step 2 the warm-reboot test still
+  outstanding, Step 3 display-output test, Step 4 rtcwake confirm at -s 60, Step 5 BIOS re-flash
+  (needs approval), Step 6 warranty, plus a record sheet.
 - 2026-11-18T20:00Z `[TOOL]` **rtcwake -s 20 timeline reconstructed; possible
   power-on-without-POST.** From `journalctl --list-boots` (CET): boots -2 23:09:15-23:14:08, -1
   23:16:07-23:25:18, 0 23:35:57-. The `-s 60` success fits the 1m59s -2 -> -1 gap. The `-s 20`
