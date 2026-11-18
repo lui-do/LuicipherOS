@@ -221,6 +221,38 @@ Decisive follow-ups: judge a wake by **fans and power LED, never by the screen**
 minutes before touching anything; and record the monitor's own message ("no signal" vs a live black
 picture). If the monitor reports no signal, the GPU never brought its output up.
 
+### Timeline of the 2026-11-18 rtcwake episode (from `journalctl --list-boots`, CET)
+
+Boot entries only exist for boots that reached Linux, so the gaps carry the information:
+
+| Boot | Start | End |
+|---|---|---|
+| −3 | 13:05:02 | 23:03:06 |
+| −2 | 23:09:15 | 23:14:08 |
+| −1 | 23:16:07 | 23:25:18 |
+| 0 | 23:35:57 | — |
+
+- **`-s 60` success** = the −2 → −1 gap (1 m 59 s: shutdown, alarm, POST, kernel start). Plausible.
+- **`-s 20` attempt** = the shutdown at 23:25:18. The next Linux boot is **23:35:57 — 10 m 39 s
+  later**, and that gap is the BIOS/defaults session (export header 22:33 UTC = 23:33 CET, saved
+  just before boot 0). **No Linux boot exists near 23:25:38**, where the alarm would have fired.
+
+User observation for that attempt: the **green BOOT Q-LED never lit** — the LED seen on every
+normal start before the desktop. Green is the *fourth* Q-LED, after CPU → DRAM → VGA, so its absence
+means firmware never reached boot-device scan.
+
+Reading: the wake either never happened, or it powered the board **without running POST** — i.e. the
+same Mode A as the warm-reboot hang. `-s 20` is the prime suspect for the first: the alarm can fire
+while the kernel is still shutting down, and be cleared or ignored.
+
+**If the second reading is right, the conclusion widens:** a power-on can fail to POST too, not only
+a reset — which would make "cold boot always works" a tendency rather than a rule, and strengthen
+the EC/board case further. One observation; not yet established.
+
+Decisive test: `sudo rtcwake -m off -s 60`, then **watch the board for 3 minutes without touching
+anything** and record whether the Q-LEDs cycle, whether fans spin, and whether the power LED comes
+on. That separates "never powered on" from "powered on, never POSTed".
+
 ### Counter-evidence 2026-11-18: a reset driven by firmware itself POSTs fine
 
 Procedure: power off → power on → Del into BIOS setup → "Discard Changes and Exit" → the boot menu

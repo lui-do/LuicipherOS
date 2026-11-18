@@ -466,6 +466,21 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-18T20:00Z `[TOOL]` **rtcwake -s 20 timeline reconstructed; possible
+  power-on-without-POST.** From `journalctl --list-boots` (CET): boots -2 23:09:15-23:14:08, -1
+  23:16:07-23:25:18, 0 23:35:57-. The `-s 60` success fits the 1m59s -2 -> -1 gap. The `-s 20`
+  attempt is the shutdown at 23:25:18 and the next Linux boot is 10m39s later (23:35:57), that gap
+  being the BIOS/defaults session (export header 22:33 UTC = 23:33 CET). **No Linux boot exists near
+  23:25:38**, when the alarm would have fired. User reports the green BOOT Q-LED never lit - green
+  is the fourth Q-LED, so firmware never reached boot-device scan. Reading: either the alarm never
+  woke the board, or it powered the board **without running POST** (same Mode A as the warm-reset
+  hang). `-s 20` is the prime suspect for the former (alarm can fire mid-shutdown and be
+  cleared/ignored). If the latter, a power-on can fail to POST too - widening the fault beyond
+  resets and weakening 'cold boot always works' further. Note boot entries only exist for boots that
+  reached Linux, so a power-on that never booted is invisible in the list. Decisive test recorded:
+  `rtcwake -m off -s 60`, then watch Q-LEDs / fans / power LED for 3 min without touching anything.
+  Docs: docs/warm-reboot-post-hang.md (timeline + widened hypothesis),
+  docs/warm-reboot-action-plan.md.
 - 2026-11-18T19:10Z `[TOOL]` **Mode B found: blank screen with Caps Lock ALIVE - a second, different
   fault. Plus optimised defaults loaded (only Fast Boot and iGPU changed).** Sequence: `rtcwake -s
   20` did not visibly return; the next power-on gave no display **but Caps Lock responded**; the

@@ -141,17 +141,30 @@ a useful test for Mode B (see `docs/warm-reboot-post-hang.md`).
 
 ### Also outstanding from Step 1: settle the rtcwake timing
 
-`-s 60` woke the machine; `-s 20` looked like a failure, but a wake with no display would look
-identical. Re-test with the screen ignored:
+`-s 60` woke the machine; `-s 20` did not (the green BOOT Q-LED never lit, and no Linux boot appears
+near the alarm time). `-s 20` is likely simply too short — the alarm can fire while the kernel is
+still shutting down and be cleared or ignored.
 
 ```bash
-sudo rtcwake -m off -s 60      # known good
-# then, after a confirmed good cycle:
-sudo rtcwake -m off -s 30
+sudo rtcwake -m off -s 60
 ```
 
-Judge each wake by **fans and the power LED, never the screen**, and wait a full 3 minutes before
-touching anything. Record: did fans start? did the display ever come up? For now, use `-s 60`.
+Then **watch the board for 3 minutes without touching anything**, and record:
+
+| Question | Why it matters |
+|---|---|
+| Do the Q-LEDs cycle (red → white → green)? | proves POST actually ran |
+| Do the fans spin up? | proves the board was powered |
+| Does the power LED come on? | proves the PSU got PS_ON# |
+| Does the display ever come up? | separates Mode A (dead POST) from Mode B (alive, no picture) |
+
+- Q-LEDs cycle → the wake works; keep `-s 60` and move on.
+- Fans spin but no Q-LED → **the wake powered the board without POSTing** — the same fault as the
+  warm reboot, and a much bigger finding. Report it.
+- Nothing at all → the alarm is not waking this board from S5; use `sudo poweroff` + the button.
+
+Do not judge a wake by the screen: on 2026-11-18 a black screen was briefly assumed to mean failure,
+and the machine may in fact have been running.
 
 Optional variant if Step 2 changes nothing and you want to go further: the hardware CMOS clear
 (CLRTC pins with the PSU unplugged). Restore settings afterwards from `docs/bios-profiles/`.
