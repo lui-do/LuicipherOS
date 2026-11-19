@@ -25,15 +25,16 @@ Runtime stores (never in the repo):
 
 ## Install / deploy
 
-System pieces, as the admin account (`luci`), from a readable tree (the
-resolver/`LUI_ROOT` handles `/opt/LuicipherOS` or a staging copy):
+System pieces, as the admin account (`luci`), from a readable staging copy or
+`~/LuicipherOS`:
 
 ```bash
-lui sync --system              # llama-cpp, llama-swap-bin, goose-desktop-bin, mise
+sudo ./install/deploy-tree.sh     # publish /opt/LuicipherOS (both accounts resolve it)
+lui sync --system                 # llama-cpp, llama-swap-bin, goose-desktop-bin, mise
 ./install/bootstrap.sh --ai-only  # service, config, goose CLI, env defaults, wrappers
 lui ai status
-lui ai sync --dry-run          # sources + ~40 GiB
-lui ai sync                    # download + sha256 verify
+lui ai sync --dry-run             # sources + ~40 GiB
+lui ai sync                       # download + sha256 verify
 ```
 
 `--ai-only` deploys the system AI pieces without stowing dotfiles into luci's

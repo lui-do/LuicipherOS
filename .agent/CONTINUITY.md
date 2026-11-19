@@ -370,7 +370,9 @@ history, one holding the November detail); no entry was dropped.
   `docs/ai-agents.md` (paths, deploy, mise commands, cloud-key policy, disable/prune). Live
   deployment of this step is pending; model download still ~40 GiB as `luci`. System deploy is
   split into `install/ai-setup.sh` + `bootstrap.sh --ai-only`, so luci can deploy the AI pieces
-  without stowing dotfiles into luci's home.
+  without stowing dotfiles into luci's home. `install/deploy-tree.sh` publishes the canonical
+  tree to `/opt/LuicipherOS` (root-owned, world-readable) so both accounts and future users
+  resolve one non-stale tree; `lui` already prefers it.
 - 2026-11-19T23:20Z `[TOOL]` **AI step 3 implemented: model manifest + `lui ai`.** New
   `config/models.json` pins the exact upstream GGUF files, sizes and sha256 (read from the HF API):
   `general` = unsloth/Qwen3.8-27B-GGUF UD-Q4_K_XL (17,659,407,264 B, `2a5f3565...`), `coding` =
