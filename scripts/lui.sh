@@ -45,6 +45,7 @@ USAGE
   lui sync [--system|--user [USER]] [--prune] [--dry-run] [--yes]
                                            reconcile the selected scope(s)
   lui status [--user [USER]]               read-only preview of what would change
+  lui ai <command>                         local AI stack: status/sync/run/audit...
   lui local-apps [--remove]               (re)generate ~/.local/bin launcher entries
   lui theme list|show|set <preset>|...     palettes: presets or from-wallpaper (matugen)
   lui root                                 print the resolved LuicipherOS tree
@@ -177,6 +178,12 @@ case "$cmd" in
     ROOT="$(resolve_root)"
     tree_banner "$ROOT" "$(classify_root "$ROOT")" safe
     exec "$ROOT/scripts/theme.sh" "$@"
+    ;;
+  ai)
+    # Local AI stack (ADR-0002): status/sync/run/bench/audit/enable/disable.
+    ROOT="$(resolve_root)"
+    tree_banner "$ROOT" "$(classify_root "$ROOT")" safe
+    exec "$ROOT/scripts/ai.sh" "$@"
     ;;
   local-apps)
     # (Re)generate the ~/.local/bin launcher .desktop entries from

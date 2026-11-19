@@ -10,6 +10,30 @@ On 2026-11-11 this log was union-merged from two diverged copies (one holding th
 history, one holding the November detail); no entry was dropped.
 
 ## [PLANS]
+- 2026-11-20T00:05Z `[USER]` **Package TUI decisions (backlog, after AI stack).** Locked: (1) declarative-only
+  — the TUI edits desired lists/requests and runs `lui sync`, never installs out-of-band;
+  (2) write model = **option 3, request queue**: `work` (non-admin) writes
+  `~/.config/lui/packages.request` (source, id, scope, note); `luci` reviews with
+  `lui sync --system --review`, approves into `config/packages`, `config/packages-arch` or the
+  flatpak lists, then syncs. User-scope flatpaks may go to a per-user overlay
+  `~/.config/lui/flatpaks-user.list` read by `lui sync --user`; (3) mixed result list with source
+  filters (repo / AUR / Flatpak), badges and installed/desired status; (4) full preview: version,
+  repo, size, dependencies/permissions, AUR votes, and a canonical URL (archlinux.org, AUR,
+  flathub.org) with an "open in browser" action; (5) Vicinae integration via
+  `lui pkg search <q>` plus an "Add package" action; (6) tech choice deferred to a mockup —
+  fzf + gum (extra; fast, bash-native) vs Python Textual (extra; prettier, heavier). Mockup to
+  show both variants before implementation. `fzf 0.75`, `gum 2.0.2`, `python-textual 8.2.8` are in
+  extra. Next implementation step remains AI step 3 (`config/models` + `lui ai`).
+- 2026-11-19T22:55Z `[USER]` **Backlog: package-manager TUI with online search.** Wants a terminal UI
+  to manage packages, with search across pacman, Flatpak and AUR. Design constraint agreed in
+  discussion: it must stay declarative — search results are added to/removed from the `config/`
+  lists and realized by `lui sync` (system scope as `luci`, user scope as the owning account),
+  never installed out-of-band, otherwise `--prune` later flags them as extras. Candidate
+  implementation: `lui pkg` (fzf + bash; `fzf` is not installed yet; `whiptail` is present).
+  Alternatives considered: `pacseek` (AUR, ready-made but direct-install), `bauh` (heavy GUI),
+  Python Textual (new runtime). Sources: `pacman -Ss` (repo), AUR RPC v5 (`curl`+python3),
+  `flatpak search`. Preview via `pacman -Si` / AUR RPC / `flatpak remote-info`. Mockup-first.
+  Not started; after the AI stack work.
 - 2026-11-19T22:12Z `[USER]` **AI stack: `@models` must also exist on fresh installs.** Every
   ISO/netinstall install must create the `@models` Btrfs subvolume mounted at `/var/lib/llm`, so
   the system-wide model store exists out of the box. Implementation: add
@@ -331,6 +355,29 @@ history, one holding the November detail); no entry was dropped.
   LFS learning only. Time of day UNCONFIRMED (date from ADR).
 
 ## [PROGRESS]
+- 2026-11-19T23:20Z `[TOOL]` **AI step 3 implemented: model manifest + `lui ai`.** New
+  `config/models.json` pins the exact upstream GGUF files, sizes and sha256 (read from the HF API):
+  `general` = unsloth/Qwen3.8-27B-GGUF UD-Q4_K_XL (17,659,407,264 B, `2a5f3565...`), `coding` =
+  peculiar-ragdoll/Tiel-Coder-35B-A3B-GGUF UD-Q3_K_XL (16,845,533,568 B, `2e11a195...`),
+  `research` = unsloth/Qwen3.5-9B-GGUF Q6_K (7,458,301,152 B, `91898433...`). New
+  `scripts/ai.sh` (`lui ai`): `status`, `sync` (admin; download to `.part`, sha256 verify, atomic
+  move), `run` (per-user; local OpenAI provider, `GOOSE_TELEMETRY_ENABLED=false`,
+  `OTEL_SDK_DISABLED=true`), `bench`, `audit`, `cloud` (explicit per-user key, no fallback),
+  `enable`/`disable`/`disable --prune`. `config/ai-packages` is the optional package set;
+  `/etc/lui/ai.disabled` makes `ensure-packages.sh` filter it. Also fixed `ensure-packages.sh` to
+  honor `IgnorePkg`/`IgnoreGroup` (see the firmware note below) and fixed a delimiter bug where
+  empty alias fields shifted manifest columns. Tests: test_ai 20/20, test_lui 22/22,
+  test_sync 33/33. Live model download not run yet (~40 GiB; needs `luci`).
+- 2026-11-19T23:47Z `[USER]` **`lui sync --system` run completed, but it overrode the firmware
+  pin.** The full system reconcile succeeded (AUR rebuilds + flatpak system updates), and pacman
+  installed `linux-firmware` and `linux-firmware-amdgpu` **20260916-1 -> 20261019-1** despite the
+  deliberate `IgnorePkg` pins, because `ensure-packages` explicitly names them. Both initramfs
+  images were rebuilt (linux + linux-lts) and `linux-firmware-amdgpu` is now 20261019 in the next
+  boot. This is a real change to the DMUB/GPU firmware under the closed boot workaround: do not
+  revert it without an explicit decision; observe the next boot (DMUB/power-gate error count) when
+  convenient. `ensure-packages.sh` now filters `pacman-conf IgnorePkg` so sync can never repeat
+  this. Also: the `vicinae-bin` upgrade's `modprobe uinput` failed because the running kernel
+  (7.3.4) and installed modules (7.3.5) differ; expected to resolve on the next reboot.
 - 2026-11-19T22:45Z `[TOOL]` **`lui sync` multi-user scope split implemented.** `work` is
   intentionally non-admin (sudo denied; the earlier wheel membership does not grant it), so sync
   now has explicit scopes: `--system` (pacman/AUR + system flatpaks; admin `luci`, sudo inside),

@@ -70,7 +70,8 @@ LuicipherOS/
 
 - `.agents/` holds agent skills; do not hand-edit what `skills-lock.json` pins.
 - `config/` is the source of truth: `packages`, `packages-arch`, `flatpaks-system.list`,
-  `flatpaks-user.list`, `protected-packages` (`flatpaks.list` is legacy, system scope).
+  `flatpaks-user.list`, `protected-packages`, `ai-packages`, `models.json`
+  (`flatpaks.list` is legacy, system scope).
 - `desktop/` holds `Detailed_PC_Report_Without_Submetrics.txt`.
 - `docs/` holds `adr/`, `agents/`, `wiki-draft/`, `TROUBLESHOOTING.md`,
   `target-bringup-runbook.md`, `hyprcapture-trial.md`, `dmub-coldboot-casefile.md`,
@@ -84,7 +85,8 @@ LuicipherOS/
 - `iso/` has `profiledef.sh`, `packages.x86_64`, `airootfs/`, `README.md`.
 - `research/` currently has `office-suites.md`.
 - `scripts/` has `lui.sh` (the `lui` CLI), `sync.sh`, `ensure-packages.sh`,
-  `ensure-flatpaks.sh`, `generate-local-apps.sh`, `theme.sh`, `screenshot-window.sh`.
+  `ensure-flatpaks.sh`, `generate-local-apps.sh`, `theme.sh`, `screenshot-window.sh`,
+  `ai.sh` (the `lui ai` command).
 - `themes/` holds the preset palettes (`<name>.json`) applied by `lui theme`; keys mirror the
   Quickshell tokens, so a preset is just a values file. Add a preset = drop a file.
 
@@ -130,6 +132,24 @@ lui local-apps --remove    # remove the managed local-app entries
 `--system` (and `--user OTHER`) escalate with `sudo` internally and need the admin account
 (`luci`); `--user` alone never calls sudo. A plain `lui sync` outside an admin account runs the
 user scope and prints the `--system` command to run as `luci`.
+
+**Local AI (ADR-0002):**
+
+```bash
+lui ai status              # service, endpoint, model files, aliases (read-only)
+lui ai sync --dry-run      # show sources/sizes before downloading
+sudo lui ai ...            # NO: lui refuses root; run as luci, it sudo's internally
+lui ai sync                # admin (luci): download/verify ~40 GiB into /var/lib/llm/models
+lui ai run                 # per-user: Goose against the local endpoint (default general)
+lui ai run coding          # fast coding model; coding-hq = general's weights
+lui ai audit               # local-only, telemetry, key placement
+lui ai disable             # stop the endpoint, keep packages/models
+lui ai disable --prune     # definitive uninstall (preview + typed confirmation)
+```
+
+Weights are data (`config/models.json`, sha256-pinned), not packages. `config/ai-packages` is the
+optional package set; `/etc/lui/ai.disabled` makes `lui sync --system` skip it without editing the
+declarative lists.
 
 **Local apps:** Vicinae (and any XDG launcher) reads `.desktop` files, not `$PATH`, so tools that
 live only in `~/.local/bin` are invisible to it. `config/local-apps` is the declarative list of
@@ -305,9 +325,11 @@ stack. Nix is an optional v0.3 layer; LFS is a learning side-quest only.
 
 - Static: `bash -n`, `python3 -m json.tool`, `sync.sh --prune --dry-run` (see TESTING.md §0).
 - Unit/regression: `tests/test_sync.sh` covers the sync contract and its scopes
-  (`--system`, `--user`, `--user ACCOUNT`, non-admin fallback) and `tests/test_lui.sh` covers
-  the CLI (tree discovery, delegation, `status`, scope flag pass-through). Both are pure bash
-  with mocked `pacman`/`flatpak`/`sudo`, need no Arch and no root, and are safe to run anywhere.
+  (`--system`, `--user`, `--user ACCOUNT`, non-admin fallback), `tests/test_ai.sh` covers the
+  model manifest / `lui ai` (status, dry-run, download+sha, run env, enable/disable, audit), and
+  `tests/test_lui.sh` covers the CLI (tree discovery, delegation, `status`, scope flag
+  pass-through). All are pure bash with mocked `pacman`/`flatpak`/`sudo`/`curl`, need no Arch and
+  no root, and are safe to run anywhere.
 - VM smoke: QEMU/OVMF, Arch ISO, 4G RAM, 60G disk. PASS means Hyprland (uwsm) loads,
   SUPER+T opens Tabby, SUPER+Space opens Vicinae, Quickshell bar and swaync are visible, and
   Print -> region -> Gradia works.
@@ -403,6 +425,8 @@ stack. Nix is an optional v0.3 layer; LFS is a learning side-quest only.
   `--preflight-mode=vm|target` and `--no-flatpak`.
 - `scripts/sync.sh` flags: `--system`, `--user [ACCOUNT]`, `--prune`, `--dry-run`, `--yes`;
   AUR helper flag (yay-bin default, paru supported).
+- AI models: add/edit an entry in `config/models.json` (repo, source file, size, sha256) and run
+  `lui ai sync`; the optional package set is `config/ai-packages`. Aliases live in the same file.
 - Quickshell plugin host: `dotfiles/quickshell/plugins/` for ported Noctalia,
   DankMaterialShell and Omarchy widgets.
 - Opt-in features: termfilechooser + yazi portal picker (dormant), HyprCapture screenshot trial

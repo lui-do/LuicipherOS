@@ -12,10 +12,49 @@ filter_list() {
   grep -vE '^\s*#' "$1" | grep -vE '^\s*$' || true
 }
 
+# `lui ai disable` writes this flag; system sync must then skip the AI package
+# set without editing the declarative lists (ADR-0002).
+AI_DISABLED_FLAG="${LUI_AI_DISABLED_FLAG:-/etc/lui/ai.disabled}"
+filter_ai() {
+  if [[ -e "$AI_DISABLED_FLAG" && -f "$ROOT/config/ai-packages" ]]; then
+    local excl; excl="$(mktemp)"
+    filter_list "$ROOT/config/ai-packages" > "$excl"
+    grep -vxF -f "$excl" || true
+    rm -f "$excl"
+  else
+    cat
+  fi
+}
+
+# Respect /etc/pacman.conf IgnorePkg/IgnoreGroup. Passing an ignored package to
+# `pacman -S` overrides the pin (it prompts, and --noconfirm does not skip it),
+# which is how the deliberately held linux-firmware pins were upgraded on
+# 2026-11-19. Sync must never do that.
+filter_ignored() {
+  local ignored
+  ignored="$(pacman-conf IgnorePkg 2>/dev/null | tr ' ' '\n' | grep -v '^$' || true)"
+  if [[ -n "$ignored" ]]; then
+    grep -vxF -f <(printf '%s\n' "$ignored") || true
+  else
+    cat
+  fi
+}
+
+if [[ -e "$AI_DISABLED_FLAG" ]]; then
+  echo "NOTE: AI stack disabled ($AI_DISABLED_FLAG); skipping config/ai-packages"
+fi
+IGNORED_PKGS="$(pacman-conf IgnorePkg 2>/dev/null | tr ' ' '\n' | grep -v '^$' || true)"
+[[ -n "$IGNORED_PKGS" ]] && echo "NOTE: honoring IgnorePkg: $(echo "$IGNORED_PKGS" | tr '\n' ' ')"
+
 echo "==> pacman: installing from config/packages"
 if [[ -f "$ROOT/config/packages" ]]; then
-  # shellcheck disable=SC2046
-  sudo pacman -S --needed --noconfirm $(filter_list "$ROOT/config/packages")
+  PKGS="$(filter_list "$ROOT/config/packages" | filter_ai | filter_ignored)"
+  if [[ -n "$PKGS" ]]; then
+    # shellcheck disable=SC2086
+    sudo pacman -S --needed --noconfirm $PKGS
+  else
+    echo "  (nothing to install; all entries filtered/ignored)"
+  fi
 else
   echo "missing config/packages, skipping"
 fi
@@ -39,8 +78,13 @@ if [[ -f "$ROOT/config/packages-arch" ]]; then
     # yay v13+: menus are skipped via --answer* None (the old --no*menu flags
     # are gone; without these, existing build files hang even --noconfirm).
     # NOTE: answer any PGP key import prompt by hand (no safe flag for it).
-    # shellcheck disable=SC2046
-    "$AUR_HELPER" -S --needed --noconfirm --answerclean None --answerdiff None --answeredit None --cleanafter $(filter_list "$ROOT/config/packages-arch")
+    AUR_PKGS="$(filter_list "$ROOT/config/packages-arch" | filter_ai | filter_ignored)"
+    if [[ -n "$AUR_PKGS" ]]; then
+      # shellcheck disable=SC2086
+      "$AUR_HELPER" -S --needed --noconfirm --answerclean None --answerdiff None --answeredit None --cleanafter $AUR_PKGS
+    else
+      echo "  (nothing to install; all AUR entries filtered/ignored)"
+    fi
   else
     echo "WARN: $AUR_HELPER still missing, skipping AUR"
   fi

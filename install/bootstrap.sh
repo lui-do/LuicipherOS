@@ -183,7 +183,7 @@ elif command -v llama-swap &>/dev/null; then
     sudo systemctl enable llama-swap 2>/dev/null || echo "  (llama-swap enable skipped)"
   fi
   # The store must be the @models mount; never create it inside @.
-  if findmnt -q /var/lib/llm; then
+  if findmnt -M /var/lib/llm >/dev/null 2>&1; then
     sudo install -d -m755 -o root -g root /var/lib/llm/models
   else
     echo "  WARN: /var/lib/llm is not a mount point; model store not created (ADR-0002)"

@@ -30,7 +30,12 @@ cat > "$T/tree/scripts/generate-local-apps.sh" <<'EOF'
 echo "GEN-CALLED: $*"
 exit 0
 EOF
-chmod +x "$T/tree/scripts/sync.sh" "$T/tree/scripts/generate-local-apps.sh"
+cat > "$T/tree/scripts/ai.sh" <<'EOF'
+#!/usr/bin/env bash
+echo "AI-CALLED: $*"
+exit 0
+EOF
+chmod +x "$T/tree/scripts/sync.sh" "$T/tree/scripts/generate-local-apps.sh" "$T/tree/scripts/ai.sh"
 
 run() { LUI_ROOT="$T/tree" bash "$LUI" "$@" 2>&1; }
 rc()  { LUI_ROOT="$T/tree" bash "$LUI" "$@" >/dev/null 2>&1; echo $?; }
@@ -87,6 +92,10 @@ echo "== 3c. local-apps delegates and passes args through =="
   && ok "local-apps delegates to the generator" || bad "local-apps: $(run local-apps)"
 [[ "$(run local-apps --remove)" == *"GEN-CALLED: --remove"* ]] \
   && ok "local-apps passes --remove through" || bad "--remove: $(run local-apps --remove)"
+
+echo "== 3d. ai delegates =="
+[[ "$(run ai status)" == *"AI-CALLED: status"* ]] \
+  && ok "ai delegates to scripts/ai.sh" || bad "ai: $(run ai status)"
 
 echo "== 4. version / help / unknown =="
 [[ "$(run version)" == lui\ * ]] \

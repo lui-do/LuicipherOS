@@ -1,0 +1,12 @@
+# config/ai-packages — packages that make up the optional AI stack (ADR-0002).
+#
+# `lui ai disable` writes /etc/lui/ai.disabled; `lui sync --system` then skips
+# these packages without editing the declarative lists. `lui ai disable --prune`
+# removes them explicitly (preview + typed confirmation). `lui ai enable` clears
+# the flag and lets the next sync reinstall them.
+#
+# Weights are NOT packages: see config/models.json and `lui ai sync`.
+
+llama-cpp
+ggml-vulkan
+llama-swap-bin

@@ -9,6 +9,9 @@ Glossary only. No implementation details.
 - **Sync (lui sync)**: idempotent reconciler in `scripts/sync.sh`. Default = install missing only. `--prune` = also uninstall extras. Scopes: `--system` (shared packages + system flatpaks, admin `luci`), `--user [ACCOUNT]` (user flatpaks + launcher entries, default invoking account). LOCKED v0.1: manual-only, no auto-sync on boot (grill Q5).
 - **System scope**: everything shared by every profile — pacman/AUR packages, system flatpaks, system services, the model store. Reconciled by `lui sync --system` as `luci`.
 - **User scope**: one account's personal layer — user flatpaks, `lui-local-*.desktop` entries, dotfiles, agent sessions/keys. Reconciled by `lui sync --user` (or `--user ACCOUNT` from the admin). `work` runs it without sudo.
+- **AI stack (ADR-0002)**: system-wide `llama-cpp` (Vulkan) + `llama-swap` endpoint on `127.0.0.1:12434`, with Goose and the model weights available to every profile. Local-only by default; telemetry off; per-user cloud keys only.
+- **Model alias**: `general`, `coding`, `coding-hq` (alias of `general`), `research`. Weights live in `config/models.json` and `/var/lib/llm/models`; aliases select prompt/context, not a second copy except where a file differs.
+- **Request queue** (planned): `~/.config/lui/packages.request` written by a non-admin user, reviewed by `luci` with `lui sync --system --review`; keeps package changes declarative and admin-approved.
 - **Protected package**: base package never auto-removed (`config/protected-packages`: kernel, firmware, drivers, compositor, networking).
 - **Extra**: explicitly installed package/app not in desired + protected sets. Previewed before prune, never silently removed.
 - **Target machine**: Ryzen 5 9600X + ASUS TUF GAMING B650E-PLUS WIFI + RX 7900 XT 20GB. v0.1 is tuned here, tested elsewhere.
