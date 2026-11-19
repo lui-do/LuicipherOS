@@ -13,6 +13,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 AUR_HELPER="yay"
 NO_FLATPAK=false
 STOW_ONLY=false
+AI_ONLY=false
 PREFLIGHT_MODE="any"
 ARGS=("$@")
 i=0
@@ -24,9 +25,10 @@ while [[ $i -lt $# ]]; do
     --aur-helper=*) AUR_HELPER="${a#*=}" ;;
     --no-flatpak) NO_FLATPAK=true ;;
     --stow-only) STOW_ONLY=true ;;
+    --ai-only) AI_ONLY=true ;;
     --preflight-mode=*) PREFLIGHT_MODE="${a#*=}" ;;
     -h|--help)
-      echo "Usage: $0 [--aur-helper yay|paru] [--no-flatpak] [--stow-only] [--preflight-mode any|target|vm]"
+      echo "Usage: $0 [--aur-helper yay|paru] [--no-flatpak] [--stow-only] [--ai-only] [--preflight-mode any|target|vm]"
       exit 0
       ;;
     *) echo "WARN: unknown arg: $a" ;;
@@ -40,6 +42,12 @@ log() { echo "==> $1"; }
 need_cmd() { command -v "$1" &>/dev/null || { echo "FAIL: missing command: $1"; exit 1; }; }
 
 log "LuicipherOS bootstrap v0.1 (helper=$AUR_HELPER, flatpak=$([ "$NO_FLATPAK" == true ] && echo off || echo on))"
+
+if [[ "$AI_ONLY" == true ]]; then
+  bash "$ROOT/install/ai-setup.sh"
+  log "ai-only done"
+  exit 0
+fi
 
 # 1) preflight (fail fast on UEFI/network/disk; warns elsewhere).
 # Strict: a --target/--vm failure aborts bootstrap (no fallback masking it).
@@ -164,60 +172,11 @@ if [[ -f "$ROOT/scripts/lui.sh" ]]; then
 fi
 
 # 5c) local AI model server (ADR-0002): llama.cpp behind llama-swap.
-# Deploys the system service, its config, and the unprivileged `llama` account.
-# Model weights are NOT downloaded here (that is `lui ai sync`), and the whole
-# stack is skipped when /etc/lui/ai.disabled exists (`lui ai disable`).
-if [[ -e /etc/lui/ai.disabled ]]; then
-  log "AI stack disabled: skipping llama-swap deployment"
-elif command -v llama-swap &>/dev/null; then
-  log "local AI: llama-swap service + config"
-  if [[ -f "$ROOT/install/llama-swap.sysusers" ]]; then
-    sudo install -Dm644 "$ROOT/install/llama-swap.sysusers" /usr/lib/sysusers.d/luicipher-llama.conf
-    sudo systemd-sysusers /usr/lib/sysusers.d/luicipher-llama.conf
-  fi
-  if [[ -f "$ROOT/install/llama-swap/config.yaml" ]]; then
-    sudo install -Dm644 "$ROOT/install/llama-swap/config.yaml" /etc/llama-swap/config.yaml
-  fi
-  if [[ -f "$ROOT/install/llama-swap.service" ]]; then
-    sudo install -Dm644 "$ROOT/install/llama-swap.service" /etc/systemd/system/llama-swap.service
-    sudo systemctl enable llama-swap 2>/dev/null || echo "  (llama-swap enable skipped)"
-  fi
-  # Goose CLI from the same upstream release as goose-desktop-bin (the AUR CLI
-  # conflicts with the Desktop package). Both use ~/.config/goose.
-  if [[ -f "$ROOT/install/goose-cli.sh" ]]; then
-    bash "$ROOT/install/goose-cli.sh" || echo "  WARN: goose CLI install failed"
-  fi
-  # Local-only defaults (no secrets) + login-shell mirror.
-  if [[ -f "$ROOT/install/environment.d/90-llm-ai.conf" ]]; then
-    sudo install -Dm644 "$ROOT/install/environment.d/90-llm-ai.conf" /etc/environment.d/90-llm-ai.conf
-  fi
-  if [[ -f "$ROOT/install/profile.d/90-llm-ai.sh" ]]; then
-    sudo install -Dm644 "$ROOT/install/profile.d/90-llm-ai.sh" /etc/profile.d/90-llm-ai.sh
-  fi
-  # Convenience wrappers; the real implementation is `lui ai run`.
-  if [[ -x /usr/local/bin/goose ]]; then
-    for pair in "general goose-general" "coding goose-code" "coding-hq goose-hq" "research goose-research"; do
-      alias_name="${pair%% *}"; bin_name="${pair##* }"
-      sudo tee "/usr/local/bin/$bin_name" >/dev/null <<EOF
-#!/bin/sh
-set -a
-[ -r /etc/environment.d/90-llm-ai.conf ] && . /etc/environment.d/90-llm-ai.conf
-set +a
-GOOSE_MODEL=$alias_name
-export GOOSE_MODEL
-exec /usr/local/bin/goose "\$@"
-EOF
-      sudo chmod 755 "/usr/local/bin/$bin_name"
-    done
-  fi
-  # The store must be the @models mount; never create it inside @.
-  if findmnt -M /var/lib/llm >/dev/null 2>&1; then
-    sudo install -d -m755 -o root -g root /var/lib/llm/models
-  else
-    echo "  WARN: /var/lib/llm is not a mount point; model store not created (ADR-0002)"
-  fi
-else
-  echo "  (llama-swap not installed yet - re-run bootstrap after packages land)"
+# The system pieces live in install/ai-setup.sh so luci can deploy them without
+# stowing dotfiles (`./install/bootstrap.sh --ai-only`). It is skipped when
+# /etc/lui/ai.disabled exists (`lui ai disable`).
+if [[ -f "$ROOT/install/ai-setup.sh" ]]; then
+  bash "$ROOT/install/ai-setup.sh" || echo "  WARN: AI setup incomplete (see above)"
 fi
 
 # user dirs + portals sanity

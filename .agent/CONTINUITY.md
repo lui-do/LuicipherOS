@@ -368,7 +368,9 @@ history, one holding the November detail); no entry was dropped.
   the merge snippet with `share: disabled` + `openTelemetry: false`. Pi config (provider, default
   `coding`, telemetry/analytics off) is stowed from `dotfiles/pi/.pi/agent/`. Added
   `docs/ai-agents.md` (paths, deploy, mise commands, cloud-key policy, disable/prune). Live
-  deployment of this step is pending; model download still ~40 GiB as `luci`.
+  deployment of this step is pending; model download still ~40 GiB as `luci`. System deploy is
+  split into `install/ai-setup.sh` + `bootstrap.sh --ai-only`, so luci can deploy the AI pieces
+  without stowing dotfiles into luci's home.
 - 2026-11-19T23:20Z `[TOOL]` **AI step 3 implemented: model manifest + `lui ai`.** New
   `config/models.json` pins the exact upstream GGUF files, sizes and sha256 (read from the HF API):
   `general` = unsloth/Qwen3.8-27B-GGUF UD-Q4_K_XL (17,659,407,264 B, `2a5f3565...`), `coding` =

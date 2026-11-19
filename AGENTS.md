@@ -81,7 +81,7 @@ LuicipherOS/
 - `install/` has `archinstall-desktop.json`, `archinstall-desktop.creds.example.json`,
   `bootstrap.sh`, `preflight.sh`, `greetd-config.toml`, `vconsole.conf`, `amdgpu-late.service`,
   `amdgpu-unload-on-shutdown.service`, `llama-swap.service`, `llama-swap.sysusers`,
-  `llama-swap/config.yaml`, `goose-cli.sh`, `environment.d/90-llm-ai.conf`,
+  `llama-swap/config.yaml`, `goose-cli.sh`, `ai-setup.sh`, `environment.d/90-llm-ai.conf`,
   `profile.d/90-llm-ai.sh`.
 - `iso/` has `profiledef.sh`, `packages.x86_64`, `airootfs/`, `README.md`.
 - `research/` currently has `office-suites.md`.
@@ -426,7 +426,8 @@ stack. Nix is an optional v0.3 layer; LFS is a learning side-quest only.
   (or `lui sync`) generates a managed `.desktop` so Vicinae finds it. Remove all with
   `lui local-apps --remove`.
 - Preflight modes: `install/preflight.sh --vm | --target`; bootstrap
-  `--preflight-mode=vm|target` and `--no-flatpak`.
+  `--preflight-mode=vm|target`, `--no-flatpak`, `--stow-only`, `--ai-only` (deploy the
+  system AI pieces as `luci` without stowing dotfiles).
 - `scripts/sync.sh` flags: `--system`, `--user [ACCOUNT]`, `--prune`, `--dry-run`, `--yes`;
   AUR helper flag (yay-bin default, paru supported).
 - AI models: add/edit an entry in `config/models.json` (repo, source file, size, sha256) and run

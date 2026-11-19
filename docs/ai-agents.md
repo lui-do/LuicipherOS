@@ -25,24 +25,30 @@ Runtime stores (never in the repo):
 
 ## Install / deploy
 
-As the admin account (`luci`), after `lui sync --system` and `bootstrap.sh`:
+System pieces, as the admin account (`luci`), from a readable tree (the
+resolver/`LUI_ROOT` handles `/opt/LuicipherOS` or a staging copy):
 
 ```bash
+lui sync --system              # llama-cpp, llama-swap-bin, goose-desktop-bin, mise
+./install/bootstrap.sh --ai-only  # service, config, goose CLI, env defaults, wrappers
 lui ai status
-lui ai sync --dry-run       # sources + ~40 GiB
-lui ai sync                 # download + sha256 verify
+lui ai sync --dry-run          # sources + ~40 GiB
+lui ai sync                    # download + sha256 verify
 ```
 
-As a daily user (`work`), once the service is up:
+`--ai-only` deploys the system AI pieces without stowing dotfiles into luci's
+home. Per-user pieces, as `work`:
 
 ```bash
+stow -d dotfiles -t "$HOME" --restow pi   # Pi config (OpenCode is merged manually)
+
 mise use -g node@lts
 mise use -g npm:opencode-ai
 mise use -g npm:@earendil-works/pi-coding-agent
 
 lui ai run                  # Goose CLI, general model
-goose-code                  # convenience wrapper (if installed by bootstrap)
-opencode                    # uses llamacpp/coding from dotfiles/opencode
+goose-code                  # convenience wrapper (if installed)
+opencode                    # uses llamacpp/coding from your merged config
 pi                          # uses llamacpp/coding from dotfiles/pi
 ```
 
