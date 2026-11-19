@@ -40,7 +40,7 @@ processing (~20%) but behind on token generation; Vulkan avoids HIP rebuild chur
 
 ### 1. Engine and service
 
-- Packages: `llama-cpp` + `ggml-vulkan` (Extra), `llama-swap` (AUR, prebuilt).
+- Packages: `llama-cpp` + `ggml-vulkan` (Extra), `llama-swap-bin` (AUR, prebuilt).
 - `llama-swap` runs as a **system** service (not per-user), dedicated system user
   `llama` in groups `render`/`video`, bound to `127.0.0.1:12434` only.
 - Config at `/etc/llama-swap/config.yaml`; models under `/var/lib/llm/models`
@@ -90,7 +90,7 @@ RAM (`-ngl`), measured rather than assumed.
 ### 4. Declarative integration and lifecycle
 
 - `config/packages`: `llama-cpp`, `ggml-vulkan`, `mise`.
-- `config/packages-arch`: `llama-swap`, `goose-desktop-bin`.
+- `config/packages-arch`: `llama-swap-bin`, `goose-desktop-bin`.
 - `install/bootstrap.sh` deploys system-owned files (llama-swap unit/config,
   environment defaults), like greetd — these are not stowable.
 - `lui ai enable` / `disable`: `disable` writes `/etc/lui/ai.disabled`, stops and
