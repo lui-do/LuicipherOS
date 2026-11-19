@@ -239,7 +239,7 @@ Disk layout on the target: LUKS + btrfs with subvolumes `@`, `@home`, `@log`, `@
 and initramfs live there. Snapper config `root` snapshots `/` into `/.snapshots` (`@snapshots`);
 snap-pac adds pre/post snapshots around pacman. Snapshots are not backups (same disk).
 
-Boot entries on the desktop (state 2026-11-17, warm-reboot investigation open - see
+Boot entries on the desktop (state 2026-11-19, warm reboot **resolved** - see
 `docs/warm-reboot-post-hang.md`): the ESP holds three entries. `2026-10-04_17-11-07_linux.conf`
 (archinstall-generated, `amdgpu.runpm=0` only, token `linux`) is the **default** since
 2026-11-17; `arch-lts.conf` (loads amd-ucode); and `arch-lateload.conf` (hand-written, currently
@@ -247,14 +247,28 @@ Boot entries on the desktop (state 2026-11-17, warm-reboot investigation open - 
 2026-11-16, cause not fully identified, prime suspect `iommu=soft`). Late GPU load does not
 depend on the entry: `/etc/modprobe.d/amdgpu-coldboot.conf` holds `blacklist amdgpu`, so no
 entry autoloads the driver, and `amdgpu-late.service` loads it ~150 s after boot (verified: driver
-at ~179-195 s, DMUB clean, login screen appears). `amdgpu-unload-on-shutdown.service` is
-currently **disabled** (test 2026-11-17): unloading at shutdown was suspected of breaking warm
-reboots, and disabling it did not help either - both states hang. Warm reboot still hangs POST
-(no logo, no menu, Caps Lock dead) from every entry; cold boot always works.
+at ~179-208 s, DMUB clean, login screen appears). `amdgpu-unload-on-shutdown.service` is
+currently **disabled** and is not needed.
+
+**Warm reboot now works** (3/3 on 2026-11-19, 62-75 s cycles, splash + boot menu + LUKS prompt).
+The trigger was **clearing the BIOS NVRAM**: loading Optimized Defaults (2026-11-18) and then
+disabling `Fast Boot` (2026-11-19) fixed a fault that had resisted every OS-side lever. The reboot
+*mechanism* is not the variable - `efi` (`ResetSystem`) and `acpi` both work, and the SoC reports
+`0x00080800` (a write of `0x6` to reset register `0xCF9`) for both, so the platform reset path is
+uniform. Do **not** re-run `reboot=` experiments: `reboot=c`, `reboot=t`, `reboot=e` and
+`reboot=p` are all cleared. If warm reboot ever hangs again, the remedy is: enter setup, **F5**
+Load Optimized Defaults, **F10** save, then set `Fast Boot` -> Disabled and re-test one reboot
+(known-good profile: `docs/bios-profiles/DISABLEDFASTBOOT_CMO.CMO`). The boot-time fallback is
+`sudo rtcwake -m off -s 60` (verified) or `poweroff` + the power button.
+
+Open and separate from the above: **no video output on some boots** while the machine runs (Caps
+Lock responds, passphrase can be typed blind). Cause identified as a firmware/early-boot display
+handoff problem - the LUKS-prompt console comes from the firmware framebuffer and `simpledrm`
+initialises very late here (24-161 s), with `amdgpu` blacklisted until ~176-208 s. Not `amdgpu`,
+not the OS console. See issue #11 and `docs/warm-reboot-action-plan.md`.
 
 Do not boot `arch-lateload.conf` until it is rebuilt and verified: it panics on LUKS unlock in
-its current history. `reboot=c` (KBC cold reset) and MCR-off are both tested and ineffective;
-`reboot=t` (triple fault) is the next single test. Revert of the default:
+its current history. Revert of the default:
 `sudo bootctl set-default arch-lateload.conf` plus `/root/arch-lateload.conf.bak`.
 
 GPU bring-up background (issue #11): early-boot amdgpu probe hits an unready SMU (DMUB

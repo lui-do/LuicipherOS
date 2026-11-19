@@ -49,21 +49,45 @@ Timeline of that reboot (boot −1 → 0): `systemd-logind: The system will rebo
 POST, then boot 0 at 21:12:29 — a 75-second cycle. amdgpu was loaded (176.9 s into boot −1) before
 the reboot, so the GPU was initialised and the reset still worked.
 
-### The experiment this opens
-
-Set the reboot type at runtime and see whether the mechanism is the variable:
+### The experiment: result 2026-11-19 — `efi` works too
 
 ```bash
-cat /sys/kernel/reboot/type                  # acpi on the working system
+cat /sys/kernel/reboot/type                  # acpi
 sudo sh -c 'echo efi > /sys/kernel/reboot/type'
-sudo reboot
+cat /sys/kernel/reboot/type                  # efi
+sudo reboot                                  # → succeeded
 ```
 
-- **`efi` hangs** → the reset mechanism *is* the variable, EFI `ResetSystem()` is the broken path,
-  and the fix is one line: `reboot=a` in the boot entry (persist ACPI/CF9 explicitly). This would
-  also explain why the firmware's own reset always worked and the OS's never did.
-- **`efi` works** → the mechanism is not the variable; the NVRAM reset (optimised defaults) is the
-  likely fix, and the config is simply "clean NVRAM".
+**The reset mechanism is not the variable.** Both `acpi` and `efi` reboot cleanly. And the SoC
+reports `0x00080800` (CF9 write) for *both*, so on this firmware the EFI `ResetSystem()` path also
+ends in a CF9 write — the platform's reset path is uniform, which is why no `reboot=` experiment
+ever changed anything.
+
+Three successes on 2026-11-19 (two `acpi`, one `efi`), all with `amdgpu` loaded.
+
+### Conclusion: the fix was clearing the BIOS NVRAM
+
+- Not the reset mechanism (proven above).
+- Not the boot entry, the driver unload, EXPO, MCR, IOMMU or the GPU being loaded.
+- The one thing that changed before the first success was **loading Optimized Defaults** (2026-11-18),
+  followed by **disabling `Fast Boot`** (2026-11-19). Both are full NVRAM writes.
+- Notably the *visible* settings barely changed: the optimised-defaults export differs from the
+  pre-failure baseline only in `Fast Boot` and `Integrated Graphics`. So the fault was most likely
+  in **non-visible NVRAM state** (hidden CBS values, or stored memory-training data) rather than in
+  any setting a human could point at.
+
+**Root cause therefore remains UNCONFIRMED**, and a regression is possible — the machine now has a
+working configuration and a repeatable remedy, not a diagnosis. Recovery, if it ever hangs again:
+
+1. Setup → **F5** Load Optimized Defaults → **F10** save.
+2. Setup → set **`Fast Boot` → Disabled** → **F10** save.
+3. Boot, then test one `sudo reboot`.
+
+Known-good profile to restore from USB: `docs/bios-profiles/DISABLEDFASTBOOT_CMO.CMO`.
+
+This also removes the hardware angle from the POST hang: the board's reset path works when NVRAM is
+sane, so there is no RMA case for *this* symptom. The DMUB cold-boot storm and the blank-display
+fault (issue #11) remain open and are separate.
 
 Either way the next question is reproducibility: `sudo reboot` two or three times in a row, since a
 single success has already been misleading once (2026-11-16).

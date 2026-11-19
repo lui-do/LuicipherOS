@@ -466,6 +466,23 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-19T23:00Z `[TOOL]` **CLOSED: `efi` reboot also succeeds -> the mechanism is not the
+  variable; the fix was clearing the BIOS NVRAM.** User set `/sys/kernel/reboot/type` to `efi` and
+  rebooted: clean (boot -1 21:32:12-21:39:14 -> boot 0 21:40:11, 3/3 for the day, all with amdgpu
+  loaded). The SoC still reports `0x00080800` (CF9 write) for the efi path too, i.e. this firmware's
+  ResetSystem() also ends in a CF9 write - the platform reset path is uniform, which is exactly why
+  no `reboot=` experiment ever changed anything. Only distinct reason codes ever seen on this
+  machine: 0x00080800 (4x, all completed resets) and 0x00200800 (7x, all power-ons). Conclusion: the
+  fault was in **non-visible NVRAM state** (the optimised-defaults export differs from the
+  pre-failure baseline only in Fast Boot and Integrated Graphics, so no visible setting was to
+  blame), cleared by Load Optimized Defaults + Fast Boot Disabled. **Root cause UNCONFIRMED;
+  regression possible** - documented remedy card (F5 defaults -> Fast Boot Disabled -> F10, profile
+  `docs/bios-profiles/DISABLEDFASTBOOT_CMO.CMO`), fallback `rtcwake -m off -s 60`, prep list (copy
+  the CMO to a FAT32 USB now; do not churn BIOS settings; re-test one reboot after any BIOS change;
+  Gen4/IOMMU levers cancelled). No hardware fault demonstrated -> **no RMA case for the POST hang**;
+  issue #11's DMUB storm and the blank-display fault remain open and separate. AGENTS.md boot-state
+  paragraph and issue-#11 status rewritten; docs/warm-reboot-post-hang.md carries the conclusion,
+  docs/warm-reboot-action-plan.md the remedy + prep.
 - 2026-11-19T22:30Z `[TOOL]` **Second successful OS warm reboot: 2/2, both CF9/ACPI.** Boot -1
   (21:12:29-21:31:10) -> boot 0 (21:32:12), a 62 s cycle, again `systemd-logind: The system will
   reboot now!` and again reason `0x00080800` (CF9 write); `/sys/kernel/reboot/type` = acpi. amdgpu

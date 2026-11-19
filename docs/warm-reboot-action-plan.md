@@ -135,27 +135,62 @@ run the CLI path too, for confidence that the tool does not matter:
 sudo reboot        # repeat 2–3 times
 ```
 
-All POST → the configuration works; go to B to find out *why*.
-Any hang → it is intermittent; B still applies.
-
 Note: `/usr/bin/reboot` is a symlink to `systemctl`, so `sudo reboot` and the Vicinae button are the
 same path (systemctl → logind → `reboot(2)`). The tool is not a variable.
 
-**B — is the reset mechanism the variable? (5 min)**
+**B — is the reset mechanism the variable? (5 min)** — **DONE 2026-11-19: NO.**
 
 ```bash
-cat /sys/kernel/reboot/type                                   # expect: acpi
 sudo sh -c 'echo efi > /sys/kernel/reboot/type'
-cat /sys/kernel/reboot/type                                   # expect: efi
 sudo reboot
 ```
 
-| Result | Meaning | Action |
-|---|---|---|
-| `efi` **hangs** | EFI `ResetSystem()` is the broken path; ACPI/CF9 is the working one | persist `reboot=a` in the boot entry (needs approval; validate with the `/proc/cmdline` receipt) |
-| `efi` **works** | mechanism irrelevant; the NVRAM reset fixed it | document "clean NVRAM" as the fix, drop the reboot param |
+`efi` rebooted cleanly. Combined with two clean `acpi` reboots, **the mechanism is not the
+variable** — and the SoC reports `0x00080800` (CF9 write) for *both*, because this firmware's
+`ResetSystem()` also ends in a CF9 write. So the platform's reset path is uniform, and no
+`reboot=` experiment was ever going to change anything.
 
-The setting does not survive a reboot — set it again per attempt, or persist `reboot=a` in the entry.
+### Outcome: the fix was clearing the BIOS NVRAM
+
+Three clean reboots on 2026-11-19 (two `acpi`, one `efi`), all with `amdgpu` loaded. The only thing
+that changed beforehand was **loading Optimized Defaults** and then **disabling `Fast Boot`** —
+both full NVRAM writes. The visible settings barely differed from the pre-failure baseline, so the
+fault was most likely in **non-visible NVRAM state** (hidden CBS values or stored memory-training
+data).
+
+**Root cause UNCONFIRMED.** This is a working configuration plus a repeatable remedy, not a
+diagnosis — a regression is possible.
+
+### If warm reboot ever hangs again (remedy card)
+
+```text
+1. Hold power 5 s / unplug + hold 20-30 s, then boot.
+2. Setup (Del) → F5  Load Optimized Defaults → F10 save.
+3. Setup (Del) → Fast Boot → Disabled           → F10 save.
+4. Boot, then test one `sudo reboot`.
+```
+
+Known-good profile for a USB restore: `docs/bios-profiles/DISABLEDFASTBOOT_CMO.CMO`.
+
+### Prep that makes a regression a non-event (do this while it works)
+
+1. **Copy `DISABLEDFASTBOOT_CMO.CMO` to a FAT32 USB stick now.** A profile restore needs the file on
+   a USB drive, and you want that in place before you need it.
+2. **Keep the fallback**: `sudo rtcwake -m off -s 60` (verified) or `poweroff` + button.
+3. **Don't churn BIOS settings.** Every save is a chance to reintroduce the bad state. In particular
+   do not re-run the MCR experiment, and treat the queued `PCIEX16(G5) → Gen4` and `IOMMU` levers as
+   cancelled — they only mattered while POST was failing, and it no longer is.
+4. **After any BIOS change, immediately test one `sudo reboot`.** Cheap, and it catches a regression
+   at a moment when you know what caused it.
+5. Optional early warning — see the boot history at a glance:
+
+```bash
+journalctl --list-boots --no-pager | tail -5
+for b in -1 -2 -3; do sudo journalctl -k -b $b --no-pager | grep -m1 'Previous system reset'; done
+```
+
+An unexpected `0x00200800` ("ACPI power state transition") where you pressed *reboot* means that
+reboot failed and the machine was power-cycled.
 
 ### What the display problem is (a separate fault)
 
@@ -262,16 +297,22 @@ Step 5 BIOS re-flash:            done/skipped    result:
 ```text
 Step 0 entry cleaned:            yes   (/proc/cmdline has no reboot=)
 Step 1 Fast Boot -> Disabled:    yes   save&reset POST: ok (LUKS prompt visible)
-Step 2 sudo reboot (via Vicinae): SPLASH + MENU + LUKS PROMPT  <-- WORKED
+Step 2 sudo reboot:              SPLASH + MENU + LUKS PROMPT  <-- WORKED
+       reboots:                  3/3  (21:12:29 acpi, 21:32:12 acpi, 21:40:11 efi)
        Q-LED:                    amber -> red -> white -> green
-       reset reason:             0x00080800 = CF9 write (ACPI hard reset)
-       reboot type:              acpi
+       reset reason:             0x00080800 = CF9 write, for acpi AND efi
+       reboot type:              acpi (default; sysfs resets each boot)
        logind:                   "The system will reboot now!"
 Step 3 blank screen:             yes, on earlier boots — typed LUKS blind; iGPU HDMI also dark
                                  (iGPU test inconclusive: no driver until amdgpu loads)
 Step 4 rtcwake -s 60:            worked 2026-11-18; -s 20 fails (alarm missed)
-Step 5 BIOS re-flash:            not yet
+Step 5 BIOS re-flash:            NOT NEEDED — warm reboot works; cancelled
 ```
+
+**Bottom line: the warm-reboot POST hang is closed operationally.** Cause was BIOS NVRAM state
+(unconfirmed which), cleared by Load Optimized Defaults + Fast Boot Disabled. No hardware fault
+demonstrated, so no RMA case for this symptom. Still open and separate: the DMUB cold-boot storm
+and the blank-display fault (issue #11).
 
 ---
 
