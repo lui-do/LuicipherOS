@@ -163,6 +163,35 @@ if [[ -f "$ROOT/scripts/lui.sh" ]]; then
   echo "  installed: /usr/local/bin/lui  (try: lui status)"
 fi
 
+# 5c) local AI model server (ADR-0002): llama.cpp behind llama-swap.
+# Deploys the system service, its config, and the unprivileged `llama` account.
+# Model weights are NOT downloaded here (that is `lui ai sync`), and the whole
+# stack is skipped when /etc/lui/ai.disabled exists (`lui ai disable`).
+if [[ -e /etc/lui/ai.disabled ]]; then
+  log "AI stack disabled: skipping llama-swap deployment"
+elif command -v llama-swap &>/dev/null; then
+  log "local AI: llama-swap service + config"
+  if [[ -f "$ROOT/install/llama-swap.sysusers" ]]; then
+    sudo install -Dm644 "$ROOT/install/llama-swap.sysusers" /usr/lib/sysusers.d/luicipher-llama.conf
+    sudo systemd-sysusers /usr/lib/sysusers.d/luicipher-llama.conf
+  fi
+  if [[ -f "$ROOT/install/llama-swap/config.yaml" ]]; then
+    sudo install -Dm644 "$ROOT/install/llama-swap/config.yaml" /etc/llama-swap/config.yaml
+  fi
+  if [[ -f "$ROOT/install/llama-swap.service" ]]; then
+    sudo install -Dm644 "$ROOT/install/llama-swap.service" /etc/systemd/system/llama-swap.service
+    sudo systemctl enable llama-swap 2>/dev/null || echo "  (llama-swap enable skipped)"
+  fi
+  # The store must be the @models mount; never create it inside @.
+  if findmnt -q /var/lib/llm; then
+    sudo install -d -m755 -o root -g root /var/lib/llm/models
+  else
+    echo "  WARN: /var/lib/llm is not a mount point; model store not created (ADR-0002)"
+  fi
+else
+  echo "  (llama-swap not installed yet - re-run bootstrap after packages land)"
+fi
+
 # user dirs + portals sanity
 command -v xdg-user-dirs-update &>/dev/null && xdg-user-dirs-update || true
 

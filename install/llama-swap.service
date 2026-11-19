@@ -1,0 +1,45 @@
+[Unit]
+Description=llama-swap local model server (LuicipherOS, ADR-0002)
+Documentation=file:///etc/llama-swap/config.yaml
+After=local-fs.target
+# On the target the AMD driver is loaded late (~150 s, issue #11). Ordering
+# applies only when that unit actually runs; on other machines the render node
+# is already present and the wait below exits immediately.
+After=amdgpu-late.service
+# Refuse to run unless the model store is a real mount point, so weights can
+# never silently land inside @ (see ADR-0002).
+ConditionPathIsMountPoint=/var/lib/llm
+ConditionPathExists=/etc/llama-swap/config.yaml
+
+[Service]
+Type=simple
+User=llama
+Group=llama
+SupplementaryGroups=render video
+# Wait for the GPU render node without blocking the rest of boot. A timeout here
+# fails the start and Restart=on-failure retries.
+ExecStartPre=/usr/bin/timeout 240 /usr/bin/bash -c 'until [ -e /dev/dri/renderD128 ]; do sleep 2; done'
+ExecStart=/usr/bin/llama-swap -config /etc/llama-swap/config.yaml -watch-config -listen 127.0.0.1:12434
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=300
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=true
+LockPersonality=true
+CacheDirectory=llama-swap
+CacheDirectoryMode=0750
+StateDirectory=llama-swap
+StateDirectoryMode=0750
+ReadOnlyPaths=/var/lib/llm
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

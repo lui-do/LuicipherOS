@@ -1,0 +1,77 @@
+# LuicipherOS local model server — /etc/llama-swap/config.yaml (ADR-0002).
+#
+# Deployed by install/bootstrap.sh; local edits are overwritten on the next
+# bootstrap run. Model weights are NOT installed by this file: they live under
+# /var/lib/llm/models and are downloaded/verified by `lui ai sync` (ADR-0002).
+#
+# Stable filenames are used on purpose so changing a quant does not require a
+# service-config change:
+#   general.gguf   Qwen3.8-27B        (general + coding-hq alias)
+#   coding.gguf    Tiel-Coder-35B-A3B (fast agent loops)
+#   research.gguf  Qwen3.5-9B         (tool use: web/bash/curl)
+#
+# Context sizes and quant choices are initial values; `lui ai bench` tunes them
+# on the target (20 GB VRAM, minus the desktop). If the iGPU is enumerated
+# first by Vulkan, add `env: ["GGML_VK_VISIBLE_DEVICES=<n>"]` to the models.
+
+healthCheckTimeout: 300
+logLevel: info
+logToStdout: "proxy"
+startPort: 10001
+globalTTL: 0
+sendLoadingState: true
+includeAliasesInList: true
+
+# Privacy (ADR-0002): no request/response captures in memory, no help agent
+# that would send prompts anywhere, and no session IDs in the activity view.
+captureBuffer: 0
+helpagent:
+  disable: true
+ui:
+  activity:
+    session_id: []
+
+models:
+  "general":
+    name: "Qwen3.8-27B (general)"
+    cmd: |
+      /usr/bin/llama-server
+      --model /var/lib/llm/models/general.gguf
+      --host 127.0.0.1
+      --port ${PORT}
+      --ctx-size 24576
+      --n-gpu-layers 999
+      --flash-attn on
+      --parallel 1
+      --jinja
+    checkEndpoint: /health
+    aliases:
+      - "coding-hq"
+
+  "coding":
+    name: "Tiel-Coder-35B-A3B (fast coding)"
+    cmd: |
+      /usr/bin/llama-server
+      --model /var/lib/llm/models/coding.gguf
+      --host 127.0.0.1
+      --port ${PORT}
+      --ctx-size 32768
+      --n-gpu-layers 999
+      --flash-attn on
+      --parallel 1
+      --jinja
+    checkEndpoint: /health
+
+  "research":
+    name: "Qwen3.5-9B (research and tools)"
+    cmd: |
+      /usr/bin/llama-server
+      --model /var/lib/llm/models/research.gguf
+      --host 127.0.0.1
+      --port ${PORT}
+      --ctx-size 65536
+      --n-gpu-layers 999
+      --flash-attn on
+      --parallel 1
+      --jinja
+    checkEndpoint: /health

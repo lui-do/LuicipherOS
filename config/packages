@@ -113,6 +113,13 @@ hip-runtime-amd
 vulkan-tools
 radeontop
 
+# --- local AI model server (ADR-0002) ---
+# llama.cpp with the Vulkan backend (default on gfx1100; ggml-hip is opt-in A/B).
+# llama-swap itself is AUR-only and lives in packages-arch. Model weights are
+# data, not packages: `lui ai sync` downloads them to /var/lib/llm/models.
+llama-cpp
+ggml-vulkan
+
 # --- virtualization / compat helpers (broad laptop/desktop claim) ---
 flatpak
 distrobox

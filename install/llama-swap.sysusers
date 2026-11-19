@@ -1,0 +1,6 @@
+# LuicipherOS: unprivileged account for the local model server (ADR-0002).
+# Deployed to /usr/lib/sysusers.d/luicipher-llama.conf by install/bootstrap.sh.
+# The home directory is the model store; the account has no login shell.
+u llama - "llama-swap local model server" /var/lib/llm /usr/bin/nologin
+m llama render
+m llama video
