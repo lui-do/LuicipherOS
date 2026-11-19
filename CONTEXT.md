@@ -6,7 +6,9 @@ Glossary only. No implementation details.
 
 - **LuicipherOS**: Arch-based Hyprland OS-config in this repo (dotfiles + installer + declarative lists), not a forked distro in v0.1.
 - **Desired list**: source-of-truth text files (`config/packages`, `config/packages-arch`, `config/flatpaks-system.list`, `config/flatpaks-user.list`). Editing them declares intent; sync realizes it.
-- **Sync (lui sync)**: idempotent reconciler in `scripts/sync.sh`. Default = install missing only. `--prune` = also uninstall extras. LOCKED v0.1: manual-only, no auto-sync on boot (grill Q5).
+- **Sync (lui sync)**: idempotent reconciler in `scripts/sync.sh`. Default = install missing only. `--prune` = also uninstall extras. Scopes: `--system` (shared packages + system flatpaks, admin `luci`), `--user [ACCOUNT]` (user flatpaks + launcher entries, default invoking account). LOCKED v0.1: manual-only, no auto-sync on boot (grill Q5).
+- **System scope**: everything shared by every profile — pacman/AUR packages, system flatpaks, system services, the model store. Reconciled by `lui sync --system` as `luci`.
+- **User scope**: one account's personal layer — user flatpaks, `lui-local-*.desktop` entries, dotfiles, agent sessions/keys. Reconciled by `lui sync --user` (or `--user ACCOUNT` from the admin). `work` runs it without sudo.
 - **Protected package**: base package never auto-removed (`config/protected-packages`: kernel, firmware, drivers, compositor, networking).
 - **Extra**: explicitly installed package/app not in desired + protected sets. Previewed before prune, never silently removed.
 - **Target machine**: Ryzen 5 9600X + ASUS TUF GAMING B650E-PLUS WIFI + RX 7900 XT 20GB. v0.1 is tuned here, tested elsewhere.

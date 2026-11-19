@@ -79,7 +79,8 @@ LuicipherOS/
   `vicinae`, `xdg`.
 - `install/` has `archinstall-desktop.json`, `archinstall-desktop.creds.example.json`,
   `bootstrap.sh`, `preflight.sh`, `greetd-config.toml`, `vconsole.conf`, `amdgpu-late.service`,
-  `amdgpu-unload-on-shutdown.service`.
+  `amdgpu-unload-on-shutdown.service`, `llama-swap.service`, `llama-swap.sysusers`,
+  `llama-swap/config.yaml`.
 - `iso/` has `profiledef.sh`, `packages.x86_64`, `airootfs/`, `README.md`.
 - `research/` currently has `office-suites.md`.
 - `scripts/` has `lui.sh` (the `lui` CLI), `sync.sh`, `ensure-packages.sh`,
@@ -114,17 +115,21 @@ archinstall --config install/archinstall-desktop.json --creds /tmp/creds.json
 3. Reconcile packages (manual only, never automatic):
 
 ```bash
-lui status                 # read-only: preview what is out of sync
-lui sync                   # install missing + regenerate local-app launcher entries
-lui sync --prune           # remove extras (confirms; honors protected-packages)
+lui status                 # read-only: both scopes, no sudo needed
+lui sync --system          # admin (luci): shared packages + system flatpaks
+lui sync --user            # this account: user flatpaks + launcher entries
+lui sync --user work       # admin: prepare another account's user scope
+lui sync --prune           # remove extras in the selected scope(s) (confirms)
 lui local-apps             # just (re)generate the ~/.local/bin launcher entries
 lui local-apps --remove    # remove the managed local-app entries
 ```
 
 `lui` is `scripts/lui.sh`, installed to `/usr/local/bin/lui` by `bootstrap.sh`. Running
 `./scripts/lui.sh ...` from a clone is equivalent. It resolves the tree via `$LUI_ROOT`, then
-`/opt/LuicipherOS`, then the tree it lives in, then `~/LuicipherOS`. Never run it as root; it
-calls `sudo` itself for the privileged steps.
+`/opt/LuicipherOS`, then the tree it lives in, then `~/LuicipherOS`. Never run it as root.
+`--system` (and `--user OTHER`) escalate with `sudo` internally and need the admin account
+(`luci`); `--user` alone never calls sudo. A plain `lui sync` outside an admin account runs the
+user scope and prints the `--system` command to run as `luci`.
 
 **Local apps:** Vicinae (and any XDG launcher) reads `.desktop` files, not `$PATH`, so tools that
 live only in `~/.local/bin` are invisible to it. `config/local-apps` is the declarative list of
@@ -216,14 +221,17 @@ flowchart TD
     PROT[config/protected-packages] --> SYNC
 ```
 
-Desired lists in `config/` declare intent; `lui sync` (`scripts/sync.sh`) realizes it. Default
-mode installs missing packages only and never touches dependencies (`-Qqd`). `--prune` also
-removes extras after a preview and confirmation, and never removes anything in
+Desired lists in `config/` declare intent; `lui sync` (`scripts/sync.sh`) realizes it. Sync has
+three scopes: **system** (`--system`, admin `luci`: pacman/AUR + system flatpaks), **user**
+(`--user [ACCOUNT]`: user flatpaks + launcher entries; defaults to the invoking account), and the
+plain `lui sync` fallback (both when admin rights are present, otherwise user only with the admin
+command printed). This keeps the daily account (`work`) non-admin while still reconciling its own
+scope. Default mode installs missing packages only and never touches dependencies (`-Qqd`).
+`--prune` also removes extras after a preview and confirmation, and never removes anything in
 `protected-packages` (kernel, firmware, drivers, compositor, networking). Prune compares only
 explicitly installed pacman packages and flatpak apps; hand-installed binaries, AppImages and
-language-tool installs are never touched. System and user flatpak scopes prune independently,
-and the user scope depends on which account runs the script. Sync is manual-only by design:
-no auto-sync on boot.
+language-tool installs are never touched. Each scope prunes independently. Sync is manual-only by
+design: no auto-sync on boot.
 
 Desktop stack (locked in v0.1): Hyprland (>= 0.55, native Lua) under uwsm, greetd + tuigreet
 login, Vicinae launcher on SUPER+Space (fuzzel fallback), custom Quickshell bar and plugin
@@ -290,15 +298,16 @@ The ISO is a netinstall image: packages are never baked in, so every install get
 packages. Fixes to `luicipheros-install` reach a booted ISO only via `git pull` plus a copy
 (see `iso/README.md`).
 
-Decision record: ADR-0001 locks Arch + scripts. Nix is an optional v0.3 layer; LFS is a
-learning side-quest only.
+Decision record: ADR-0001 locks Arch + scripts; ADR-0002 locks the local-first, system-wide AI
+stack. Nix is an optional v0.3 layer; LFS is a learning side-quest only.
 
 ## Testing Strategy
 
 - Static: `bash -n`, `python3 -m json.tool`, `sync.sh --prune --dry-run` (see TESTING.md §0).
-- Unit/regression: `tests/test_sync.sh` covers the sync contract and `tests/test_lui.sh` covers
-  the CLI (tree discovery, delegation, `status`, argument pass-through). Both are pure bash with
-  mocked `pacman`/`flatpak`/`sudo`, need no Arch and no root, and are safe to run anywhere.
+- Unit/regression: `tests/test_sync.sh` covers the sync contract and its scopes
+  (`--system`, `--user`, `--user ACCOUNT`, non-admin fallback) and `tests/test_lui.sh` covers
+  the CLI (tree discovery, delegation, `status`, scope flag pass-through). Both are pure bash
+  with mocked `pacman`/`flatpak`/`sudo`, need no Arch and no root, and are safe to run anywhere.
 - VM smoke: QEMU/OVMF, Arch ISO, 4G RAM, 60G disk. PASS means Hyprland (uwsm) loads,
   SUPER+T opens Tabby, SUPER+Space opens Vicinae, Quickshell bar and swaync are visible, and
   Print -> region -> Gradia works.
@@ -352,8 +361,10 @@ learning side-quest only.
 - Never remove or weaken `config/protected-packages`, or make `--prune` run without preview
   and confirmation.
 - Do not run `lui sync --prune` on the desktop until the extras inventory is done and the
-  dev-tool packages are in `config/packages` (see CONTINUITY.md). Run `sync.sh` as the daily
-  account (`work`), never as root; `luci` is the admin account.
+  dev-tool packages are in `config/packages` (see CONTINUITY.md). Run system scope as the admin
+  account (`luci`: `lui sync --system`) and user scope as the account that owns it (`work`:
+  `lui sync --user`); never run `lui` as root. `luci` is the admin account and `work` is
+  intentionally non-admin.
 - Never re-add Firefox, waybar, kitty, or swappy; they were deliberately removed.
 - Never add hyprlang `.conf` Hyprland configs.
 - Do not edit `.agents/skills/**` or vendored skill content unless the task is explicitly about
@@ -390,8 +401,8 @@ learning side-quest only.
   `lui local-apps --remove`.
 - Preflight modes: `install/preflight.sh --vm | --target`; bootstrap
   `--preflight-mode=vm|target` and `--no-flatpak`.
-- `scripts/sync.sh` flags: `--prune`, `--dry-run`, `--yes`; AUR helper flag (yay-bin default,
-  paru supported).
+- `scripts/sync.sh` flags: `--system`, `--user [ACCOUNT]`, `--prune`, `--dry-run`, `--yes`;
+  AUR helper flag (yay-bin default, paru supported).
 - Quickshell plugin host: `dotfiles/quickshell/plugins/` for ported Noctalia,
   DankMaterialShell and Omarchy widgets.
 - Opt-in features: termfilechooser + yazi portal picker (dormant), HyprCapture screenshot trial

@@ -29,6 +29,24 @@ luicipheros-install --vm
 Expect: preflight PASS -> EDIT-ME pointers -> archinstall runs the JSON.
 First ISO boot that reaches `archinstall` = ISO smoke PASS.
 
+## Post-install accounts and scopes
+
+The creds prompt creates the admin account (`luci`, sudo) only; extra
+accounts are added inside the installed OS. Reconcile each scope from the
+account that owns it:
+
+```bash
+# admin (luci): shared packages, system flatpaks, system services
+lui sync --system
+lui sync --user                 # luci's own user scope
+
+# daily account (work): personal scope, no sudo
+lui sync --user
+```
+
+`install/archinstall-desktop.json` declares `@models` at `/var/lib/llm`, so
+fresh installs already have the system-wide model store (ADR-0002).
+
 ## Live-session note (script fixes without rebuilding)
 
 `/usr/local/bin/luicipheros-install` on the booted ISO is frozen at build

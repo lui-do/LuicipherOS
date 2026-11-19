@@ -331,6 +331,17 @@ history, one holding the November detail); no entry was dropped.
   LFS learning only. Time of day UNCONFIRMED (date from ADR).
 
 ## [PROGRESS]
+- 2026-11-19T22:45Z `[TOOL]` **`lui sync` multi-user scope split implemented.** `work` is
+  intentionally non-admin (sudo denied; the earlier wheel membership does not grant it), so sync
+  now has explicit scopes: `--system` (pacman/AUR + system flatpaks; admin `luci`, sudo inside),
+  `--user [ACCOUNT]` (user flatpaks + launcher entries; current account, no sudo; another
+  account via `sudo -u` from the admin), and plain `lui sync` (system+user when admin rights are
+  present, otherwise user only with the exact `--system` command printed). Prune is per scope;
+  `lui status` previews both read-only without sudo. `ensure-flatpaks.sh` gained
+  `--system|--user`. Tests: test_lui 21/21, test_sync 33/33 (new cases: system-only, user-only,
+  `--user ACCOUNT`, non-admin fallback). ISO wiring: `install/archinstall-desktop.json` now
+  declares `@models` at `/var/lib/llm`, and `luicipheros-install` prints the scoped post-install
+  commands (`--system` as luci, `--user` per account). Docs updated in AGENTS.md + CONTEXT.md.
 - 2026-11-19T22:12Z `[TOOL]` **Target desktop: `@models` subvolume created and mounted.** Ran the
   ADR-0002 storage runbook as admin account `luci`: created Btrfs subvolume `@models` at the top
   level (subvolid 475), mounted at `/var/lib/llm` via `/etc/fstab` with

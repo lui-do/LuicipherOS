@@ -5,10 +5,11 @@
 # install/bootstrap.sh, and runnable in place from the repo.
 #
 # v0.1 subcommands:
-#   lui sync [--prune] [--dry-run] [--yes]  reconcile packages + flatpaks + local apps
+#   lui sync [--system|--user [USER]] [--prune] [--dry-run] [--yes]
+#                                            reconcile system / user scopes
 #   lui theme list|show|set|reset           palette presets / from-wallpaper generation
 #   lui local-apps [--remove]               ~/.local/bin launcher entries
-#   lui status                              read-only: what is out of sync
+#   lui status [--user [USER]]              read-only: what is out of sync
 #   lui root                                print the resolved tree path
 #   lui version | help
 #
@@ -41,15 +42,31 @@ usage() {
 lui — LuicipherOS declarative reconciler
 
 USAGE
-  lui sync [--prune] [--dry-run] [--yes]   install missing packages + flatpaks + local apps
-  lui status                               read-only preview of what would change
+  lui sync [--system|--user [USER]] [--prune] [--dry-run] [--yes]
+                                           reconcile the selected scope(s)
+  lui status [--user [USER]]               read-only preview of what would change
   lui local-apps [--remove]               (re)generate ~/.local/bin launcher entries
   lui theme list|show|set <preset>|...     palettes: presets or from-wallpaper (matugen)
   lui root                                 print the resolved LuicipherOS tree
   lui version                              print the CLI version
   lui help                                 this text
 
-SYNC
+SYNC SCOPES (multi-user, ADR-0002)
+  --system        system-wide: pacman + AUR packages, system flatpaks. Admin
+                  account only (luci): the script escalates with sudo itself.
+  --user [USER]   one account's personal scope: user flatpaks + launcher
+                  entries. Defaults to the invoking user and needs no sudo.
+                  Naming another account (e.g. --user work) needs admin rights.
+  (no flag)       system + current user when admin rights are available;
+                  otherwise user scope only, with the admin command printed.
+
+  Examples:
+    luci$  lui sync --system          # shared packages, once per machine
+    luci$  lui sync --user            # luci's user flatpaks + launcher entries
+    luci$  lui sync --user work       # prepare work's user scope (admin)
+    work$  lui sync --user            # work's user scope, no sudo
+
+SYNC MODIFIERS
   Default is add-only: installs what the lists declare, never removes, and
   regenerates the local-app launcher entries.
     --prune     also remove extras not declared in the lists (asks first)
@@ -57,7 +74,7 @@ SYNC
     --yes       skip the confirmation prompt (automation only)
 
   Prune honors config/protected-packages and never touches pacman
-  dependencies (-Qqd). System and user flatpak scopes are handled separately.
+  dependencies (-Qqd). Each scope prunes only its own extras.
 
 LOCAL-APPS
   Vicinae (and any XDG launcher) reads .desktop files, not $PATH, so tools that
@@ -75,9 +92,10 @@ TREE SELECTION
   declared packages look like extras.
 
 NOTES
-  Run as your normal user, not root: lui calls sudo itself for the privileged
-  steps. Sync is manual-only by design; there is no auto-sync unit and none
-  will be installed.
+  Run as your normal user, not root. `--system` (and `--user OTHER`) escalates
+  with sudo internally and therefore needs the admin account (luci on this
+  machine). `--user` alone never calls sudo. Sync is manual-only by design;
+  there is no auto-sync unit and none will be installed.
 EOF
 }
 

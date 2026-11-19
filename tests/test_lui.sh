@@ -49,6 +49,12 @@ echo "== 2. sync delegates and passes arguments through =="
   && ok "sync passes flags through" || bad "flag pass-through: $(run sync --prune --dry-run)"
 [[ "$(run sync --prune --yes)" == *"SYNC-CALLED: --prune --yes"* ]] \
   && ok "sync passes --yes" || bad "--yes pass-through: $(run sync --prune --yes)"
+[[ "$(run sync --system)" == *"SYNC-CALLED: --system"* ]] \
+  && ok "sync passes --system" || bad "--system pass-through: $(run sync --system)"
+[[ "$(run sync --user work)" == *"SYNC-CALLED: --user work"* ]] \
+  && ok "sync passes --user ACCOUNT" || bad "--user ACCOUNT pass-through: $(run sync --user work)"
+[[ "$(run sync --user=work)" == *"SYNC-CALLED: --user=work"* ]] \
+  && ok "sync passes --user=ACCOUNT" || bad "--user= pass-through: $(run sync --user=work)"
 
 echo "== 3. status is read-only and names the tree =="
 STATUS_OUT=$(run status)

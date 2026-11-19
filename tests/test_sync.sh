@@ -66,7 +66,22 @@ fi
 EOF
 cat > "$T/bin/sudo" <<'EOF'
 #!/usr/bin/env bash
+# -n/-v are probing calls: honour SUDO_DENY=1 to simulate a non-admin account.
+if [[ "${1:-}" == "-n" || "${1:-}" == "-v" ]]; then
+  [[ "${SUDO_DENY:-0}" == "1" ]] && exit 1
+  exit 0
+fi
 echo "sudo $*" >> "$CALLS_DIR/sudo-calls"
+# `sudo -u USER env HOME=... USER=... cmd...` -> run cmd (recorded above)
+if [[ "${1:-}" == "-u" ]]; then
+  shift 2
+  if [[ "${1:-}" == "env" ]]; then
+    shift
+    while [[ $# -gt 0 && "$1" == *=* ]]; do shift; done
+  fi
+  exec "$@"
+fi
+exit 0
 EOF
 chmod +x "$T/bin/"*
 export PATH="$T/bin:$PATH"
@@ -80,9 +95,9 @@ mkdir -p "$M/config" "$M/scripts"
 cp "$T/cfg/"* "$M/config/"
 cp "$ROOT/scripts/sync.sh" "$M/scripts/"
 # stub ensure scripts (add path must run but do nothing here)
-printf '#!/usr/bin/env bash\necho "ensure-packages stub"\n' > "$M/scripts/ensure-packages.sh"
-printf '#!/usr/bin/env bash\necho "ensure-flatpaks stub"\n' > "$M/scripts/ensure-flatpaks.sh"
-printf '#!/usr/bin/env bash\necho "generate-local-apps stub"\n' > "$M/scripts/generate-local-apps.sh"
+printf '#!/usr/bin/env bash\necho "ensure-packages $*" >> "$CALLS_DIR/ensure-packages"\n' > "$M/scripts/ensure-packages.sh"
+printf '#!/usr/bin/env bash\necho "ensure-flatpaks $*" >> "$CALLS_DIR/ensure-flatpaks"\n' > "$M/scripts/ensure-flatpaks.sh"
+printf '#!/usr/bin/env bash\necho "generate-local-apps $*" >> "$CALLS_DIR/generate-local-apps"\n' > "$M/scripts/generate-local-apps.sh"
 chmod +x "$M/scripts/"*.sh
 SYNC="$M/scripts/sync.sh"
 
@@ -172,6 +187,56 @@ rm -f "$T/calls"/{sudo-calls,flatpak-calls,pacman-calls}
 OUT=$(bash "$SYNC" --prune --dry-run 2>&1)
 [[ "$OUT" == *"nothing to prune"* ]] \
   && ok "nothing-to-prune short-circuits" || bad "missing nothing-to-prune: $OUT"
+
+echo "== 7. --system runs only the system scope =="
+rm -f "$T/calls"/{sudo-calls,flatpak-calls,pacman-calls,ensure-packages,ensure-flatpaks,generate-local-apps}
+OUT=$(bash "$SYNC" --system 2>&1)
+[[ -f "$T/calls/ensure-packages" ]] \
+  && ok "--system runs ensure-packages" || bad "--system skipped packages: $OUT"
+grep -q -- '--system' "$T/calls/ensure-flatpaks" 2>/dev/null \
+  && ok "--system runs system flatpaks" || bad "--system flatpak scope wrong"
+[[ ! -f "$T/calls/generate-local-apps" ]] \
+  && ok "--system does not touch user launcher entries" || bad "--system ran local-apps"
+OUT=$(bash "$SYNC" --system --prune --dry-run 2>&1)
+[[ "$OUT" == *"pacman extras"* && "$OUT" == *"flatpak system extras"* ]] \
+  && ok "--system prune covers pacman + system flatpaks" || bad "system prune wrong: $OUT"
+[[ "$OUT" != *"flatpak user extras"* ]] \
+  && ok "--system prune excludes user scope" || bad "user scope leaked into --system prune"
+
+echo "== 8. --user runs only the user scope, without sudo =="
+rm -f "$T/calls"/{sudo-calls,flatpak-calls,pacman-calls,ensure-packages,ensure-flatpaks,generate-local-apps}
+OUT=$(bash "$SYNC" --user 2>&1)
+[[ ! -f "$T/calls/ensure-packages" ]] \
+  && ok "--user does not install system packages" || bad "--user ran ensure-packages"
+grep -q -- '--user' "$T/calls/ensure-flatpaks" 2>/dev/null \
+  && ok "--user runs user flatpaks" || bad "--user flatpak scope wrong"
+[[ -f "$T/calls/generate-local-apps" ]] \
+  && ok "--user regenerates launcher entries" || bad "--user skipped local-apps"
+[[ ! -f "$T/calls/sudo-calls" ]] \
+  && ok "--user needs no sudo for the current account" || bad "--user called sudo"
+OUT=$(bash "$SYNC" --user --prune --dry-run 2>&1)
+[[ "$OUT" == *"flatpak user extras"* ]] \
+  && ok "--user prune covers user flatpaks" || bad "user prune missing: $OUT"
+[[ "$OUT" != *"pacman extras"* ]] \
+  && ok "--user prune excludes system scope" || bad "system scope leaked into --user prune"
+
+echo "== 9. --user ACCOUNT targets another account via sudo -u =="
+rm -f "$T/calls"/{sudo-calls,flatpak-calls,pacman-calls,ensure-packages,ensure-flatpaks,generate-local-apps}
+OUT=$(bash "$SYNC" --user luci 2>&1)
+grep -q -- '-u luci' "$T/calls/sudo-calls" 2>/dev/null \
+  && ok "target user runs through sudo -u" || bad "no sudo -u for target: $OUT"
+[[ -f "$T/calls/generate-local-apps" ]] \
+  && ok "target user still gets launcher entries" || bad "target local-apps missing"
+
+echo "== 10. non-admin default falls back to user scope with a hint =="
+rm -f "$T/calls"/{sudo-calls,flatpak-calls,pacman-calls,ensure-packages,ensure-flatpaks,generate-local-apps}
+OUT=$(SUDO_DENY=1 bash "$SYNC" 2>&1)
+[[ "$OUT" == *"system scope was skipped"* ]] \
+  && ok "prints the admin command hint" || bad "missing admin hint: $OUT"
+[[ ! -f "$T/calls/ensure-packages" ]] \
+  && ok "system packages not attempted without admin" || bad "system packages attempted"
+[[ -f "$T/calls/generate-local-apps" ]] \
+  && ok "user scope still runs" || bad "user scope skipped"
 
 echo ""
 echo "tests: $PASS passed, $FAILN failed"
