@@ -466,6 +466,29 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-19T22:00Z `[TOOL]` **BREAKTHROUGH: the first OS-initiated warm reboot ever completed POST
+  - and the AMD reset-reason code names the mechanism.** `sudo reboot` via logind (Vicinae) from
+  boot -1 posted: Q-LEDs amber->red->white->green, TUF splash, boot menu, LUKS prompt. The next boot
+  reports `Previous system reset reason [0x00080800]: software wrote 0x6 to reset control register
+  0xCF9` - i.e. the **ACPI FADT hard reset (CF9)**; `/sys/kernel/reboot/type` = `acpi`. Every reset
+  this board has ever completed is a CF9 write (boot -3 = firmware save&reset after defaults, boot
+  -1 = firmware save&reset after Fast Boot off, boot 0 = the OS reboot); the other reason code seen,
+  0x00200800, just means 'came from a power-on'. **Methodological key: a hung reset is followed by a
+  power cycle, and the power-on overwrites the reason code - so failed mechanisms are invisible,
+  which is why reboot=c/t/e all looked like the same failure.** Confirmed from the journal: the
+  reboot was `systemd-logind: The system will reboot now!`, and amdgpu had loaded at 176.9s in boot
+  -1, so the GPU was initialised and it still worked. Consequences: (a) stale NVRAM is a live
+  suspect (defaults were loaded immediately before the first working reset), (b) the mechanism
+  question is reopened. Next two experiments: A) `sudo reboot` 2-3x for reproducibility (a single
+  success misled once already on 2026-11-16); B) `echo efi > /sys/kernel/reboot/type` then reboot -
+  if efi hangs, EFI ResetSystem is the broken path and the fix is `reboot=a` in the boot entry; if
+  it works, the NVRAM reset was the fix. Separately, the blank-display fault is now diagnosed: the
+  LUKS-prompt console comes from the firmware framebuffer and `simpledrm` initialises very late (24s
+  / 56s / 161s across three boots), amdgpu being blacklisted until ~176-208s; the motherboard-HDMI
+  test was inconclusive because the iGPU only gets a driver once amdgpu loads and firmware drives
+  the primary (discrete) card. Live BIOS state = DISABLEDFASTBOOT profile. Docs:
+  docs/warm-reboot-post-hang.md (Breakthrough section), docs/warm-reboot-action-plan.md (Step 2
+  result + experiments A/B), docs/bios-profiles/README.md.
 - 2026-11-18T20:40Z `[TOOL]` **Corrected: the blue LED is the case POWER LED, so rtcwake -s 20
   genuinely failed and the widened hypothesis is withdrawn.** User clarification: the LED they
   watched is the blue power light that shows whether the desktop is powered, independent of Linux -

@@ -42,3 +42,20 @@ Two notes:
   experiment value (Disabled) lives only in `AFTERMCR_*`. Loading defaults
   therefore reverted the MCR experiment, which is harmless (MCR off was
   proven ineffective on 2026-11-15).
+
+## DISABLEDFASTBOOT_* - 2026-11-19
+
+Exported after setting `Fast Boot` back to Disabled (Step 1 of the runbook),
+immediately before the first OS-initiated warm reboot that ever completed
+POST on this machine.
+
+Diff against `OPTIMISEDDEFAULTS_*` is exactly that one change:
+
+| Setting | Optimised defaults | DisabledFastBoot |
+|---|---|---|
+| `Fast Boot` | Enabled | **Disabled** |
+| everything else | — | identical |
+
+Current live BIOS state = this profile: Fast Boot Disabled, Integrated
+Graphics Auto, all other values as the optimised defaults (which equal the
+`BEFOREMCR_*` baseline apart from `Integrated Graphics`).

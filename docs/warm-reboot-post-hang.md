@@ -3,11 +3,70 @@
 Symptom: `sudo reboot` results in no ASUS logo, no boot menu, no keyboard (Caps Lock dead)
 = UEFI POST never completes. Cold boot (poweroff → power button) always works.
 
+> **2026-11-19: an OS-initiated warm reboot WORKED.** Reset reason reported afterwards:
+> `[0x00080800]: software wrote 0x6 to reset control register 0xCF9` — the ACPI/FADT hard reset.
+> See "Breakthrough" below before reading the rest of this file.
+
 This is a **separate issue** from the DMUB cold-boot storm
 (see `docs/dmub-coldboot-casefile.md`) and from the spontaneous `0x00800800` resets.
 
 > **Doing the work:** `docs/warm-reboot-action-plan.md` is the ordered runbook (recovery card, the
 > EC/CMOS and firmware steps, what to record). This file is the evidence log.
+
+## Breakthrough 2026-11-19: the reset reason code names the mechanism
+
+The AMD SoC records **how the previous reset was performed**, and the kernel prints it on the next
+boot:
+
+```
+x86/amd: Previous system reset reason [0x00080800]: software wrote 0x6 to reset control register 0xCF9
+x86/amd: Previous system reset reason [0x00200800]: ACPI power state transition occurred
+```
+
+`0x00080800` = a software CF9 hard reset. `0x00200800` = the machine came from a power-on.
+
+### Why this hid for a week
+
+**After a hung reset the machine is power-cycled, and the power-on overwrites the reason code.** So
+every failed warm reboot reported `[0x00200800]` — the *power cycle*, not the failed reset. The
+mechanism of the failures is therefore invisible in the logs; only the successful resets can be read
+back. That is why `reboot=c`, `reboot=t` and `reboot=e` all looked like "same failure".
+
+### Every reset this machine has completed, with its mechanism
+
+| Boot | Preceded by | Reason |
+|---|---|---|
+| −3 (Nov 18 23:35:57) | firmware save&reset (optimised defaults loaded) | `0x00080800` **CF9** ✓ POSTed |
+| −2 (Nov 19 14:26:39) | power-on | `0x00200800` |
+| −1 (Nov 19 21:06:43) | firmware save&reset (Fast Boot disabled) | `0x00080800` **CF9** ✓ POSTed |
+| 0 (Nov 19 21:12:29) | **OS reboot via logind (Vicinae)** | `0x00080800` **CF9** ✓ POSTed |
+
+So: firmware resets are CF9 writes, and the one OS-initiated reboot that ever completed POST was
+**also a CF9 write**. `/sys/kernel/reboot/type` on the working system reads **`acpi`** — meaning the
+kernel used the ACPI FADT `RESET_REG`, which on this board is the CF9 register with value `0x06`.
+
+Timeline of that reboot (boot −1 → 0): `systemd-logind: The system will reboot now!` at 21:11:13,
+POST, then boot 0 at 21:12:29 — a 75-second cycle. amdgpu was loaded (176.9 s into boot −1) before
+the reboot, so the GPU was initialised and the reset still worked.
+
+### The experiment this opens
+
+Set the reboot type at runtime and see whether the mechanism is the variable:
+
+```bash
+cat /sys/kernel/reboot/type                  # acpi on the working system
+sudo sh -c 'echo efi > /sys/kernel/reboot/type'
+sudo reboot
+```
+
+- **`efi` hangs** → the reset mechanism *is* the variable, EFI `ResetSystem()` is the broken path,
+  and the fix is one line: `reboot=a` in the boot entry (persist ACPI/CF9 explicitly). This would
+  also explain why the firmware's own reset always worked and the OS's never did.
+- **`efi` works** → the mechanism is not the variable; the NVRAM reset (optimised defaults) is the
+  likely fix, and the config is simply "clean NVRAM".
+
+Either way the next question is reproducibility: `sudo reboot` two or three times in a row, since a
+single success has already been misleading once (2026-11-16).
 
 ## Verified facts (2026-11-16)
 

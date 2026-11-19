@@ -107,10 +107,67 @@ If it hangs: recover with the card, then get the receipt:
 sudo journalctl -k -b -1 --no-pager | grep -m1 'Previous system reset'
 ```
 
-**Record:** `warm reboot after defaults: splash / menu / nothing — Q-LED: … — Caps Lock: …`.
+### RESULT 2026-11-19: **the warm reboot WORKED** — and the log says how
 
-- **POSTs** → a stale NVRAM setting was involved. Big finding; stop and report.
-- **Hangs** → stale NVRAM ruled out. Go to Step 4 (Step 3 only if you saw a blank display).
+`sudo reboot` from boot −1 completed: Q-LEDs (amber → red → white → green), TUF splash, boot menu,
+LUKS prompt. The reset reason reported afterwards:
+
+```
+[0x00080800]: software wrote 0x6 to reset control register 0xCF9
+```
+
+That is the **ACPI FADT hard reset** (CF9). `/sys/kernel/reboot/type` reads **`acpi`**. Every reset
+this board has ever completed — including both firmware save&resets — was a CF9 write.
+
+Also from the journal: the reboot was `systemd-logind: The system will reboot now!`, i.e. a genuine
+OS-initiated reboot, and amdgpu had been loaded 176 s into that boot, so the GPU was initialised.
+
+**Consequence: stale NVRAM is a live suspect, not ruled out.** The optimised defaults were loaded
+immediately before the first working reset, and nothing else changed.
+
+### Next: two experiments, in this order
+
+**A — reproducibility (5 min).** One success has already been misleading once (2026-11-16):
+
+```bash
+sudo reboot        # repeat 2–3 times
+```
+
+All POST → the configuration works; go to B to find out *why*.
+Any hang → it is intermittent; B still applies.
+
+**B — is the reset mechanism the variable? (5 min)**
+
+```bash
+cat /sys/kernel/reboot/type                                   # expect: acpi
+sudo sh -c 'echo efi > /sys/kernel/reboot/type'
+cat /sys/kernel/reboot/type                                   # expect: efi
+sudo reboot
+```
+
+| Result | Meaning | Action |
+|---|---|---|
+| `efi` **hangs** | EFI `ResetSystem()` is the broken path; ACPI/CF9 is the working one | persist `reboot=a` in the boot entry (needs approval; validate with the `/proc/cmdline` receipt) |
+| `efi` **works** | mechanism irrelevant; the NVRAM reset fixed it | document "clean NVRAM" as the fix, drop the reboot param |
+
+The setting does not survive a reboot — set it again per attempt, or persist `reboot=a` in the entry.
+
+### What the display problem is (a separate fault)
+
+On 2026-11-19 several boots reached the LUKS prompt with **no video at all** — the passphrase had to
+be typed blind, and it worked. From the journal:
+
+- The console during the LUKS prompt comes from the **firmware framebuffer** (`simpledrm`/`efifb`).
+  `simpledrm` initialises very late here — 24 s, 56 s and 161 s across three boots — so on some boots
+  there is nothing on screen yet while the prompt waits.
+- `amdgpu` is blacklisted, so nothing takes over until `amdgpu-late` runs at ~176–208 s.
+- The motherboard-HDMI test was **inconclusive**: the iGPU (`card0`, `0000:0e:00.0`) only has a
+  driver once `amdgpu` loads, and firmware drives the *primary* video device — the discrete card.
+
+So the blank prompt is a **firmware / early-boot display handoff** problem, not `amdgpu` and not the
+OS console. Different fault from the POST hang; Caps Lock still distinguishes them.
+
+**Record:** `warm reboot after defaults: splash / menu / nothing — Q-LED: … — Caps Lock: …`.
 
 ---
 
@@ -195,6 +252,22 @@ Step 4 rtcwake -s 60:            powered on yes/no    Q-LEDs cycled yes/no
 Step 5 BIOS re-flash:            done/skipped    result:
 ```
 
+### Result sheet 2026-11-19 (filled)
+
+```text
+Step 0 entry cleaned:            yes   (/proc/cmdline has no reboot=)
+Step 1 Fast Boot -> Disabled:    yes   save&reset POST: ok (LUKS prompt visible)
+Step 2 sudo reboot (via Vicinae): SPLASH + MENU + LUKS PROMPT  <-- WORKED
+       Q-LED:                    amber -> red -> white -> green
+       reset reason:             0x00080800 = CF9 write (ACPI hard reset)
+       reboot type:              acpi
+       logind:                   "The system will reboot now!"
+Step 3 blank screen:             yes, on earlier boots — typed LUKS blind; iGPU HDMI also dark
+                                 (iGPU test inconclusive: no driver until amdgpu loads)
+Step 4 rtcwake -s 60:            worked 2026-11-18; -s 20 fails (alarm missed)
+Step 5 BIOS re-flash:            not yet
+```
+
 ---
 
 ## Already ruled out (do not re-test)
@@ -209,5 +282,6 @@ Step 5 BIOS re-flash:            done/skipped    result:
 | `pci` (CF9 hard reset) | no reset observed |
 | GPU / memory / boot device as cause of the hang | POST never starts, so no device is initialised |
 | PSU as a supply fault | rails present (fans spinning) during the dead state |
-| Stale NVRAM / CMOS | optimised defaults loaded 2026-11-18; retest in Step 2 |
+| Stale NVRAM / CMOS | **live suspect** — optimised defaults loaded 2026-11-18, and the first working reset came immediately after |
+| Reset mechanism | **reopened** — the one OS reboot that worked used ACPI/CF9; EFI `ResetSystem()` has never been confirmed to work. See Step 2B |
 | `rtcwake -s 20` | too short — the alarm is missed; use `-s 60` |
