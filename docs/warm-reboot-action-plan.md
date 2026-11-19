@@ -195,19 +195,31 @@ reboot failed and the machine was power-cycled.
 ### What the display problem is (a separate fault)
 
 On 2026-11-19 several boots reached the LUKS prompt with **no video at all** — the passphrase had to
-be typed blind, and it worked. From the journal:
+be typed blind, and it worked. Mechanism:
 
-- The console during the LUKS prompt comes from the **firmware framebuffer** (`simpledrm`/`efifb`).
-  `simpledrm` initialises very late here — 24 s, 56 s and 161 s across three boots — so on some boots
-  there is nothing on screen yet while the prompt waits.
-- `amdgpu` is blacklisted, so nothing takes over until `amdgpu-late` runs at ~176–208 s.
+- The kernel writes its console into the framebuffer the firmware left behind, but the GPU is not
+  scanning it out, so nothing appears. The machine is running normally.
+- Nothing re-initialises the display until `amdgpu` loads, which is **~176–208 s** into the boot
+  because the driver is soft-blacklisted for the DMUB workaround. So a bad boot means a dark screen
+  for roughly three minutes, and the picture appears when the driver finally loads.
 - The motherboard-HDMI test was **inconclusive**: the iGPU (`card0`, `0000:0e:00.0`) only has a
   driver once `amdgpu` loads, and firmware drives the *primary* video device — the discrete card.
 
-So the blank prompt is a **firmware / early-boot display handoff** problem, not `amdgpu` and not the
-OS console. Different fault from the POST hang; Caps Lock still distinguishes them.
+Correction to an earlier note: `simpledrm` does **not** initialise late. Its console switch happens
+milliseconds after the kernel's first line; the journal's early timestamps simply carry an offset
+equal to the pre-kernel boot time (firmware POST + bootloader loading a 53 MB initramfs), which is
+why they read 24–56 s. See `docs/warm-reboot-post-hang.md` for the evidence.
 
-**Record:** `warm reboot after defaults: splash / menu / nothing — Q-LED: … — Caps Lock: …`.
+**Test on the next blank boot:** time it. Does the picture appear at ~3 minutes (when `amdgpu`
+loads)? Does the monitor say "no signal"? What do the Q-LEDs do? Then try DisplayPort instead of
+HDMI.
+
+**Possible real fix:** if the DMUB storm is gone (all four recent boots report 0 DMUB/power-gate
+errors, but all used the late load), the late-load pair could be retired and the display would come
+up immediately. That needs a boot with the driver not blacklisted — **boot-critical, needs explicit
+approval**, revert = restore the blacklist and re-enable the unit.
+
+**Record:** `blank screen: HDMI/DP/iGPU — monitor: no signal/black — picture at ~3 min: yes/no`.
 
 ---
 

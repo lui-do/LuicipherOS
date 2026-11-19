@@ -262,10 +262,14 @@ Load Optimized Defaults, **F10** save, then set `Fast Boot` -> Disabled and re-t
 `sudo rtcwake -m off -s 60` (verified) or `poweroff` + the power button.
 
 Open and separate from the above: **no video output on some boots** while the machine runs (Caps
-Lock responds, passphrase can be typed blind). Cause identified as a firmware/early-boot display
-handoff problem - the LUKS-prompt console comes from the firmware framebuffer and `simpledrm`
-initialises very late here (24-161 s), with `amdgpu` blacklisted until ~176-208 s. Not `amdgpu`,
-not the OS console. See issue #11 and `docs/warm-reboot-action-plan.md`.
+Lock responds, passphrase can be typed blind). The kernel writes its console into the framebuffer
+the firmware left behind, but the GPU is not scanning it out; nothing re-initialises the display
+until `amdgpu` loads at ~176-208 s (soft-blacklisted for the DMUB workaround), so a bad boot means a
+dark screen for ~3 minutes until the desktop appears. Not `amdgpu` failing and not the OS console.
+(`simpledrm` is built-in and comes up immediately - an earlier note claiming it initialises "late"
+misread journal timestamps that carry a pre-kernel offset.) Worth testing: whether the DMUB storm is
+still present at all, since all four recent boots report 0 DMUB/power-gate errors - but they all used
+the late load. See issue #11 and `docs/warm-reboot-action-plan.md`.
 
 Do not boot `arch-lateload.conf` until it is rebuilt and verified: it panics on LUKS unlock in
 its current history. Revert of the default:

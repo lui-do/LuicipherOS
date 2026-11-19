@@ -466,6 +466,24 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-19T23:40Z `[TOOL]` **Blank-display fault characterised; corrected an earlier misreading of
+  the journal clocks.** Mechanism: the kernel writes its console into the framebuffer the firmware
+  left behind, but the GPU is not scanning it out, so nothing is displayed while the machine runs
+  normally. Nothing re-initialises the display until `amdgpu` loads at ~176-208 s (soft-blacklisted
+  for the DMUB workaround) - hence a ~3-minute dark window on a bad boot, with the picture appearing
+  when the driver loads. **Correction: `simpledrm` is NOT late.** It is built-in
+  (`CONFIG_DRM_SIMPLEDRM=y`, `CONFIG_SYSFB_SIMPLEFB=y`, `CONFIG_FB_EFI=y`) and its console switch
+  happens ms after the kernel's first line; the 24-56 s figures were a monotonic-clock offset equal
+  to pre-kernel boot time (firmware POST + bootloader loading a 53 MB initramfs). Evidence: within
+  boot -1 wall (21:32:12->21:39:14 = 422 s) and monotonic (37.894->459.697 = 421.8 s) agree, yet
+  systemd's first line lands 33 ms after the kernel's first line - impossible for real time. Also
+  noted: the motherboard-HDMI test was inconclusive (iGPU has no driver until amdgpu loads, and
+  firmware drives the primary/discrete card). All four recent boots report **0 DMUB/power-gate
+  errors**, but all used the late load, so the decisive display experiment is a boot with the driver
+  NOT blacklisted (early load) - if that is also DMUB-clean the late-load pair could be retired and
+  the display would come up immediately; boot-critical, needs explicit approval, revert = restore
+  the blacklist and re-enable the unit. Docs updated: docs/warm-reboot-post-hang.md (Mode B +
+  correction + open question), docs/warm-reboot-action-plan.md, AGENTS.md.
 - 2026-11-19T23:00Z `[TOOL]` **CLOSED: `efi` reboot also succeeds -> the mechanism is not the
   variable; the fix was clearing the BIOS NVRAM.** User set `/sys/kernel/reboot/type` to `efi` and
   rebooted: clean (boot -1 21:32:12-21:39:14 -> boot 0 21:40:11, 3/3 for the day, all with amdgpu

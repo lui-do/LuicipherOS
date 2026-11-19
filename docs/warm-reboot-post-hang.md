@@ -309,10 +309,40 @@ Caps Lock responded. `journalctl --list-boots` has **no Linux boot in that windo
 timeline below), so the machine was sitting in firmware — most likely in BIOS setup, since Del had
 been pressed. Caps Lock responding is therefore the firmware's keyboard handling, not an OS.
 
-That sharpens Mode B considerably: it is **not** the `amdgpu` driver and **not** the OS. It is the
-firmware's own display initialisation (GOP / GPU VBIOS output path) failing on that power-on, and it
-is reproducible with no Linux involved. Testable: on the next blank screen, try the other GPU output
-(DisplayPort vs HDMI) and the motherboard's own video output (the iGPU is now `Auto`).
+That sharpens Mode B considerably: it is **not** the `amdgpu` driver and **not** the OS console. The
+kernel writes to the framebuffer the firmware left behind, but the GPU is not scanning that
+framebuffer out — so the console content exists and is simply not displayed. Nothing re-initialises
+the display until `amdgpu` loads, which on this machine is ~176–208 s into the boot because the
+driver is soft-blacklisted (`amdgpu-late.service`). Hence a dark screen for the first ~3 minutes,
+and the desktop appearing when the driver finally loads.
+
+### Correction: `simpledrm` is not "late"
+
+An earlier note here said `simpledrm` initialises "very late (24–161 s)". That was a misreading of
+the journal's monotonic timestamps. The early timestamps carry an offset equal to the **pre-kernel**
+boot time, and the offset varies per boot:
+
+- Within a boot the two clocks agree: boot −1 spans wall `21:32:12 → 21:39:14` (422 s) and monotonic
+  `37.894 → 459.697` (421.8 s).
+- But systemd's first line lands **33 ms** after the kernel's first line (`37.927` vs `37.894`) —
+  physically impossible for real time, since the initramfs must be unpacked and PID 1 started in
+  between.
+
+So the offset is pre-kernel time (firmware POST plus the bootloader loading a **53 MB** initramfs),
+and `simpledrm`'s console switch happens milliseconds after the kernel's first output. `simpledrm` is
+built-in here (`CONFIG_DRM_SIMPLEDRM=y`, `CONFIG_SYSFB_SIMPLEFB=y`, `CONFIG_FB_EFI=y`), so the
+console is available from the very start of the kernel — it just may not be visible.
+
+### Open question for the display fault
+
+The `amdgpu-late` workaround is what makes a dark screen last ~3 minutes instead of seconds. Since
+the reset fault turned out to be NVRAM state, it is worth asking whether the DMUB cold-boot storm
+that justified the workaround is still there — **all four recent boots report 0 DMUB/power-gate
+errors**, but they all used the late load. The decisive test is a boot with the driver *not*
+blacklisted (early load) and a check of
+`journalctl -k -b | grep -ciE 'Error queueing DMUB|Failed to power gate'`. If that prints 0, the
+late-load pair could be retired and the display would come up immediately. Boot-critical change:
+needs explicit approval, with the revert being to restore the blacklist and re-enable the unit.
 
 ### Timeline of the 2026-11-18 rtcwake episode (from `journalctl --list-boots`, CET)
 
