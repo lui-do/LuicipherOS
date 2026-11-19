@@ -44,6 +44,11 @@ need_cmd() { command -v "$1" &>/dev/null || { echo "FAIL: missing command: $1"; 
 log "LuicipherOS bootstrap v0.1 (helper=$AUR_HELPER, flatpak=$([ "$NO_FLATPAK" == true ] && echo off || echo on))"
 
 if [[ "$AI_ONLY" == true ]]; then
+  # Keep the installed CLI in sync with the deployed tree; --ai-only skips the
+  # full bootstrap, so do the one system-wide install it would have done.
+  if [[ -f "$ROOT/scripts/lui.sh" ]]; then
+    sudo install -Dm755 "$ROOT/scripts/lui.sh" /usr/local/bin/lui
+  fi
   bash "$ROOT/install/ai-setup.sh"
   log "ai-only done"
   exit 0
