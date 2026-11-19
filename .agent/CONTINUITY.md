@@ -466,6 +466,17 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-26T00:00Z [CODE] VM smoke PASS (QEMU/OVMF, 2026.09.01 ISO), five checkpoints green.
 
 ## [DISCOVERIES]
+- 2026-11-19T22:30Z `[TOOL]` **Second successful OS warm reboot: 2/2, both CF9/ACPI.** Boot -1
+  (21:12:29-21:31:10) -> boot 0 (21:32:12), a 62 s cycle, again `systemd-logind: The system will
+  reboot now!` and again reason `0x00080800` (CF9 write); `/sys/kernel/reboot/type` = acpi. amdgpu
+  was loaded in both successful boots (176 s and 208 s), so the GPU being initialised is not what
+  breaks it - the 'what the OS leaves behind' theory is not doing the work. **Path equivalence
+  checked: `/usr/bin/reboot` is a symlink to `systemctl`, so `sudo reboot` and the Vicinae button
+  are the same path (systemctl -> logind -> reboot(2)) - the tool is not a variable, the machine
+  state is.** Standing conclusion: the configuration now reboots reliably 2/2; remaining question is
+  whether the fix was the NVRAM reset (optimised defaults) or the mechanism, which experiment B
+  (`echo efi > /sys/kernel/reboot/type` then reboot) settles. Docs: docs/warm-reboot-post-hang.md
+  (reproducibility table), docs/warm-reboot-action-plan.md.
 - 2026-11-19T22:00Z `[TOOL]` **BREAKTHROUGH: the first OS-initiated warm reboot ever completed POST
   - and the AMD reset-reason code names the mechanism.** `sudo reboot` via logind (Vicinae) from
   boot -1 posted: Q-LEDs amber->red->white->green, TUF splash, boot menu, LUKS prompt. The next boot

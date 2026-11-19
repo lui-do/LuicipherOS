@@ -68,6 +68,21 @@ sudo reboot
 Either way the next question is reproducibility: `sudo reboot` two or three times in a row, since a
 single success has already been misleading once (2026-11-16).
 
+### Reproducibility so far: 2 / 2 (2026-11-19)
+
+| Reboot | Initiated by | Reason | Result |
+|---|---|---|---|
+| 21:11:13 → boot 0 at 21:12:29 | logind (Vicinae) | `0x00080800` CF9 | ✓ splash + menu + LUKS |
+| 21:31:09 → boot 0 at 21:32:12 | logind (Vicinae) | `0x00080800` CF9 | ✓ (62 s cycle) |
+
+Both boots ran `amdgpu` (loaded at 176 s and 208 s respectively), so the GPU was initialised in both
+cases — the "what the OS leaves behind" theory is not what is doing the work.
+
+**Path equivalence checked:** `/usr/bin/reboot` is a symlink to `systemctl`, so `sudo reboot` and the
+Vicinae button both end in `systemctl reboot` → logind → `reboot(2)`. The command used is therefore
+*not* a variable; the earlier failures and today's successes used the same path. The change is
+machine state (NVRAM), not the tool.
+
 ## Verified facts (2026-11-16)
 
 ### Boot entries on the ESP

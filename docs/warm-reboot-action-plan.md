@@ -127,7 +127,9 @@ immediately before the first working reset, and nothing else changed.
 
 ### Next: two experiments, in this order
 
-**A — reproducibility (5 min).** One success has already been misleading once (2026-11-16):
+**A — reproducibility (5 min).** One success has already been misleading once (2026-11-16). Two
+Vicinae reboots have now succeeded on 2026-11-19 (21:12:29 and 21:32:12, both `0x00080800` CF9), so
+run the CLI path too, for confidence that the tool does not matter:
 
 ```bash
 sudo reboot        # repeat 2–3 times
@@ -135,6 +137,9 @@ sudo reboot        # repeat 2–3 times
 
 All POST → the configuration works; go to B to find out *why*.
 Any hang → it is intermittent; B still applies.
+
+Note: `/usr/bin/reboot` is a symlink to `systemctl`, so `sudo reboot` and the Vicinae button are the
+same path (systemctl → logind → `reboot(2)`). The tool is not a variable.
 
 **B — is the reset mechanism the variable? (5 min)**
 
