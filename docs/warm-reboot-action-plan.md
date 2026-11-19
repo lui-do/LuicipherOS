@@ -262,17 +262,12 @@ Then **watch for 3 minutes without touching anything**, judged by the board:
 
 ---
 
-## Step 5 — Re-flash the BIOS (30 min) — **requires explicit approval**
+## Step 5 — ~~Re-flash the BIOS~~ — **CANCELLED 2026-11-19**
 
-**Why:** the EC firmware ships inside the BIOS image, and a corrupted EC image survives every power
-cycle. There is no newer BIOS than 4004 (already a beta, AGESA ComboAM5 PI 1.3.0.1d).
-
-| Option | How | Notes |
-|---|---|---|
-| Re-flash **4004** (same version) | ASUS support → download → rename to `A5690.CAP` if needed → FAT32 USB → BIOS → Tool → ASUS EZ Flash 3 | Rewrites EC/AGESA, version unchanged |
-| Downgrade to **3881** (last non-beta) | same procedure | AMD anti-rollback may refuse — record the outcome either way |
-
-Then run one `sudo reboot` test and record it.
+Not needed: warm reboot works. Keep as a fallback only if the hang ever returns *and* the
+Load-Optimized-Defaults remedy stops working. For reference: there is no BIOS newer than 4004
+(already a beta, AGESA ComboAM5 PI 1.3.0.1d), so the options would be a same-version re-flash or a
+downgrade to 3881 (last non-beta; AMD anti-rollback may refuse it).
 
 ---
 
@@ -287,6 +282,71 @@ Once Step 5 fails, nothing else is reachable by a user. The claim sentence:
 > devices. The board runs the newest firmware available (4004, a beta, AGESA ComboAM5 PI 1.3.0.1d).*
 
 Target: **motherboard**. The GPU is not implicated in the POST hang; the PSU delivers power.
+
+---
+
+## The remaining item: the blank display (next session)
+
+The blank display is the only part of this investigation still open. The mechanism is understood:
+
+- The kernel writes its console into the framebuffer the firmware left behind, but the GPU is **not
+  scanning it out** — so the picture is missing while the machine runs normally.
+- Nothing re-initialises the display until `amdgpu` loads, and the DMUB workaround delays that to
+  **~176–208 s**. So a bad boot is dark for about three minutes.
+- **That window exists because of the late load.** If the driver could load at boot, the display
+  would come up in seconds.
+
+### 1. Observe (no changes, just tomorrow's normal boot)
+
+| Question | Why |
+|---|---|
+| Is the **LUKS prompt visible**? | tests whether the firmware's display survives at all |
+| Does the picture appear at ~3 min? | confirms it is the amdgpu handover |
+| What do the **Q-LEDs** do? | VGA (white) stuck = GPU init; none = firmware never started |
+| Does the monitor say **"no signal"** or show black? | "no signal" = the output is not driven |
+
+Then capture everything in one go:
+
+```bash
+./scripts/boot-report.sh 3
+```
+
+### 2. The question that decides the fix: is the DMUB storm still there?
+
+All recent boots report **0** DMUB/power-gate errors — but every one used the late load, so that
+proves nothing about an early load. Test it by loading the driver **early in a normal boot**, inside
+the 150 s window (no config change needed):
+
+```bash
+sudo modprobe amdgpu
+sudo dmesg | grep -ciE 'Error queueing DMUB|Failed to power gate'
+```
+
+To have time to do this without rushing, widen the window first with a temporary drop-in, and remove
+it afterwards:
+
+```bash
+sudo systemctl edit amdgpu-late      # add:  [Service]
+                                     #       ExecStartPre=
+                                     #       ExecStartPre=/usr/bin/sleep 300
+```
+
+| Result | Meaning | Next |
+|---|---|---|
+| **0 errors** | the storm is gone; the late load is no longer needed | retire the pair (needs approval): remove `blacklist amdgpu`, drop the kernel param, disable both units, `mkinitcpio -P`, cold boot, confirm the display comes up immediately and DMUB stays 0 |
+| **errors > 0** | the storm is real | keep the workaround exactly as it is; the blank window is the price of it |
+
+**Revert is trivial either way:** restore `/etc/modprobe.d/amdgpu-coldboot.conf` (`blacklist amdgpu`),
+re-enable `amdgpu-late`, and reboot.
+
+### 3. If the workaround has to stay
+
+Two smaller improvements, both optional:
+
+- **Shrink the pre-kernel blank window** by slimming the 53 MB initramfs — with `amdgpu` blacklisted
+  the `kms` hook is pulling in GPU firmware for a driver that is not loaded. Boot-critical change.
+- **Shorten the wait**: if a shorter sleep than 150 s is DMUB-clean, the window shrinks. Test the
+  sleep value, not the blacklist.
 
 ---
 

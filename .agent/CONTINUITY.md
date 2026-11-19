@@ -10,6 +10,17 @@ On 2026-11-11 this log was union-merged from two diverged copies (one holding th
 history, one holding the November detail); no entry was dropped.
 
 ## [PLANS]
+- 2026-11-19T23:55Z `[USER]` **Backlog for the next sessions (user-specified order).** Boot issues
+  are done for now; the remaining blank-display work is prepared in docs/warm-reboot-action-plan.md
+  and needs a reboot. Topics to pick up next, in the user's order: (1) **AI agents and models -
+  priority**; (2) Vicinae; (3) Quickshell; (4) `lui sync`; (5) Docker and Podman 'run' apps, for
+  both system-wide and user-only scopes. Related open threads already in the tree: the rice-up /
+  shared-palette pipeline (themes/ + `lui theme`, stage 2 procedural wallpaper + Themes menu still
+  deferred, see docs/mockups/themes-v1.html), the WezTerm switch (config/packages declares wezterm +
+  matugen + exfatprogs, pending `lui sync`), and the local-apps launcher entries
+  (`config/local-apps`). Notes for whoever picks this up: `luci` is the admin account and `lui` is
+  the CLI - keep the naming split; sync stays manual-only (LOCKED); and the per-user override layer
+  is `~/.config/lui/hypr/overrides.lua` + `~/.config/lui/quickshell/tokens.json`.
 - 2026-11-14T23:07Z `[USER]` **Plan for 2026-11-16:** (1) reboot -> verify
   `amdgpu.ppfeaturemask=0xffff7fff` is live in `/proc/cmdline` (it has been in
   `arch-lateload.conf` since 2026-11-14 but no boot has used it yet); (2) from now,
