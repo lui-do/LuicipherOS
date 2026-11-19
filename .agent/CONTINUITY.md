@@ -10,6 +10,16 @@ On 2026-11-11 this log was union-merged from two diverged copies (one holding th
 history, one holding the November detail); no entry was dropped.
 
 ## [PLANS]
+- 2026-11-19T22:12Z `[USER]` **AI stack: `@models` must also exist on fresh installs.** Every
+  ISO/netinstall install must create the `@models` Btrfs subvolume mounted at `/var/lib/llm`, so
+  the system-wide model store exists out of the box. Implementation: add
+  `{ "mountpoint": "/var/lib/llm", "name": "@models" }` to the btrfs subvolume list in
+  `install/archinstall-desktop.json` (archinstall writes the fstab entry), then let
+  `install/bootstrap.sh` create `/var/lib/llm`, set ownership, and add
+  `nofail,x-systemd.device-timeout=10s` if needed (archinstall's `mount_options` are per-partition,
+  not per-subvolume). Do this as part of ADR-0002 execution, not before approval. Note: the VM disk
+  is 60 G and must be enlarged for real model weights. The target desktop already has `@models`
+  (subvolid 475, mounted 2026-11-19).
 - 2026-11-19T23:59Z `[USER]` **Blank-display follow-up - DO NOT LOSE THIS.** The user runs the DMUB
   early-load test first (docs/warm-reboot-action-plan.md, "The remaining item"). **When the result
   is reported, prepare whichever applies: (a) if DMUB errors come back 0, the late-load retirement
@@ -160,6 +170,18 @@ history, one holding the November detail); no entry was dropped.
 - 2026-09-21T20:00Z [CODE] v0.3 candidates: `lui sync` as a binary, CI plus VM test matrix.
 
 ## [DECISIONS]
+- 2026-11-19T22:30Z `[USER]` **ADR-0002 approved: local-first, system-wide AI stack.** Engine =
+  `llama-cpp` + `ggml-vulkan` (Vulkan default; ROCm only an opt-in A/B), routed by `llama-swap`
+  as a hardened system service on `127.0.0.1:12434` under the unprivileged `llama` account.
+  Weights are data, not packages: `config/models` + `lui ai sync` (sha256), stored on the
+  `@models` subvolume at `/var/lib/llm`. Three weight sets, four aliases (`general`, `coding`,
+  `coding-hq` = alias of general, `research`). Goose CLI + Desktop = native `goose-desktop-bin`
+  so settings/sessions are shared and user-only. OpenCode and Pi are per-user via system-wide
+  `mise`. Cloud keys are per-user only (`~/.config/lui/ai.env`, 0600); no automatic fallback;
+  telemetry pinned off. `lui ai disable` only stops the endpoint; `lui ai disable --prune` is the
+  only definitive uninstall. Fresh installs must create `@models` from
+  `install/archinstall-desktop.json`. Stale boot note: storage on the target is already done
+  (2026-11-19).
 - 2026-11-15T14:10Z `[USER]` **Hypothesis from live evidence: warm reboots hang POST with amdgpu
   loaded; the driver must be unloaded before reboot.** The 2026-11-15 automated-boot test reboot
   produced a completely dead warm boot (no ASUS logo, no menu, Caps Lock dead = UEFI POST never
@@ -309,6 +331,13 @@ history, one holding the November detail); no entry was dropped.
   LFS learning only. Time of day UNCONFIRMED (date from ADR).
 
 ## [PROGRESS]
+- 2026-11-19T22:12Z `[TOOL]` **Target desktop: `@models` subvolume created and mounted.** Ran the
+  ADR-0002 storage runbook as admin account `luci`: created Btrfs subvolume `@models` at the top
+  level (subvolid 475), mounted at `/var/lib/llm` via `/etc/fstab` with
+  `subvol=/@models,compress=zstd,noatime,nofail,x-systemd.device-timeout=10s`. Verified
+  `findmnt` reports `/dev/mapper/root[/@models]` and `df` shows 658 G free. No existing data was
+  moved; snapshots of `@` exclude nested subvolumes. Only the storage step is done - engine,
+  packages, models and agents are still pending ADR-0002 approval.
 - 2026-11-15T13:04Z `[TOOL]` **Ricing stage 1 built: theme pipeline core.** New `themes/` dir with
   the six signed-off presets (mocha, nord, tokyo-night, gruvbox, everforest, rose-pine - keys mirror
   the Quickshell tokens); `scripts/theme.sh` + `lui theme` subcommand (list/show/set/reset/set

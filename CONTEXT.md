@@ -25,6 +25,7 @@ Glossary only. No implementation details.
 - flatpak scope: SPLIT — system list + user list.
 - sync: manual-only, no auto-sync on boot.
 - ADR-0001: LOCKED Arch + scripts. Nix reproducibility = optional v0.3 layer on Arch + breakage guards. LFS = learning side-quest, not v0.1 path.
+- AI stack (ADR-0002): LOCKED local-first. System-wide `llama-cpp` (Vulkan) + `llama-swap` + Goose; three weight sets exposed as `general`, `coding`, `coding-hq`, `research`; sessions and cloud keys are user-only; no silent cloud fallback; telemetry off; weights downloaded only by `lui ai sync`; `lui ai disable` stops the endpoint, `disable --prune` is the only definitive uninstall.
 
 ## Open for v0.2
 
