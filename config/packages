@@ -125,6 +125,8 @@ flatpak
 distrobox
 xdg-user-dirs
 polkit-gnome
+# mise: system-wide binary, per-user tool installs (OpenCode, Pi, node, ...)
+mise
 
 # --- declared from the 2026-11-02 desktop inventory (installed by hand, kept as-is) ---
 # Source: docs/inventory-2026-11-02.md. Keep package lines free of inline comments:

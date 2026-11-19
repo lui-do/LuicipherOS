@@ -355,6 +355,20 @@ history, one holding the November detail); no entry was dropped.
   LFS learning only. Time of day UNCONFIRMED (date from ADR).
 
 ## [PROGRESS]
+- 2026-11-19T23:25Z `[TOOL]` **AI step 4 implemented: Goose + mise + user-only state.** Added
+  `mise` (Extra) to `config/packages`, `goose-desktop-bin` to `config/packages-arch` and
+  `config/ai-packages`. The AUR `goose-cli-bin` conflicts with `goose-desktop` and the Desktop
+  package deletes `/usr/bin/goose`, so `install/goose-cli.sh` installs the matching **1.60.1**
+  upstream CLI tarball (b2sum-pinned) to `/usr/local/lib/goose` + `/usr/local/bin/goose`; both
+  native apps share `~/.config/goose`. `install/environment.d/90-llm-ai.conf` pins local provider,
+  `GOOSE_MODEL=general`, telemetry off, `PI_TELEMETRY=0`; `install/profile.d/90-llm-ai.sh` mirrors
+  it for login shells. `bootstrap.sh` deploys those, generates `goose-general/code/hq/research`
+  wrappers, and stows `dotfiles/pi`. OpenCode config is deliberately **not stowed** (it would
+  overwrite the existing `~/.config/opencode/opencode.json` permissions); `docs/ai-agents.md` has
+  the merge snippet with `share: disabled` + `openTelemetry: false`. Pi config (provider, default
+  `coding`, telemetry/analytics off) is stowed from `dotfiles/pi/.pi/agent/`. Added
+  `docs/ai-agents.md` (paths, deploy, mise commands, cloud-key policy, disable/prune). Live
+  deployment of this step is pending; model download still ~40 GiB as `luci`.
 - 2026-11-19T23:20Z `[TOOL]` **AI step 3 implemented: model manifest + `lui ai`.** New
   `config/models.json` pins the exact upstream GGUF files, sizes and sha256 (read from the HF API):
   `general` = unsloth/Qwen3.8-27B-GGUF UD-Q4_K_XL (17,659,407,264 B, `2a5f3565...`), `coding` =

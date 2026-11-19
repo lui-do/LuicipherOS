@@ -285,6 +285,14 @@ cmd_audit() {
   else
     echo "INFO  OpenCode config not found yet"
   fi
+  if [[ -f "$HOME/.pi/agent/settings.json" ]]; then
+    grep -qs '"enableInstallTelemetry": *false' "$HOME/.pi/agent/settings.json" \
+      && echo "PASS  Pi install telemetry disabled" || echo "WARN  Pi install telemetry not pinned off"
+    grep -qs '"enableAnalytics": *false' "$HOME/.pi/agent/settings.json" \
+      && echo "PASS  Pi analytics disabled" || echo "WARN  Pi analytics not pinned off"
+  else
+    echo "INFO  Pi settings not found yet"
+  fi
   echo "INFO  Pi telemetry env: PI_TELEMETRY=${PI_TELEMETRY:-unset} (must be 0)"
   [[ "$problems" -eq 0 ]] && echo "== audit complete: no critical issues ==" \
     || { echo "== audit complete: $problems critical issue(s) =="; return 1; }
@@ -365,6 +373,7 @@ cmd_disable() {
   echo "    packages: ${pkgs[*]:-(none installed)}"
   echo "    models:   $(size_human "$bytes") under $STORE"
   echo "    service files: /etc/systemd/system/llama-swap.service /etc/llama-swap /usr/lib/sysusers.d/luicipher-llama.conf"
+  echo "    agents:   /usr/local/lib/goose, /usr/local/bin/goose*, /etc/environment.d/90-llm-ai.conf"
   echo "    the @models subvolume itself is kept."
   if [[ "$yes" != true ]]; then
     local ans
@@ -376,6 +385,10 @@ cmd_disable() {
   fi
   sudo rm -f /etc/systemd/system/llama-swap.service /usr/lib/sysusers.d/luicipher-llama.conf
   sudo rm -rf /etc/llama-swap
+  sudo rm -rf /usr/local/lib/goose
+  sudo rm -f /usr/local/bin/goose /usr/local/bin/goose-general /usr/local/bin/goose-code \
+    /usr/local/bin/goose-hq /usr/local/bin/goose-research
+  sudo rm -f /etc/environment.d/90-llm-ai.conf /etc/profile.d/90-llm-ai.sh
   sudo find "$STORE" -mindepth 1 -delete
   sudo systemctl daemon-reload
   echo "==> AI packages and weights removed; /etc/lui/ai.disabled stays so sync will not reinstall them"

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://pi.dev/schemas/models.schema.json",
+  "providers": {
+    "llamacpp": {
+      "baseUrl": "http://127.0.0.1:12434/v1",
+      "api": "openai-completions",
+      "apiKey": "local",
+      "models": [
+        { "id": "general", "name": "Qwen3.8-27B (local)" },
+        { "id": "coding", "name": "Tiel-Coder-35B-A3B (local)" },
+        { "id": "coding-hq", "name": "Qwen3.8-27B (local, HQ)" },
+        { "id": "research", "name": "Qwen3.5-9B (local)" }
+      ]
+    }
+  }
+}

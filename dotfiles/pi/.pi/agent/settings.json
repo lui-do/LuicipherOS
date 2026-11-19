@@ -1,0 +1,7 @@
+{
+  "$schema": "https://pi.dev/schemas/settings.schema.json",
+  "defaultProvider": "llamacpp",
+  "defaultModel": "coding",
+  "enableInstallTelemetry": false,
+  "enableAnalytics": false
+}

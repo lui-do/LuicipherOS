@@ -1,0 +1,132 @@
+# AI agents and models (ADR-0002)
+
+Local-first, system-wide. One model service, one model store, per-user sessions
+and keys. Nothing here falls back to a cloud provider on its own.
+
+## Files (declarative)
+
+| Path | Purpose |
+|---|---|
+| `config/ai-packages` | optional AI package set (engine, router, Goose Desktop) |
+| `config/models.json` | model manifest: repo, file, size, sha256, context, aliases |
+| `install/environment.d/90-llm-ai.conf` | system-wide Goose defaults (no secrets) |
+| `install/profile.d/90-llm-ai.sh` | mirror for non-systemd login shells |
+| `install/goose-cli.sh` | pinned Goose CLI from the same release as Desktop |
+| `install/llama-swap.service` / `install/llama-swap/config.yaml` | model server |
+| `dotfiles/pi/` | Pi config: local provider, telemetry/analytics off |
+
+Runtime stores (never in the repo):
+
+- weights: `/var/lib/llm/models` (root-owned, `@models` subvolume)
+- Goose: `~/.config/goose`, `~/.local/share/goose` (user-only, CLI and Desktop)
+- OpenCode: `~/.local/share/opencode`
+- Pi: `~/.pi/agent/sessions`
+- per-user cloud keys: `~/.config/lui/ai.env` (mode 0600)
+
+## Install / deploy
+
+As the admin account (`luci`), after `lui sync --system` and `bootstrap.sh`:
+
+```bash
+lui ai status
+lui ai sync --dry-run       # sources + ~40 GiB
+lui ai sync                 # download + sha256 verify
+```
+
+As a daily user (`work`), once the service is up:
+
+```bash
+mise use -g node@lts
+mise use -g npm:opencode-ai
+mise use -g npm:@earendil-works/pi-coding-agent
+
+lui ai run                  # Goose CLI, general model
+goose-code                  # convenience wrapper (if installed by bootstrap)
+opencode                    # uses llamacpp/coding from dotfiles/opencode
+pi                          # uses llamacpp/coding from dotfiles/pi
+```
+
+`goose-desktop` and the CLI use the same `~/.config/goose`; verify after the
+first launch with `goose info -v` and the Desktop Settings page. Do not use the
+Flatpak build: its sandbox separates state.
+
+## OpenCode (work profile)
+
+OpenCode config is **not stowed**, because it would overwrite an existing
+`~/.config/opencode/opencode.json` (permissions, providers, keybinds). Merge
+these keys into your file and keep the rest:
+
+```json
+{
+  "share": "disabled",
+  "openTelemetry": false,
+  "model": "llamacpp/coding",
+  "providers": {
+    "llamacpp": {
+      "name": "llama-swap (local)",
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": {
+        "baseURL": "http://127.0.0.1:12434/v1",
+        "apiKey": "local"
+      },
+      "models": {
+        "general": { "name": "Qwen3.8-27B (local)" },
+        "coding": { "name": "Tiel-Coder-35B-A3B (local)" },
+        "coding-hq": { "name": "Qwen3.8-27B (local, HQ)" },
+        "research": { "name": "Qwen3.5-9B (local)" }
+      }
+    }
+  }
+}
+```
+
+`share: disabled` is the important privacy bit; `openTelemetry: false` is the
+second. `lui ai audit` verifies both.
+
+Pi's config is stowed (`dotfiles/pi/.pi/agent/`); it has no existing LuicipherOS
+conflict by default.
+
+## Model aliases
+
+| Alias | Weights | Use |
+|---|---|---|
+| `general` | Qwen3.8-27B UD-Q4_K_XL | chat, docs, vision |
+| `coding` | Tiel-Coder-35B-A3B UD-Q3_K_XL | fast coding loops |
+| `coding-hq` | same file as `general` | harder tickets |
+| `research` | Qwen3.5-9B Q6_K | web/curl/bash tool chains |
+
+One large model is resident at a time; llama-swap swaps in ~10–15 s. Tune
+context/quants with `lui ai bench` on the target.
+
+## Cloud keys (explicit, per user)
+
+Nothing cloud is installed system-wide. A user who wants a hosted model writes
+their own key:
+
+```bash
+mkdir -p ~/.config/lui
+cat > ~/.config/lui/ai.env <<'EOF'
+GOOSE_PROVIDER__API_KEY=sk-...
+OPENROUTER_API_KEY=sk-or-...
+EOF
+chmod 600 ~/.config/lui/ai.env
+
+lui ai cloud openrouter anthropic/claude-sonnet-5.5
+```
+
+`lui ai run` always uses the local endpoint, regardless of what is in `ai.env`.
+`lui ai cloud` is the only path that uses a hosted provider, and it fails if no
+key is present instead of falling back.
+
+## Disable / uninstall
+
+```bash
+lui ai disable             # stop the endpoint; keep packages and weights
+lui ai enable              # restore
+lui ai disable --prune     # preview + typed confirmation; removes packages,
+                           # weights, service files, goose CLI, env defaults
+```
+
+`/etc/lui/ai.disabled` makes `lui sync --system` skip `config/ai-packages` so a
+disabled stack is not reinstalled. The `@models` subvolume is kept; only its
+contents are removed.

@@ -34,7 +34,7 @@ while [[ $i -lt $# ]]; do
   i=$((i+1))
 done
 
-STOW_PKGS=(hypr quickshell swaync tabby fuzzel vicinae uwsm xdg termfilechooser)
+STOW_PKGS=(hypr quickshell swaync tabby fuzzel vicinae uwsm xdg termfilechooser pi)
 
 log() { echo "==> $1"; }
 need_cmd() { command -v "$1" &>/dev/null || { echo "FAIL: missing command: $1"; exit 1; }; }
@@ -181,6 +181,34 @@ elif command -v llama-swap &>/dev/null; then
   if [[ -f "$ROOT/install/llama-swap.service" ]]; then
     sudo install -Dm644 "$ROOT/install/llama-swap.service" /etc/systemd/system/llama-swap.service
     sudo systemctl enable llama-swap 2>/dev/null || echo "  (llama-swap enable skipped)"
+  fi
+  # Goose CLI from the same upstream release as goose-desktop-bin (the AUR CLI
+  # conflicts with the Desktop package). Both use ~/.config/goose.
+  if [[ -f "$ROOT/install/goose-cli.sh" ]]; then
+    bash "$ROOT/install/goose-cli.sh" || echo "  WARN: goose CLI install failed"
+  fi
+  # Local-only defaults (no secrets) + login-shell mirror.
+  if [[ -f "$ROOT/install/environment.d/90-llm-ai.conf" ]]; then
+    sudo install -Dm644 "$ROOT/install/environment.d/90-llm-ai.conf" /etc/environment.d/90-llm-ai.conf
+  fi
+  if [[ -f "$ROOT/install/profile.d/90-llm-ai.sh" ]]; then
+    sudo install -Dm644 "$ROOT/install/profile.d/90-llm-ai.sh" /etc/profile.d/90-llm-ai.sh
+  fi
+  # Convenience wrappers; the real implementation is `lui ai run`.
+  if [[ -x /usr/local/bin/goose ]]; then
+    for pair in "general goose-general" "coding goose-code" "coding-hq goose-hq" "research goose-research"; do
+      alias_name="${pair%% *}"; bin_name="${pair##* }"
+      sudo tee "/usr/local/bin/$bin_name" >/dev/null <<EOF
+#!/bin/sh
+set -a
+[ -r /etc/environment.d/90-llm-ai.conf ] && . /etc/environment.d/90-llm-ai.conf
+set +a
+GOOSE_MODEL=$alias_name
+export GOOSE_MODEL
+exec /usr/local/bin/goose "\$@"
+EOF
+      sudo chmod 755 "/usr/local/bin/$bin_name"
+    done
   fi
   # The store must be the @models mount; never create it inside @.
   if findmnt -M /var/lib/llm >/dev/null 2>&1; then

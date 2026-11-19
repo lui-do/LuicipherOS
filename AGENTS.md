@@ -75,13 +75,14 @@ LuicipherOS/
 - `desktop/` holds `Detailed_PC_Report_Without_Submetrics.txt`.
 - `docs/` holds `adr/`, `agents/`, `wiki-draft/`, `TROUBLESHOOTING.md`,
   `target-bringup-runbook.md`, `hyprcapture-trial.md`, `dmub-coldboot-casefile.md`,
-  `upstream-drm-amd-coldboot-dmub.md`.
+  `upstream-drm-amd-coldboot-dmub.md`, `ai-agents.md`.
 - `dotfiles/` has `fuzzel`, `hypr`, `quickshell`, `swaync`, `tabby`, `termfilechooser`, `uwsm`,
-  `vicinae`, `xdg`.
+  `vicinae`, `xdg`, `pi`.
 - `install/` has `archinstall-desktop.json`, `archinstall-desktop.creds.example.json`,
   `bootstrap.sh`, `preflight.sh`, `greetd-config.toml`, `vconsole.conf`, `amdgpu-late.service`,
   `amdgpu-unload-on-shutdown.service`, `llama-swap.service`, `llama-swap.sysusers`,
-  `llama-swap/config.yaml`.
+  `llama-swap/config.yaml`, `goose-cli.sh`, `environment.d/90-llm-ai.conf`,
+  `profile.d/90-llm-ai.sh`.
 - `iso/` has `profiledef.sh`, `packages.x86_64`, `airootfs/`, `README.md`.
 - `research/` currently has `office-suites.md`.
 - `scripts/` has `lui.sh` (the `lui` CLI), `sync.sh`, `ensure-packages.sh`,
@@ -352,6 +353,9 @@ stack. Nix is an optional v0.3 layer; LFS is a learning side-quest only.
 
 - Secrets: never commit credentials. Copy `archinstall-desktop.creds.example.json` to
   `/tmp/creds.json` and fill password hashes (`openssl passwd -6`). Do not commit hashes.
+- AI keys are per-user only: `~/.config/lui/ai.env` (mode 0600), never `/etc`. The local endpoint
+  is loopback-only, telemetry is pinned off, and there is no automatic cloud fallback; verify
+  with `lui ai audit`. `lui ai cloud` is the only explicit cloud path.
 - Ignored artifacts (`.gitignore`): `iso/pacman.conf`, `iso/syslinux`, `iso/efiboot`, `out/`,
   `screenshotVM/`, `docs/*.pdf`.
 - Disk encryption: LUKS on the target. SecureBoot is out of scope for v0.1.
