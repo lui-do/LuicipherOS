@@ -10,6 +10,15 @@ On 2026-11-11 this log was union-merged from two diverged copies (one holding th
 history, one holding the November detail); no entry was dropped.
 
 ## [PLANS]
+- 2026-11-19T23:59Z `[USER]` **Blank-display follow-up - DO NOT LOSE THIS.** The user runs the DMUB
+  early-load test first (docs/warm-reboot-action-plan.md, "The remaining item"). **When the result
+  is reported, prepare whichever applies: (a) if DMUB errors come back 0, the late-load retirement
+  change set (drop `blacklist amdgpu`, remove the `modprobe.blacklist=` kernel param, disable
+  `amdgpu-late` + `amdgpu-unload-on-shutdown`, `mkinitcpio -P`, cold boot, verify display + 0 DMUB
+  errors); or (b) if errors are non-zero, the initramfs slimming (the `kms` hook pulls GPU firmware
+  into a 53 MB image for a driver that never loads).** Both are boot-critical and need the user's
+  explicit go-ahead. Also still to be confirmed by that same test: whether the firmware's display
+  survives at all (is the LUKS prompt visible on a cold boot).
 - 2026-11-19T23:55Z `[USER]` **Backlog for the next sessions (user-specified order).** Boot issues
   are done for now; the remaining blank-display work is prepared in docs/warm-reboot-action-plan.md
   and needs a reboot. Topics to pick up next, in the user's order: (1) **AI agents and models -
