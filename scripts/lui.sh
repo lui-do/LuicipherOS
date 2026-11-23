@@ -34,6 +34,8 @@
 set -euo pipefail
 
 LUI_VERSION="0.1"
+# Shared canonical tree; overridable for tests/edge installs.
+SHARED_ROOT="${LUI_SHARED_ROOT:-/opt/LuicipherOS}"
 
 die() { printf 'lui: %s\n' "$*" >&2; exit 1; }
 
@@ -107,7 +109,7 @@ resolve_root() {
       || die "LUI_ROOT=$LUI_ROOT does not look like a LuicipherOS tree"
     printf '%s\n' "$LUI_ROOT"; return 0
   fi
-  cand="/opt/LuicipherOS"
+  cand="$SHARED_ROOT"
   if [[ -f "$cand/scripts/sync.sh" ]]; then printf '%s\n' "$cand"; return 0; fi
   self="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
   if [[ -f "$self/scripts/sync.sh" ]]; then printf '%s\n' "$self"; return 0; fi
@@ -119,7 +121,7 @@ resolve_root() {
 # Which rule selected the tree; used to warn on the risky per-user fallback.
 classify_root() { # $1 = resolved root
   if [[ -n "${LUI_ROOT:-}" ]]; then echo "LUI_ROOT"
-  elif [[ "$1" == "/opt/LuicipherOS" ]]; then echo "shared"
+  elif [[ "$1" == "$SHARED_ROOT" ]]; then echo "shared"
   elif [[ "$1" == "$HOME/LuicipherOS" ]]; then echo "home-fallback"
   else echo "in-place"
   fi

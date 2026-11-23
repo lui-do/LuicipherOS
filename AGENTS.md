@@ -70,14 +70,15 @@ LuicipherOS/
 
 - `.agents/` holds agent skills; do not hand-edit what `skills-lock.json` pins.
 - `config/` is the source of truth: `packages`, `packages-arch`, `flatpaks-system.list`,
-  `flatpaks-user.list`, `protected-packages`, `ai-packages`, `models.json`
+  `flatpaks-user.list`, `protected-packages`, `ai-packages`, `models.json`, `ai-templates/`
   (`flatpaks.list` is legacy, system scope).
 - `desktop/` holds `Detailed_PC_Report_Without_Submetrics.txt`.
 - `docs/` holds `adr/`, `agents/`, `wiki-draft/`, `TROUBLESHOOTING.md`,
   `target-bringup-runbook.md`, `hyprcapture-trial.md`, `dmub-coldboot-casefile.md`,
   `upstream-drm-amd-coldboot-dmub.md`, `ai-agents.md`.
 - `dotfiles/` has `fuzzel`, `hypr`, `quickshell`, `swaync`, `tabby`, `termfilechooser`, `uwsm`,
-  `vicinae`, `xdg`, `pi`.
+  `vicinae`, `xdg`.
+- `config/ai-templates/` holds merge templates for per-user OpenCode/Pi config (`lui ai setup-user`).
 - `install/` has `archinstall-desktop.json`, `archinstall-desktop.creds.example.json`,
   `bootstrap.sh`, `preflight.sh`, `greetd-config.toml`, `vconsole.conf`, `amdgpu-late.service`,
   `amdgpu-unload-on-shutdown.service`, `llama-swap.service`, `llama-swap.sysusers`,
@@ -144,6 +145,7 @@ lui ai sync                # admin (luci): download/verify ~40 GiB into /var/lib
 lui ai run                 # per-user: Goose against the local endpoint (default general)
 lui ai run coding          # fast coding model; coding-hq = Inkling quality coding
 lui ai audit               # local-only, telemetry, key placement
+lui ai setup-user          # merge local provider/privacy into OpenCode+Pi
 lui ai disable             # stop the endpoint, keep packages/models
 lui ai disable --prune     # definitive uninstall (preview + typed confirmation)
 ```

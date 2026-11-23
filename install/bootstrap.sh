@@ -36,7 +36,7 @@ while [[ $i -lt $# ]]; do
   i=$((i+1))
 done
 
-STOW_PKGS=(hypr quickshell swaync tabby fuzzel vicinae uwsm xdg termfilechooser pi)
+STOW_PKGS=(hypr quickshell swaync tabby fuzzel vicinae uwsm xdg termfilechooser)
 
 log() { echo "==> $1"; }
 need_cmd() { command -v "$1" &>/dev/null || { echo "FAIL: missing command: $1"; exit 1; }; }

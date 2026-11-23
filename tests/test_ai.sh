@@ -132,6 +132,31 @@ OUT=$(run_ai audit 2>&1)
 [[ "$OUT" == *"loopback"* ]] && ok "audit confirms loopback" || bad "no loopback check: $OUT"
 [[ "$OUT" == *"no API keys"* ]] && ok "audit checks /etc for keys" || bad "no key check: $OUT"
 
+echo "== 9. setup-user merges without overwriting existing config =="
+mkdir -p "$T/home/.config/opencode" "$T/home/.pi/agent"
+printf '%s\n' '{"permission":{"bash":"ask"}}' > "$T/home/.config/opencode/opencode.json"
+printf '%s\n' '{"providers":{"omni":{"baseUrl":"https://omni.example"}}}' > "$T/home/.pi/agent/models.json"
+printf '%s\n' '{"foo":1}' > "$T/home/.pi/agent/settings.json"
+OUT=$(run_ai setup-user 2>&1)
+python3 - "$T/home" <<'PY'
+import json, sys, os
+home = sys.argv[1]
+oc = json.load(open(os.path.join(home, ".config/opencode/opencode.json")))
+pm = json.load(open(os.path.join(home, ".pi/agent/models.json")))
+ps = json.load(open(os.path.join(home, ".pi/agent/settings.json")))
+checks = [
+    oc["permission"]["bash"] == "ask",
+    oc["share"] == "disabled" and oc["openTelemetry"] is False,
+    "llamacpp" in oc["providers"] and oc["model"] == "llamacpp/coding",
+    "omni" in pm["providers"] and "llamacpp" in pm["providers"],
+    ps["foo"] == 1 and ps["enableInstallTelemetry"] is False,
+]
+sys.exit(0 if all(checks) else 1)
+PY
+[[ $? -eq 0 ]] && ok "existing keys preserved, local provider merged" || bad "merge lost data: $OUT"
+ls "$T/home/.config/opencode/opencode.json.bak-"* >/dev/null 2>&1 \
+  && ok "backup written before merge" || bad "no backup written"
+
 echo ""
 echo "tests: $PASS passed, $FAILN failed"
 [[ "$FAILN" -eq 0 ]]

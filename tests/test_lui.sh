@@ -75,15 +75,15 @@ cp "$T/tree/scripts/sync.sh" "$T/fakehome/LuicipherOS/scripts/sync.sh"
 # the copy must NOT sit inside a tree, so its own-tree rule misses and the
 # $HOME/LuicipherOS fallback is what resolves
 cp "$LUI" "$T/fakebin/lui"
-OUT=$(env -u LUI_ROOT HOME="$T/fakehome" bash "$T/fakebin/lui" status 2>&1)
+OUT=$(env -u LUI_ROOT HOME="$T/fakehome" LUI_SHARED_ROOT="$T/no-shared" bash "$T/fakebin/lui" status 2>&1)
 [[ "$OUT" == *"[home-fallback]"* ]] \
   && ok "tree banner marks the fallback" || bad "fallback not labelled: $OUT"
 [[ "$OUT" != *"WARNING:"* ]] \
   && ok "safe path does not warn (no cry-wolf)" || bad "spurious warning on status: $OUT"
-OUT=$(env -u LUI_ROOT HOME="$T/fakehome" bash "$T/fakebin/lui" sync --prune --dry-run 2>&1)
+OUT=$(env -u LUI_ROOT HOME="$T/fakehome" LUI_SHARED_ROOT="$T/no-shared" bash "$T/fakebin/lui" sync --prune --dry-run 2>&1)
 [[ "$OUT" == *"WARNING: this is this user's own clone"* ]] \
   && ok "prune on the fallback warns loudly" || bad "no prune warning: $OUT"
-OUT=$(env -u LUI_ROOT HOME="$T/fakehome" LUI_ROOT="$T/tree" bash "$T/fakebin/lui" sync --prune --dry-run 2>&1)
+OUT=$(env -u LUI_ROOT HOME="$T/fakehome" LUI_SHARED_ROOT="$T/no-shared" LUI_ROOT="$T/tree" bash "$T/fakebin/lui" sync --prune --dry-run 2>&1)
 [[ "$OUT" != *"WARNING:"* ]] \
   && ok "no warning when LUI_ROOT is set" || bad "spurious warning: $OUT"
 

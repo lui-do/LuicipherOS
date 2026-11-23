@@ -13,7 +13,7 @@ and keys. Nothing here falls back to a cloud provider on its own.
 | `install/profile.d/90-llm-ai.sh` | mirror for non-systemd login shells |
 | `install/goose-cli.sh` | fallback pinned Goose CLI (only if the package omits `/usr/bin/goose`) |
 | `install/llama-swap.service` / `install/llama-swap/config.yaml` | model server |
-| `dotfiles/pi/` | Pi config: local provider, telemetry/analytics off |
+| `config/ai-templates/` | merge templates for per-user OpenCode/Pi config (`lui ai setup-user`) |
 
 Runtime stores (never in the repo):
 
@@ -41,7 +41,7 @@ lui ai sync                       # download + sha256 verify
 home. Per-user pieces, as `work`:
 
 ```bash
-stow -d dotfiles -t "$HOME" --restow pi   # Pi config (OpenCode is merged manually)
+lui ai setup-user        # merge local provider/privacy keys into OpenCode+Pi (preserves your keys)
 
 mise use -g node@lts
 mise use -g npm:opencode-ai
@@ -50,7 +50,7 @@ mise use -g npm:@earendil-works/pi-coding-agent
 lui ai run                  # Goose CLI, general model
 goose-code                  # convenience wrapper (if installed)
 opencode                    # uses llamacpp/coding from your merged config
-pi                          # uses llamacpp/coding from dotfiles/pi
+pi                          # uses llamacpp/coding from ~/.pi/agent
 ```
 
 `goose-desktop` and the CLI use the same `~/.config/goose`; verify after the
@@ -59,9 +59,9 @@ Flatpak build: its sandbox separates state.
 
 ## OpenCode (work profile)
 
-OpenCode config is **not stowed**, because it would overwrite an existing
-`~/.config/opencode/opencode.json` (permissions, providers, keybinds). Merge
-these keys into your file and keep the rest:
+OpenCode config is **merged, not stowed**, so an existing
+`~/.config/opencode/opencode.json` (permissions, providers, keybinds) is never
+overwritten. `lui ai setup-user` adds these keys and backs up the old file:
 
 ```json
 {
@@ -90,8 +90,8 @@ these keys into your file and keep the rest:
 `share: disabled` is the important privacy bit; `openTelemetry: false` is the
 second. `lui ai audit` verifies both.
 
-Pi's config is stowed (`dotfiles/pi/.pi/agent/`); it has no existing LuicipherOS
-conflict by default.
+Pi's config is merged by `lui ai setup-user` into `~/.pi/agent/` (provider
+`llamacpp` added, other providers preserved, telemetry/analytics off).
 
 ## Model aliases
 

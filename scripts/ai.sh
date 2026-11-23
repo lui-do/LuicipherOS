@@ -28,6 +28,8 @@ usage: lui ai <command>
   run [MODEL] [ARGS...]  start Goose against the local endpoint (default: general)
   bench [MODEL...]       one-shot latency/token check per model
   audit                  local-only / telemetry / key checks
+  setup-user             merge the local provider + privacy keys into this
+                         user's OpenCode/Pi config (preserves existing keys)
   cloud <PROVIDER> [MODEL] [ARGS...]
                          explicit hosted session using this user's key (no fallback)
   enable                 remove the disabled flag, enable llama-swap (admin)
@@ -227,6 +229,70 @@ cmd_run() {
   die "goose not installed (step 4: goose-desktop-bin); set LUI_GOOSE_BIN to test"
 }
 
+cmd_setup_user() {
+  require_cmd python3
+  local cfg="${XDG_CONFIG_HOME:-$HOME/.config}"
+  python3 - "$ROOT" "$cfg" "$HOME" <<'PY'
+import json, os, shutil, sys, time
+
+root, cfg, home = sys.argv[1], sys.argv[2], sys.argv[3]
+
+def load(path):
+    with open(path) as f:
+        return json.load(f)
+
+def save(path, data):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    changed = True
+    if os.path.exists(path):
+        try:
+            changed = load(path) != data
+        except Exception:
+            changed = True
+        if changed:
+            bak = path + ".bak-" + time.strftime("%Y%m%d-%H%M%S")
+            shutil.copy2(path, bak)
+    if changed:
+        with open(path, "w") as f:
+            json.dump(data, f, indent=2)
+            f.write("\n")
+    print(("updated  " if changed else "unchanged") + " " + path)
+
+# OpenCode: preserve permission/keybindings/etc., add the local provider and
+# force the two privacy switches.
+tpl = load(os.path.join(root, "config/ai-templates/opencode.json"))
+oc = os.path.join(cfg, "opencode/opencode.json")
+d = load(oc) if os.path.exists(oc) else {}
+d["share"] = "disabled"
+d["openTelemetry"] = False
+d.setdefault("model", tpl["model"])
+if not isinstance(d.get("providers", {}), dict):
+    sys.exit("lui ai: opencode 'providers' is not an object")
+d.setdefault("providers", {})["llamacpp"] = tpl["providers"]["llamacpp"]
+save(oc, d)
+
+# Pi: keep other providers (e.g. omni), add/replace llamacpp only.
+tplm = load(os.path.join(root, "config/ai-templates/pi-models.json"))
+pm = os.path.join(home, ".pi/agent/models.json")
+d = load(pm) if os.path.exists(pm) else {}
+if not isinstance(d.get("providers", {}), dict):
+    sys.exit("lui ai: pi 'providers' is not an object")
+d.setdefault("providers", {})["llamacpp"] = tplm["providers"]["llamacpp"]
+save(pm, d)
+
+# Pi settings: privacy off, local defaults only when not already chosen.
+tpls = load(os.path.join(root, "config/ai-templates/pi-settings.json"))
+ps = os.path.join(home, ".pi/agent/settings.json")
+d = load(ps) if os.path.exists(ps) else {}
+d["enableInstallTelemetry"] = False
+d["enableAnalytics"] = False
+d.setdefault("defaultProvider", tpls["defaultProvider"])
+d.setdefault("defaultModel", tpls["defaultModel"])
+save(ps, d)
+PY
+  echo "== per-user config merged; verify with: lui ai audit"
+}
+
 cmd_cloud() {
   local provider="${1:-}"
   [[ -n "$provider" ]] || die "usage: lui ai cloud <provider> [MODEL] [ARGS...]"
@@ -407,6 +473,7 @@ case "$cmd" in
   run) cmd_run "$@" ;;
   bench) cmd_bench "$@" ;;
   audit) cmd_audit "$@" ;;
+  setup-user) cmd_setup_user "$@" ;;
   cloud) cmd_cloud "$@" ;;
   enable) cmd_enable "$@" ;;
   disable) cmd_disable "$@" ;;

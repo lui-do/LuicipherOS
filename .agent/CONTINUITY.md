@@ -355,6 +355,19 @@ history, one holding the November detail); no entry was dropped.
   LFS learning only. Time of day UNCONFIRMED (date from ADR).
 
 ## [PROGRESS]
+- 2026-11-23T22:31Z `[TOOL]` **AI deploy audit + non-destructive user-config merge.** Packages:
+  `llama-cpp 1.0.0-1`, `ggml-vulkan 1.0.0-1`, `llama-swap-bin 275-1`, `goose-desktop-bin
+  1.60.2-1`, `mise 2026.11.12-1`; `/usr/bin/goose` is 1.60.2 (packaged CLI; old
+  `/usr/local/bin/goose` fallback removed), wrappers point at it, `/opt/LuicipherOS` matches the
+  repo for `ai.sh`, and `/etc/llama-swap/config.yaml` matches the repo. `lui ai sync` is running:
+  `small.gguf.part` was 3.7 GiB of 7.5 GiB at 22:31; `coding`/`coding-hq` still to come.
+  **Hazard fixed:** `~/.pi/agent/models.json` already had a custom `omni` provider and
+  `~/.config/opencode/opencode.json` had permission rules; stowing the templates would have
+  overwritten them. Stow was removed for `pi`; new `lui ai setup-user` merges the `llamacpp`
+  provider + privacy keys into both, preserving other keys, with `.bak-<timestamp>` backups.
+  Run as `work`: OpenCode updated, Pi models now `llamacpp` + `omni`, Pi settings telemetry off,
+  `lui ai audit` reports no critical issues. `lui ai status` extras for later inventory (do NOT
+  prune): `miniupnpc`, `python-rich`, `traceroute`. Git is 5 commits ahead of origin.
 - 2026-11-23T21:25Z `[USER]` **Cold boots show the LUKS prompt again.** On every normal cold boot
   since the 2026-11-20 firmware change (boots Nov 20, 21, 22, 23) the LUKS prompt was visible; the
   blank-start symptom did not recur. Current boot (started 12:56, checked 21:25): `amdgpu` first
