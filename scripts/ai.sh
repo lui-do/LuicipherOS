@@ -265,7 +265,12 @@ cmd_audit() {
   else
     echo "WARN  Goose telemetry pin not found in /etc/environment.d (step 4)"
   fi
-  if grep -RqsE 'API_KEY=|_API_KEY=' /etc/environment.d /etc/lui 2>/dev/null; then
+  # Only real key material counts; `local`/`ollama`/`dummy` are placeholders for
+  # keyless local endpoints and are allowed in the system defaults.
+  local key_hits=""
+  key_hits="$(grep -RhsE '^[A-Z0-9_]*API_KEY=' /etc/environment.d /etc/lui 2>/dev/null \
+    | grep -vE '^[A-Z0-9_]*API_KEY=(local|ollama|dummy|none|)?$' || true)"
+  if [[ -n "$key_hits" ]]; then
     echo "FAIL  API key material found under /etc (must be user-only)"; problems=$((problems+1))
   else
     echo "PASS  no API keys under /etc/environment.d or /etc/lui"
