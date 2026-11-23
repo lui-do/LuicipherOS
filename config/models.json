@@ -7,13 +7,13 @@
       "id": "general",
       "aliases": ["coding-hq"],
       "file": "general.gguf",
-      "repo": "unsloth/Qwen3.8-27B-GGUF",
-      "source_file": "Qwen3.8-27B-UD-Q4_K_XL.gguf",
-      "size_bytes": 17659407264,
-      "sha256": "2a5f3565f39cf885103da591182c1266da64745737b42b452fd3e675369f1211",
+      "repo": "unsloth/Inkling-2-Mini-GGUF",
+      "source_file": "Mainline_Support/Inkling-2-Mini-UD-Q4_K_M.gguf_file",
+      "size_bytes": 16610544608,
+      "sha256": "78fcedcf93c5d1bfe83e225513b71392bb52259be0eaa5f8899c856a2e5834ae",
       "license": "Apache-2.0",
       "context": 24576,
-      "role": "general chat/docs, vision-capable; also serves coding-hq"
+      "role": "general chat/docs/coding, multimodal (text-only by default); also serves coding-hq"
     },
     {
       "id": "coding",

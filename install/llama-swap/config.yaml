@@ -6,7 +6,7 @@
 #
 # Stable filenames are used on purpose so changing a quant does not require a
 # service-config change:
-#   general.gguf   Qwen3.8-27B        (general + coding-hq alias)
+#   general.gguf   Inkling 2 Mini     (general + coding-hq alias)
 #   coding.gguf    Tiel-Coder-35B-A3B (fast agent loops)
 #   research.gguf  Qwen3.5-9B         (tool use: web/bash/curl)
 #
@@ -33,7 +33,10 @@ ui:
 
 models:
   "general":
-    name: "Qwen3.8-27B (general)"
+    name: "Inkling 2 Mini (general)"
+    # Mainline-layout GGUF (renamed to general.gguf by `lui ai sync`). If VRAM is
+    # tight, keep a few expert layers in system RAM: add `--n-cpu-moe 4` (or
+    # `--cpu-moe` for all experts) instead of lowering quality.
     cmd: |
       /usr/bin/llama-server
       --model /var/lib/llm/models/general.gguf

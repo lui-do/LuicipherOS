@@ -77,9 +77,9 @@ these keys into your file and keep the rest:
         "apiKey": "local"
       },
       "models": {
-        "general": { "name": "Qwen3.8-27B (local)" },
+        "general": { "name": "Inkling 2 Mini (local)" },
         "coding": { "name": "Tiel-Coder-35B-A3B (local)" },
-        "coding-hq": { "name": "Qwen3.8-27B (local, HQ)" },
+        "coding-hq": { "name": "Inkling 2 Mini (local, HQ)" },
         "research": { "name": "Qwen3.5-9B (local)" }
       }
     }
@@ -97,13 +97,17 @@ conflict by default.
 
 | Alias | Weights | Use |
 |---|---|---|
-| `general` | Qwen3.8-27B UD-Q4_K_XL | chat, docs, vision |
+| `general` | Inkling 2 Mini UD-Q4_K_M | chat, docs, coding; text-only by default |
 | `coding` | Tiel-Coder-35B-A3B UD-Q3_K_XL | fast coding loops |
 | `coding-hq` | same file as `general` | harder tickets |
 | `research` | Qwen3.5-9B Q6_K | web/curl/bash tool chains |
 
 One large model is resident at a time; llama-swap swaps in ~10–15 s. Tune
-context/quants with `lui ai bench` on the target.
+context/quants with `lui ai bench` on the target. If the 20 GB card is tight,
+spill expert layers to system RAM with `--n-cpu-moe N` (all experts:
+`--cpu-moe`) — not to the SSD. llama.cpp's mmap mode can demand-page from disk,
+but expert reads become random I/O and collapse tok/s; RAM offload is the
+supported path.
 
 ## Cloud keys (explicit, per user)
 

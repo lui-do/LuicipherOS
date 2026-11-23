@@ -6,9 +6,9 @@
       "api": "openai-completions",
       "apiKey": "local",
       "models": [
-        { "id": "general", "name": "Qwen3.8-27B (local)" },
+        { "id": "general", "name": "Inkling 2 Mini (local)" },
         { "id": "coding", "name": "Tiel-Coder-35B-A3B (local)" },
-        { "id": "coding-hq", "name": "Qwen3.8-27B (local, HQ)" },
+        { "id": "coding-hq", "name": "Inkling 2 Mini (local, HQ)" },
         { "id": "research", "name": "Qwen3.5-9B (local)" }
       ]
     }
