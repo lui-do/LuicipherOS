@@ -355,6 +355,13 @@ history, one holding the November detail); no entry was dropped.
   LFS learning only. Time of day UNCONFIRMED (date from ADR).
 
 ## [PROGRESS]
+- 2026-11-23T21:25Z `[USER]` **Cold boots show the LUKS prompt again.** On every normal cold boot
+  since the 2026-11-20 firmware change (boots Nov 20, 21, 22, 23) the LUKS prompt was visible; the
+  blank-start symptom did not recur. Current boot (started 12:56, checked 21:25): `amdgpu` first
+  PCI message at **211.716107 s** (late load), DMUB/power-gate error count **0**, no failed units.
+  Firmware on disk is `linux-firmware`/`linux-firmware-amdgpu` **20261019-1**. This is an
+  observation, not a closure: the blank-start fault was intermittent, the DMUB early-load test is
+  still pending, and issue #11 stays open. No hard power-off was needed.
 - 2026-11-19T23:25Z `[TOOL]` **AI step 4 implemented: Goose + mise + user-only state.** Added
   `mise` (Extra) to `config/packages`, `goose-desktop-bin` to `config/packages-arch` and
   `config/ai-packages`. The AUR `goose-cli-bin` conflicts with `goose-desktop` and the Desktop
