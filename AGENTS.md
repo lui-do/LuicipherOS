@@ -142,7 +142,7 @@ lui ai sync --dry-run      # show sources/sizes before downloading
 sudo lui ai ...            # NO: lui refuses root; run as luci, it sudo's internally
 lui ai sync                # admin (luci): download/verify ~40 GiB into /var/lib/llm/models
 lui ai run                 # per-user: Goose against the local endpoint (default general)
-lui ai run coding          # fast coding model; coding-hq = general's weights
+lui ai run coding          # fast coding model; coding-hq = Inkling quality coding
 lui ai audit               # local-only, telemetry, key placement
 lui ai disable             # stop the endpoint, keep packages/models
 lui ai disable --prune     # definitive uninstall (preview + typed confirmation)

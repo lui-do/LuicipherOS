@@ -27,7 +27,7 @@ Sierra tau-bench, public GGUF/llama.cpp reports):
 | Candidate | Verdict |
 | --- | --- |
 | Qwen3.8-27B (Aug 2026, Apache-2.0, 262K, vision) | Strong all-round 27B; replaced as `general` on 2026-11-23 |
-| Inkling 2 Mini (Nov 2026, Apache-2.0, 1M, looped MoE 26.4B/3.4B) | New `general`: better agentic coding, faster decode, 20 GB-class |
+| Inkling 2 Mini (Nov 2026, Apache-2.0, 1M, looped MoE 26.4B/3.4B) | `coding-hq`: better agentic coding, faster decode, 20 GB-class |
 | Tiel-Coder-35B-A3B (MIT, 36B total / 3B active, 2026) | Fast agent-loop coder; weaker on the hardest tickets |
 | Qwen3.5-9B (Apache-2.0, 262K) | Best small tool-caller (BFCL-V4 66.1, TAU2 79.1) |
 | Gemma 4 31B | Rejected for agent use: llama.cpp tool-call bugs (calls returned as content) |
@@ -60,19 +60,19 @@ Model weights are **data, not packages**. `config/models` is the source of truth
 (alias, upstream repo, file, sha256, context, extra args). Downloads happen only
 through `lui ai sync` with confirmation; `lui sync` never downloads weights.
 
-Three weight sets, four aliases (≈42 GB total):
+Three weight sets, four aliases (≈41 GB total):
 
 | Alias | Weights | Quant target | Role |
 | --- | --- | --- | --- |
-| `general` | Inkling 2 Mini (looped MoE 26.4B/3.4B) | UD-Q4_K_M (~16.6 GB), 24K ctx | Everyday chat/docs/coding; text-only by default |
+| `general` | Qwen3.5-9B | Q6_K (~7.5 GB), 64K ctx | Everyday chat/docs (small, fast) |
 | `coding` | Tiel-Coder-35B-A3B | UD-Q3_K_XL (~16 GB) | Fast agent loops (OpenCode/Pi/Goose) |
-| `coding-hq` | Inkling 2 Mini (same file) | as `general` | Hard tickets, review |
-| `research` | Qwen3.5-9B | Q6_K (~7.5 GB) | Web/curl/bash tool chains |
+| `coding-hq` | Inkling 2 Mini | UD-Q4_K_M (~16.6 GB), 24K ctx | Quality coding/review |
+| `research` | Qwen3.5-9B (same file as `general`) | Q6_K | Web/curl/bash tool chains |
 
 Only one large model is resident at a time (llama-swap, ~10–15 s swap). The exact
 quant per alias is locked after `lui ai bench` on the target; if Q4 leaves too
-little context, `general`/`coding-hq` move to UD-Q3_K_XL or spill a few layers to
-RAM (`-ngl`), measured rather than assumed.
+little context, `coding-hq` moves to UD-Q3_K_XL or spills a few layers to RAM
+(`-ngl` / `--n-cpu-moe`), measured rather than assumed.
 
 ### 3. Agents and shared state
 
@@ -141,12 +141,15 @@ VM disk must be enlarged for real model weights; the target desktop already has
 - **Weights vs packages**: pacman should not own 42 GB of changing model files with
   their own licences. A pinned manifest + checksum keeps installs small and makes
   removal explicit, while packages stay declarative in `lui sync`.
-- **Four aliases, three downloads**: `coding-hq` reuses the Inkling 2 Mini
-  weights, so speed and quality are both available without a fourth download.
-- **2026-11-23 update**: `general`/`coding-hq` moved from Qwen3.8-27B to
-  Inkling 2 Mini UD-Q4_K_M after user decision (better agentic coding, faster
-  MoE decode, Apache-2.0). Keep `--n-cpu-moe` as the VRAM spill path; SSD
-  demand-paging is not a supported performance mode.
+- **Four aliases, three downloads**: `general` and `research` share the
+  Qwen3.5-9B file; `coding-hq` is the separate Inkling quality-coding model;
+  `coding` is Tiel.
+- **2026-11-23 update**: `general` moved to the small Qwen3.5-9B (everyday
+  chat/docs; shared with `research`), and `coding-hq` is Inkling 2 Mini
+  UD-Q4_K_M for quality coding. Earlier that day `general` briefly held the
+  Inkling weights; the small/quality split keeps chat fast and coding strong.
+  `--n-cpu-moe` is the VRAM spill path; SSD demand-paging is not a supported
+  performance mode.
 - **Native Goose Desktop**: the Flatpak sandbox separates state and breaks the
   "CLI and Desktop share everything" requirement.
 - **System-wide engine, per-user agents**: one GPU queue and one model cache, but

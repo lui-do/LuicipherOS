@@ -77,10 +77,10 @@ these keys into your file and keep the rest:
         "apiKey": "local"
       },
       "models": {
-        "general": { "name": "Inkling 2 Mini (local)" },
+        "general": { "name": "Qwen3.5-9B (local)" },
         "coding": { "name": "Tiel-Coder-35B-A3B (local)" },
         "coding-hq": { "name": "Inkling 2 Mini (local, HQ)" },
-        "research": { "name": "Qwen3.5-9B (local)" }
+        "research": { "name": "Qwen3.5-9B (local, tools)" }
       }
     }
   }
@@ -97,10 +97,10 @@ conflict by default.
 
 | Alias | Weights | Use |
 |---|---|---|
-| `general` | Inkling 2 Mini UD-Q4_K_M | chat, docs, coding; text-only by default |
+| `general` | Qwen3.5-9B Q6_K | everyday chat/docs (small, fast) |
 | `coding` | Tiel-Coder-35B-A3B UD-Q3_K_XL | fast coding loops |
-| `coding-hq` | same file as `general` | harder tickets |
-| `research` | Qwen3.5-9B Q6_K | web/curl/bash tool chains |
+| `coding-hq` | Inkling 2 Mini UD-Q4_K_M | quality coding/review |
+| `research` | same file as `general` (Qwen3.5-9B) | web/curl/bash tool chains |
 
 One large model is resident at a time; llama-swap swaps in ~10–15 s. Tune
 context/quants with `lui ai bench` on the target. If the 20 GB card is tight,
