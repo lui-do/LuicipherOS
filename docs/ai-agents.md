@@ -11,7 +11,7 @@ and keys. Nothing here falls back to a cloud provider on its own.
 | `config/models.json` | model manifest: repo, file, size, sha256, context, aliases |
 | `install/environment.d/90-llm-ai.conf` | system-wide Goose defaults (no secrets) |
 | `install/profile.d/90-llm-ai.sh` | mirror for non-systemd login shells |
-| `install/goose-cli.sh` | pinned Goose CLI from the same release as Desktop |
+| `install/goose-cli.sh` | fallback pinned Goose CLI (only if the package omits `/usr/bin/goose`) |
 | `install/llama-swap.service` / `install/llama-swap/config.yaml` | model server |
 | `dotfiles/pi/` | Pi config: local provider, telemetry/analytics off |
 

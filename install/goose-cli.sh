@@ -2,18 +2,18 @@
 # install/goose-cli.sh — install the Goose CLI from the same upstream release
 # as goose-desktop-bin, so Desktop and CLI share one config/session tree.
 #
-# WHY NOT the AUR CLI: goose-cli-bin conflicts with goose-desktop (and
-# goose-desktop-bin deliberately removes /usr/bin/goose). Keeping the Desktop
-# package and installing the matching CLI tarball is the only combination that
-# gives both without conflicting packages.
+# WHY THIS IS ONLY A FALLBACK: newer goose-desktop-bin builds bundle the CLI at
+# /usr/bin/goose. Prefer that packaged binary (same release as Desktop); use this
+# installer only if the package does not ship one. Keep VERSION/B2SUM in sync
+# with config/packages-arch (goose-desktop-bin).
 #
 # Idempotent. Needs sudo; run it unprivileged (bootstrap does).
 # BUMP TOGETHER: keep VERSION/B2SUM in sync with config/packages-arch
 # (goose-desktop-bin) and re-check the release assets.
 set -euo pipefail
 
-VERSION="1.60.1"
-B2SUM="8a38d9830c82e0ad515735c94ab73be7970ddad0445fb918e54e09bfe2b7f71dfaae463d6bbd4191963dc197adc27a6943ba3082638cc7b76d19de6ff7914b2d"
+VERSION="1.60.2"
+B2SUM="879c6eb6783650226541ebd20226fc0c3d82292213ffcbaeac12e0559f747f1667cd665b7515d979e74251f819884827a57e459f67b5270dd4585ac1daa353d4"
 URL="https://github.com/aaif-goose/goose/releases/download/v${VERSION}/goose-x86_64-unknown-linux-gnu-vulkan.tar.bz2"
 DEST="/usr/local/lib/goose"
 BIN="/usr/local/bin/goose"

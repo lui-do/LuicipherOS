@@ -35,10 +35,21 @@ sudo install -Dm644 "$ROOT/install/llama-swap/config.yaml" /etc/llama-swap/confi
 sudo install -Dm644 "$ROOT/install/llama-swap.service" /etc/systemd/system/llama-swap.service
 sudo systemctl enable llama-swap 2>/dev/null || echo "  (llama-swap enable skipped)"
 
-# Goose CLI from the same upstream release as goose-desktop-bin (the AUR CLI
-# conflicts with the Desktop package). Both native apps use ~/.config/goose.
-if [[ -f "$ROOT/install/goose-cli.sh" ]]; then
-  bash "$ROOT/install/goose-cli.sh" || echo "  WARN: goose CLI install failed"
+# Goose CLI: newer goose-desktop-bin builds bundle /usr/bin/goose (same release
+# as Desktop). Prefer that; fall back to the pinned tarball only if absent.
+GOOSE_EXEC="/usr/bin/goose"
+if [[ -x "$GOOSE_EXEC" ]]; then
+  # Drop an older fallback so it cannot shadow the packaged CLI.
+  if [[ -L /usr/local/bin/goose || -e /usr/local/lib/goose ]]; then
+    sudo rm -f /usr/local/bin/goose
+    sudo rm -rf /usr/local/lib/goose
+  fi
+  log "packaged Goose CLI: $("$GOOSE_EXEC" --version 2>/dev/null || echo present)"
+else
+  if [[ -f "$ROOT/install/goose-cli.sh" ]]; then
+    bash "$ROOT/install/goose-cli.sh" || echo "  WARN: goose CLI install failed"
+  fi
+  GOOSE_EXEC="/usr/local/bin/goose"
 fi
 
 log "local-only environment defaults (no secrets)"
@@ -46,7 +57,7 @@ sudo install -Dm644 "$ROOT/install/environment.d/90-llm-ai.conf" /etc/environmen
 sudo install -Dm644 "$ROOT/install/profile.d/90-llm-ai.sh" /etc/profile.d/90-llm-ai.sh
 
 log "model wrappers"
-if [[ -x /usr/local/bin/goose ]]; then
+if [[ -x "$GOOSE_EXEC" ]]; then
   for pair in "general goose-general" "coding goose-code" "coding-hq goose-hq" "research goose-research"; do
     alias_name="${pair%% *}"; bin_name="${pair##* }"
     sudo tee "/usr/local/bin/$bin_name" >/dev/null <<EOF
@@ -56,7 +67,7 @@ set -a
 set +a
 GOOSE_MODEL=$alias_name
 export GOOSE_MODEL
-exec /usr/local/bin/goose "\$@"
+exec $GOOSE_EXEC "\$@"
 EOF
     sudo chmod 755 "/usr/local/bin/$bin_name"
   done
